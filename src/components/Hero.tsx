@@ -26,7 +26,7 @@ const desktopIcons = [
 export default function Hero() {
   const [progress, setProgress] = useState(0);
   const [bootStage, setBootStage] = useState<'loading' | 'login' | 'desktop'>('loading');
-  const [themeIdx, setThemeIdx] = useState(0);
+  const [themeIdx, setThemeIdx] = useState(1);
   const [contextMenu, setContextMenu] = useState({ show: false, x: 0, y: 0 });
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   
@@ -70,6 +70,8 @@ export default function Hero() {
     
     setIsSubmittingLogin(true); 
     setBootStage('desktop');
+
+    window.dispatchEvent(new Event('system-unlock'));
     
     setTimeout(() => {
       window.dispatchEvent(new CustomEvent('launch-app', { detail: 'profile' }));

@@ -5,7 +5,15 @@ import Finder from './Finder'; // <-- Add this
 import InteractiveTerminal from './Terminal';
 import Contact from './Contact'; 
 import SystemProfile from './SystemProfile'; 
+// 👇 1. ADD THIS NEW STATE
+  const [isUnlocked, setIsUnlocked] = useState(false);
 
+  // 👇 2. ADD THIS NEW EFFECT to listen for the unlock signal
+  useEffect(() => {
+    const handleUnlock = () => setIsUnlocked(true);
+    window.addEventListener('system-unlock', handleUnlock);
+    return () => window.removeEventListener('system-unlock', handleUnlock);
+  }, []);
 
 // --- ZERO-DEPENDENCY SYNTHETIC AUDIO ENGINE ---
 const playSystemSound = (type: 'pop' | 'click') => {
@@ -322,6 +330,7 @@ export default function HUD() {
     { id: 'github', label: 'Repository', icon: GitBranch, color: 'text-zinc-100', title: '' },
   ];
 
+  if (!isUnlocked) return null;
   return (
     <>
       {isMobile && openApps.length > 0 && (

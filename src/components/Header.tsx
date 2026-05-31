@@ -24,6 +24,16 @@ export default function Header() {
   const [wifiOn, setWifiOn] = useState(true);
   const [btOn, setBtOn] = useState(true);
 
+  // 👇 ADDED: The lock screen visibility state
+  const [isUnlocked, setIsUnlocked] = useState(false);
+
+  // 👇 ADDED: Listen for the unlock event from Hero.tsx
+  useEffect(() => {
+    const handleUnlock = () => setIsUnlocked(true);
+    window.addEventListener('system-unlock', handleUnlock);
+    return () => window.removeEventListener('system-unlock', handleUnlock);
+  }, []);
+
   // Live System Clock + Date
   useEffect(() => {
     setMounted(true);
@@ -76,6 +86,9 @@ export default function Header() {
       setOpenMenu(menuName);
     }
   };
+
+  // 👇 ADDED: Abort rendering if the system is still locked!
+  if (!isUnlocked) return null;
 
   const year = currentDateObj.getFullYear();
   const month = currentDateObj.getMonth();
