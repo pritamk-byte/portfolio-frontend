@@ -50,7 +50,7 @@ export default function Contact() {
     const data = Object.fromEntries(formData);
 
     try {
-      const response = await fetch('/api/contact', {
+      const response = await fetch('https://portfolio-backend-t2zv.onrender.com/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),

@@ -66,7 +66,7 @@ export default function Spotlight() {
 
   const launchApp = (appId: string) => {
     if (appId === 'github') {
-      window.open('https://github.com', '_blank');
+      window.open('https://github.com/pritamk-byte', '_blank');
     } else {
       window.dispatchEvent(new CustomEvent('launch-app', { detail: appId }));
     }
