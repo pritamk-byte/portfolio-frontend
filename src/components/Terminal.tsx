@@ -213,7 +213,8 @@ export default function InteractiveTerminal() {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/terminal/history');
+        // NEW:
+        const response = await fetch('https://portfolio-backend-t2zv.onrender.com/api/terminal/history');
         if (response.ok) {
           const data = await response.json();
           const formattedHistory: CommandHistory[] = data.reverse().flatMap((log: any) => [

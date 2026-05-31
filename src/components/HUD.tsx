@@ -311,9 +311,10 @@ export default function HUD() {
   };
 
   const dockItems = [
-    { id: 'finder', label: 'Finder', icon: LayoutGrid, color: 'text-blue-400', title: 'Finder' }, // <-- ADD THIS LINE
+    { id: 'finder', label: 'Finder', icon: LayoutGrid, color: 'text-blue-400', title: 'Finder' },
     { id: 'profile', label: 'System Profile', icon: User, color: 'text-zinc-100', title: 'System Profile' },
-    // ... rest of your items
+    // 👇 ADD THIS LINE RIGHT HERE
+    { id: 'terminal', label: 'Terminal', icon: TerminalIcon, color: 'text-emerald-400', title: 'Terminal' }, 
     { id: 'esp', label: 'ESP Platform', icon: Globe, color: 'text-blue-400', title: 'ESP Core' },
     { id: 'alumni', label: 'ConnectAlumni', icon: Users, color: 'text-orange-400', title: 'ConnectAlumni' },
     { id: 'resume', label: 'Resume.pdf', icon: FileText, color: 'text-yellow-400', title: 'Document Viewer' },
