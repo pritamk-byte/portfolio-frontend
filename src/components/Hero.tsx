@@ -2,13 +2,15 @@
 import { useState, useEffect } from 'react';
 import { Command, ArrowRight, Folder, FileText, Globe, TerminalSquare } from 'lucide-react';
 
-const themes = {
-  default: { c1: 'bg-purple-900/30', c2: 'bg-blue-900/20', c3: 'bg-emerald-900/15' },
-  ocean:   { c1: 'bg-cyan-900/30',   c2: 'bg-blue-900/20', c3: 'bg-teal-900/15' },
-  lava:    { c1: 'bg-red-900/30',    c2: 'bg-orange-900/20', c3: 'bg-yellow-900/15' },
-  matrix:  { c1: 'bg-emerald-900/30',c2: 'bg-green-900/20', c3: 'bg-lime-900/15' }
-};
-const themeKeys = Object.keys(themes) as (keyof typeof themes)[];
+// --- NEW WALLPAPER ENGINE ---
+// Supports both your original CSS gradients and high-res image URLs
+const wallpapers = [
+  { id: 'default-blur', type: 'css', name: 'Dynamic Aura' },
+  { id: 'monterey', type: 'image', name: 'Monterey Abstract', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'big-sur', type: 'image', name: 'Big Sur Wave', url: 'https://images.unsplash.com/photo-1604871000636-074fa5117945?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'mojave', type: 'image', name: 'Mojave Night', url: 'https://images.unsplash.com/photo-1542224566-6e85f2e6772f?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'sierra', type: 'image', name: 'High Sierra', url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2564&auto=format&fit=crop' }
+];
 
 const desktopIcons = [
   { id: 'profile', label: 'Pritam_OS', icon: Folder, color: 'text-blue-400', fill: 'fill-blue-400/20' },
@@ -24,10 +26,10 @@ export default function Hero() {
   const [contextMenu, setContextMenu] = useState({ show: false, x: 0, y: 0 });
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   
-  // THE MISSING STATE DECLARATION: Fixes Error 2304
+  // Submit State Lock prevents double rapid-fire executions!
   const [isSubmittingLogin, setIsSubmittingLogin] = useState(false);
 
-  const currentTheme = themes[themeKeys[themeIdx]];
+  const currentWallpaper = wallpapers[themeIdx];
 
   useEffect(() => {
     if (bootStage !== 'loading') return;
@@ -59,11 +61,9 @@ export default function Hero() {
   };
 
   const handleLogin = () => {
-    // 1. Submit State Lock prevents double rapid-fire executions!
     if (isSubmittingLogin) return; 
     if (bootStage !== 'login') return; 
     
-    // 2. Lock the process immediately.
     setIsSubmittingLogin(true); 
     setBootStage('desktop');
     
@@ -79,7 +79,6 @@ export default function Hero() {
 
   const handleIconClick = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    // Mobile Check: If screen is mobile, open immediately on single tap
     if (window.innerWidth < 768) {
       launchApp(id);
     } else {
@@ -93,11 +92,21 @@ export default function Hero() {
       onContextMenu={handleContextMenu}
       onClick={() => setSelectedIcon(null)}
     >
-      {/* Updated tailwind warning classes (e.g. top-[-20%]) */}
-      <div className="absolute inset-0 bg-[#000000]">
-        <div className={`absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full ${currentTheme.c1} blur-[120px] transition-colors duration-1000`}></div>
-        <div className={`absolute top-[10%] right-[-10%] w-[60vw] h-[60vw] rounded-full ${currentTheme.c2} blur-[130px] transition-colors duration-1000`}></div>
-        <div className={`absolute bottom-[-20%] left-[15%] w-[70vw] h-[70vw] rounded-full ${currentTheme.c3} blur-[140px] transition-colors duration-1000`}></div>
+      
+      {/* THE WALLPAPER LAYER */}
+      <div className="absolute inset-0 bg-[#000000] transition-all duration-1000">
+        {currentWallpaper.type === 'css' ? (
+          <>
+            <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full bg-purple-900/30 blur-[120px] transition-colors duration-1000"></div>
+            <div className="absolute top-[10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-blue-900/20 blur-[130px] transition-colors duration-1000"></div>
+            <div className="absolute bottom-[-20%] left-[15%] w-[70vw] h-[70vw] rounded-full bg-emerald-900/15 blur-[140px] transition-colors duration-1000"></div>
+          </>
+        ) : (
+          <div 
+            className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 opacity-90"
+            style={{ backgroundImage: `url(${currentWallpaper.url})` }}
+          />
+        )}
       </div>
 
       {bootStage === 'desktop' && (
@@ -132,15 +141,24 @@ export default function Hero() {
         </div>
       )}
 
-      {/* Updated z-9999 class */}
       {contextMenu.show && (
         <div 
-          className="fixed z-9999 w-56 bg-[#1e1e1e]/80 backdrop-blur-3xl border border-white/10 rounded-xl shadow-2xl py-1.5 text-[12px] font-sans text-zinc-200"
+          className="fixed z-[9999] w-56 bg-[#1e1e1e]/80 backdrop-blur-3xl border border-white/10 rounded-xl shadow-2xl py-1.5 text-[12px] font-sans text-zinc-200"
           style={{ top: contextMenu.y, left: contextMenu.x }}
         >
           <button className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white">New Folder</button>
           <div className="h-px bg-white/10 my-1"></div>
-          <button className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white" onClick={() => setThemeIdx(p => (p + 1) % themeKeys.length)}>Change Desktop Background...</button>
+          
+          {/* Wallpaper Change Button */}
+          <div className="px-4 py-1 text-zinc-500 font-semibold text-[10px] tracking-wider uppercase">Wallpaper</div>
+          <button 
+            className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center" 
+            onClick={() => setThemeIdx(p => (p + 1) % wallpapers.length)}
+          >
+            <span>Next Background</span>
+            <span className="text-zinc-500 text-[10px]">{currentWallpaper.name}</span>
+          </button>
+          
           <div className="h-px bg-white/10 my-1"></div>
           <button className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white" onClick={() => launchApp('terminal')}>Open Terminal</button>
           <button className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white" onClick={() => window.location.reload()}>Refresh Workspace</button>
@@ -162,7 +180,6 @@ export default function Hero() {
           ${bootStage === 'loading' && 'hidden'}
         `}
       >
-        {/* Updated bg-linear-to-tr class */}
         <div className="w-24 h-24 rounded-full bg-linear-to-tr from-zinc-700 to-zinc-500 flex items-center justify-center border border-zinc-500 shadow-2xl mb-4 overflow-hidden">
            <span className="text-4xl text-white font-medium drop-shadow-md">P</span>
         </div>
