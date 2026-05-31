@@ -601,10 +601,11 @@ export default function InteractiveTerminal() {
         .mac-scrollbar::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
         .mac-scrollbar::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
       `}</style>
-
+      
       <div ref={scrollContainerRef} className="flex-1 p-6 overflow-y-auto flex flex-col gap-2 mac-scrollbar pb-12">
         {history.map((line, i) => (
-          <div 
+          // 👇 CHANGED FROM <div> TO <pre>
+          <pre 
             key={i} 
             className={`
               ${line.type === 'input' ? 'text-zinc-400' : ''}
@@ -614,11 +615,11 @@ export default function InteractiveTerminal() {
               ${line.type === 'game' ? 'text-orange-400 font-semibold' : ''}
               ${line.type === 'success' ? 'text-emerald-400 font-bold' : ''}
               ${line.type === 'orange' ? 'text-orange-400' : ''}
-              whitespace-pre-wrap
+              whitespace-pre font-inherit m-0 
             `}
           >
             {line.text}
-          </div>
+          </pre>
         ))}
         
         {isTyping && (
