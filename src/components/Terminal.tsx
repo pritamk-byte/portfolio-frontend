@@ -12,7 +12,7 @@ const STATIC_COMMANDS: Record<string, CommandHistory[]> = {
   'whoami': [{ type: 'output', text: 'Pritam - Software Engineer & Backend Architect.' }],
   'cat about.txt': [{ type: 'output', text: 'I am a Software Engineer passionate about building scalable backends with Java and Spring Boot.' }],
   'skills': [{ type: 'output', text: 'Java, Spring Boot, PostgreSQL, SQL, Next.js, React, Pandas.' }],
-  'contact': [{ type: 'output', text: 'Email: contact@pritam.dev | Location: India' }],
+  'contact': [{ type: 'output', text: 'Email: contact@pritam.dev | Location: India' }], // <-- Don't forget to put your real email here!
   'github': [{ type: 'output', text: 'Opening GitHub... (Link disabled in terminal mode)' }],
   'linkedin': [{ type: 'output', text: 'Opening LinkedIn... (Link disabled in terminal mode)' }],
   'resume': [{ type: 'output', text: 'Fetching PDF... Please use the standard UI buttons to download.' }],
@@ -22,18 +22,7 @@ const STATIC_COMMANDS: Record<string, CommandHistory[]> = {
     { type: 'success', text: 'Status: 🟢 Platform is Online and facilitating alumni networks.' }
   ],
 
-  // OS & System Info 
-  'date': [{ type: 'output', text: new Date().toString() }],
-  'cal': [
-    { type: 'output', text: '      May 2026' },
-    { type: 'output', text: 'Su Mo Tu We Th Fr Sa' },
-    { type: 'output', text: '                1  2' },
-    { type: 'output', text: ' 3  4  5  6  7  8  9' },
-    { type: 'output', text: '10 11 12 13 14 15 16' },
-    { type: 'output', text: '17 18 19 20 21 22 23' },
-    { type: 'output', text: '24 25 26 27 28 29 30' },
-    { type: 'output', text: '31' }
-  ],
+  // OS & System Info (date and cal moved to dynamic handlers below)
   'uptime': [{ type: 'output', text: 'up 4 days, 13:37, 1 user, load average: 0.00, 0.01, 0.05' }],
   'uname -a': [{ type: 'output', text: 'Linux pritam-os 5.15.0-76-generic #83-Ubuntu SMP Wed Jun 21 10:23:27 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux' }],
   'hostname': [{ type: 'output', text: 'PRITAM-MAIN-SERVER' }],
@@ -66,11 +55,11 @@ const STATIC_COMMANDS: Record<string, CommandHistory[]> = {
   'dir /s': [
     { type: 'system', text: 'Volume in drive C has no label.' },
     { type: 'output', text: 'Directory of C:\\Windows\\System32' },
-    { type: 'output', text: '05/31/2026  12:00 AM    <DIR>      .' },
-    { type: 'output', text: '05/31/2026  12:00 AM    <DIR>      ..' },
-    { type: 'output', text: '05/31/2026  12:00 AM       412,160 cmd.exe' },
-    { type: 'output', text: '05/31/2026  12:00 AM     2,112,000 kernel32.dll' },
-    { type: 'output', text: '05/31/2026  12:00 AM     1,048,576 ntdll.dll' },
+    { type: 'output', text: '05/31/2026  12:00 AM    <DIR>          .' },
+    { type: 'output', text: '05/31/2026  12:00 AM    <DIR>          ..' },
+    { type: 'output', text: '05/31/2026  12:00 AM           412,160 cmd.exe' },
+    { type: 'output', text: '05/31/2026  12:00 AM         2,112,000 kernel32.dll' },
+    { type: 'output', text: '05/31/2026  12:00 AM         1,048,576 ntdll.dll' },
     { type: 'output', text: 'Total Files Listed:' },
     { type: 'output', text: '           3 File(s)      3,572,736 bytes' }
   ],
@@ -116,7 +105,7 @@ const STATIC_COMMANDS: Record<string, CommandHistory[]> = {
   'vim': [{ type: 'error', text: 'Opening Vim... Wait, how do I exit this? (Just kidding, use the UI)' }],
   'nano': [{ type: 'output', text: 'Nano is for beginners. Real devs use Vim.' }],
   'git status': [{ type: 'success', text: 'On branch main. Your branch is up to date with origin/main. Nothing to commit.' }],
-  'docker ps': [{ type: 'output', text: 'CONTAINER ID   IMAGE      COMMAND   CREATED   STATUS   PORTS   NAMES\n9b23f1a2c3d4   postgres   "docker-e…"  2 days ago   Up 2 days  5432/tcp  pritam-db' }],
+  'docker ps': [{ type: 'output', text: 'CONTAINER ID   IMAGE       COMMAND   CREATED   STATUS   PORTS   NAMES\n9b23f1a2c3d4   postgres   "docker-e…"  2 days ago   Up 2 days  5432/tcp  pritam-db' }],
   'mvn clean install': [
     { type: 'system', text: '[INFO] Scanning for projects...' },
     { type: 'system', text: '[INFO] Building com.pritam:portfolio-api 0.0.1-SNAPSHOT' },
@@ -170,7 +159,7 @@ const STATIC_COMMANDS: Record<string, CommandHistory[]> = {
     { type: 'system', text: 'AVAILABLE COMMANDS:' },
     { type: 'system', text: '-------------------------------------------------------' },
     { type: 'output', text: '  OS & NET: ping, date, cal, uptime, systeminfo, netstat, arp -a, tracert' },
-    { type: 'output', text: '  FILES:    ls, pwd, cd, tree, dir /s, open <app>' }, // --- Added open ---
+    { type: 'output', text: '  FILES:    ls, pwd, cd, tree, dir /s, open <app>' },
     { type: 'output', text: '  DEV:      vim, nano, git status, docker ps, java, spring, mvn clean install' },
     { type: 'output', text: '  PROFILE:  skills, whoami, contact, connectalumni' },
     { type: 'output', text: '  FUN:      matrix, rcb, sl, cowsay, fortune' },
@@ -213,7 +202,7 @@ export default function InteractiveTerminal() {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        // NEW:
+        // --- PRODUCTION URL ---
         const response = await fetch('https://portfolio-backend-t2zv.onrender.com/api/terminal/history');
         if (response.ok) {
           const data = await response.json();
@@ -526,6 +515,39 @@ export default function InteractiveTerminal() {
       return;
     }
 
+    // --- DYNAMIC OS COMMANDS (date and cal) ---
+    if (lowerCommand === 'date') {
+      streamLines([{ type: 'output', text: new Date().toString() }]);
+      return;
+    }
+
+    if (lowerCommand === 'cal') {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      
+      const calLines: CommandHistory[] = [
+        { type: 'output', text: `      ${monthNames[month]} ${year}` },
+        { type: 'output', text: 'Su Mo Tu We Th Fr Sa' }
+      ];
+      
+      let currentLine = '   '.repeat(firstDay);
+      for (let day = 1; day <= daysInMonth; day++) {
+        currentLine += day.toString().padStart(2, ' ') + ' ';
+        if (new Date(year, month, day).getDay() === 6 || day === daysInMonth) {
+          calLines.push({ type: 'output', text: currentLine.trimEnd() });
+          currentLine = '';
+        }
+      }
+      
+      streamLines(calLines);
+      return;
+    }
+
     // --- STATIC COMMANDS ---
     if (STATIC_COMMANDS[lowerCommand]) {
       streamLines(STATIC_COMMANDS[lowerCommand]);
@@ -552,7 +574,8 @@ export default function InteractiveTerminal() {
     // Fallback to Java Backend
     setIsTyping(true);
     try {
-      const response = await fetch('http://localhost:8080/api/terminal/execute', {
+      // --- PRODUCTION URL FIX ---
+      const response = await fetch('https://portfolio-backend-t2zv.onrender.com/api/terminal/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ command: lowerCommand })
@@ -565,7 +588,7 @@ export default function InteractiveTerminal() {
     } catch (error) {
       streamLines([
         { type: 'error', text: `bash: ${lowerCommand}: command not found` },
-        { type: 'output', text: 'Type "help" to see available local commands, or ensure Java backend is running on port 8080.' }
+        { type: 'output', text: 'Type "help" to see available local commands, or ensure the live Java backend is awake.' }
       ]);
     }
   };

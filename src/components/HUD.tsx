@@ -405,7 +405,7 @@ export default function HUD() {
               onClick={(e: any) => {
                 e.preventDefault();
                 playSystemSound('click');
-                if (item.id === 'github') { window.open('https://github.com', '_blank'); return; }
+                if (item.id === 'github') { window.open('https://github.com/pritamk-byte', '_blank'); return; }
                 
                 setOpenApps(prev => prev.includes(item.id) ? prev : [...prev, item.id]);
                 setActiveApp(item.id);

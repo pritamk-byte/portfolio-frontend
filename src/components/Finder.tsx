@@ -69,7 +69,7 @@ export default function Finder() {
     } else {
       // Launch App!
       if (item.id === 'github') {
-        window.open('https://github.com', '_blank');
+        window.open('https://github.com/pritamk-byte', '_blank');
       } else {
         window.dispatchEvent(new CustomEvent('launch-app', { detail: item.id }));
       }
