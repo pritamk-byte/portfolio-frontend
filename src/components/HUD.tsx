@@ -1,19 +1,10 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { Terminal as TerminalIcon, FileText, Mail, GitBranch, X, Minus, Maximize2, Globe, Users, User, LayoutGrid } from 'lucide-react';
-import Finder from './Finder'; // <-- Add this
+import Finder from './Finder'; 
 import InteractiveTerminal from './Terminal';
 import Contact from './Contact'; 
 import SystemProfile from './SystemProfile'; 
-// 👇 1. ADD THIS NEW STATE
-  const [isUnlocked, setIsUnlocked] = useState(false);
-
-  // 👇 2. ADD THIS NEW EFFECT to listen for the unlock signal
-  useEffect(() => {
-    const handleUnlock = () => setIsUnlocked(true);
-    window.addEventListener('system-unlock', handleUnlock);
-    return () => window.removeEventListener('system-unlock', handleUnlock);
-  }, []);
 
 // --- ZERO-DEPENDENCY SYNTHETIC AUDIO ENGINE ---
 const playSystemSound = (type: 'pop' | 'click') => {
@@ -151,7 +142,6 @@ function DesktopWindow({
       <div 
         ref={windowRef}
         onPointerDownCapture={onFocus}
-        // THE FIX: Added the scale and translate animation for the minimized state
         className={`fixed flex flex-col overflow-hidden bg-[#050505] border border-zinc-800 shadow-2xl rounded-xl
           ${isMinimized ? 'opacity-0 scale-50 translate-y-[20vh] pointer-events-none' : isActive ? 'z-[95] shadow-[0_0_40px_rgba(0,0,0,0.5)] opacity-100 scale-100 translate-y-0' : 'z-[80] opacity-0 pointer-events-none md:pointer-events-auto md:opacity-95 md:hover:opacity-100 scale-100 translate-y-0'}
           ${isDragging || isResizing ? 'transition-none' : 'transition-all duration-300 ease-out'}
@@ -176,7 +166,6 @@ function DesktopWindow({
                 <X size={10} className="text-red-900 opacity-0 group-hover:opacity-100" />
               </button>
               
-              {/* THE FIX: Wired up the onMinimize function to the yellow button */}
               <button onClick={(e) => { e.stopPropagation(); playSystemSound('click'); onMinimize(); }} className="w-3.5 h-3.5 rounded-full bg-yellow-500 hover:bg-yellow-400 flex items-center justify-center group interactive">
                 <Minus size={10} className="text-yellow-900 opacity-0 group-hover:opacity-100" />
               </button>
@@ -213,7 +202,6 @@ function DesktopWindow({
 
 function DockItem({ item, isOpen, isActive, mouseX, onClick }: any) {
   const ref = useRef<HTMLButtonElement>(null);
-  
   const [size, setSize] = useState(52);
 
   useEffect(() => {
@@ -266,10 +254,17 @@ function DockItem({ item, isOpen, isActive, mouseX, onClick }: any) {
 }
 
 export default function HUD() {
+  // ✅ MOVED INSIDE THE COMPONENT BODY:
+  const [isUnlocked, setIsUnlocked] = useState(false);
+
+  useEffect(() => {
+    const handleUnlock = () => setIsUnlocked(true);
+    window.addEventListener('system-unlock', handleUnlock);
+    return () => window.removeEventListener('system-unlock', handleUnlock);
+  }, []);
+
   const [openApps, setOpenApps] = useState<string[]>([]);
   const [activeApp, setActiveApp] = useState<string | null>(null);
-  
-  // NEW: Track which apps are specifically minimized
   const [minimizedApps, setMinimizedApps] = useState<string[]>([]);
   
   const [mouseX, setMouseX] = useState<number | null>(null);
@@ -289,7 +284,6 @@ export default function HUD() {
         return prev;
       });
       
-      // Un-minimize if it was minimized via Terminal or Search
       setMinimizedApps((prev) => prev.filter(app => app !== id));
       setActiveApp(id);
     };
@@ -304,8 +298,6 @@ export default function HUD() {
   const handleCloseApp = (id: string) => {
     const newOpenApps = openApps.filter(app => app !== id);
     setOpenApps(newOpenApps);
-    
-    // Clean up minimized state if closed
     setMinimizedApps((prev) => prev.filter(app => app !== id));
     
     if (activeApp === id) {
@@ -315,13 +307,12 @@ export default function HUD() {
 
   const handleMinimizeApp = (id: string) => {
     setMinimizedApps(prev => [...prev, id]);
-    setActiveApp(null); // Remove focus
+    setActiveApp(null);
   };
 
   const dockItems = [
     { id: 'finder', label: 'Finder', icon: LayoutGrid, color: 'text-blue-400', title: 'Finder' },
     { id: 'profile', label: 'System Profile', icon: User, color: 'text-zinc-100', title: 'System Profile' },
-    // 👇 ADD THIS LINE RIGHT HERE
     { id: 'terminal', label: 'Terminal', icon: TerminalIcon, color: 'text-emerald-400', title: 'Terminal' }, 
     { id: 'esp', label: 'ESP Platform', icon: Globe, color: 'text-blue-400', title: 'ESP Core' },
     { id: 'alumni', label: 'ConnectAlumni', icon: Users, color: 'text-orange-400', title: 'ConnectAlumni' },
@@ -331,6 +322,7 @@ export default function HUD() {
   ];
 
   if (!isUnlocked) return null;
+  
   return (
     <>
       {isMobile && openApps.length > 0 && (
@@ -359,7 +351,6 @@ export default function HUD() {
       )}
 
       <>
-        {/* ADD THIS NEW FINDER WINDOW BLOCK */}
         {openApps.includes('finder') && (
           <DesktopWindow id="finder" title="Finder" icon={LayoutGrid} isActive={activeApp === 'finder'} isMinimized={minimizedApps.includes('finder')} isMobile={isMobile} onFocus={() => setActiveApp('finder')} onMinimize={() => handleMinimizeApp('finder')} onClose={() => handleCloseApp('finder')}>
             <Finder />
@@ -418,7 +409,6 @@ export default function HUD() {
                 
                 setOpenApps(prev => prev.includes(item.id) ? prev : [...prev, item.id]);
                 setActiveApp(item.id);
-                // Un-minimize if it was minimized
                 setMinimizedApps(prev => prev.filter(app => app !== item.id));
               }}
             />
