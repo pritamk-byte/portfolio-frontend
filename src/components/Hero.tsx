@@ -7,9 +7,13 @@ import { Command, ArrowRight, Folder, FileText, Globe, TerminalSquare } from 'lu
 const wallpapers = [
   { id: 'default-blur', type: 'css', name: 'Dynamic Aura' },
   { id: 'monterey', type: 'image', name: 'Monterey Abstract', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'big-sur', type: 'image', name: 'Big Sur Wave', url: 'https://images.unsplash.com/photo-1604871000636-074fa5117945?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'ventura', type: 'image', name: 'Ventura Waves', url: 'https://images.unsplash.com/photo-1620121692029-d088224ddc74?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'big-sur', type: 'image', name: 'Big Sur Coast', url: 'https://images.unsplash.com/photo-1604871000636-074fa5117945?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'catalina', type: 'image', name: 'Catalina Island', url: 'https://images.unsplash.com/photo-1559825481-12a05cc00344?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'yosemite', type: 'image', name: 'Yosemite Valley', url: 'https://images.unsplash.com/photo-1426604966848-d7adac402bff?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'sonoma', type: 'image', name: 'Sonoma Horizon', url: 'https://images.unsplash.com/photo-1506744626753-1fa28f673b0c?q=80&w=2564&auto=format&fit=crop' },
   { id: 'mojave', type: 'image', name: 'Mojave Night', url: 'https://images.unsplash.com/photo-1542224566-6e85f2e6772f?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'sierra', type: 'image', name: 'High Sierra', url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2564&auto=format&fit=crop' }
+  { id: 'aurora', type: 'image', name: 'Aurora Borealis', url: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?q=80&w=2564&auto=format&fit=crop' }
 ];
 
 const desktopIcons = [

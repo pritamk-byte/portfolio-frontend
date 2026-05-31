@@ -26,14 +26,16 @@ export default function CustomCursor() {
       }
     };
 
+    // Inside CustomCursor.tsx
+
     const addHoverState = () => {
       if (isNative) return;
       if (cursorRingRef.current) {
         gsap.to(cursorRingRef.current, {
-          width: 48, height: 48, // Reduced from 80px
-          backgroundColor: "rgba(255, 255, 255, 0.1)", // Apple Frosted Glass
+          width: 48, height: 48,
+          backgroundColor: "rgba(255, 255, 255, 0.15)", // Slightly brighter frosted look
           borderColor: "transparent",
-          backdropFilter: "blur(2px)",
+          // Removed backdrop filter here!
           duration: 0.2
         });
       }
@@ -46,10 +48,10 @@ export default function CustomCursor() {
       if (isNative) return;
       if (cursorRingRef.current) {
         gsap.to(cursorRingRef.current, {
-          width: 24, height: 24, // Reduced from 40px
+          width: 24, height: 24,
           backgroundColor: "transparent",
           borderColor: "rgba(161, 161, 170, 0.5)", 
-          backdropFilter: "blur(0px)",
+          // Removed backdrop filter here!
           duration: 0.2
         });
       }
@@ -57,7 +59,7 @@ export default function CustomCursor() {
         gsap.to(cursorDotRef.current, { opacity: 1, duration: 0.2 });
       }
     };
-
+    
     // Hides the custom cursor completely when hovering over iframes/inputs
     const showNativeCursor = () => {
       isNative = true;
