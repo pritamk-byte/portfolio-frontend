@@ -1,9 +1,7 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Command, ArrowRight, Folder, FileText, Globe, TerminalSquare, Gamepad2, Crosshair, FileCode } from 'lucide-react';
 
-// --- NEW WALLPAPER ENGINE ---
-// Supports both your original CSS gradients and high-res image URLs
 const wallpapers = [
   { id: 'default-blur', type: 'css', name: 'Dynamic Aura' },
   { id: 'monterey', type: 'image', name: 'Monterey Abstract', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop' },
@@ -22,10 +20,96 @@ const desktopIcons = [
   { id: 'alumni', label: 'ConnectAlumni', icon: Globe, color: 'text-orange-400', fill: '' },
   { id: 'resume', label: 'Resume.pdf', icon: FileText, color: 'text-white', fill: '' },
   { id: 'terminal', label: 'Terminal', icon: TerminalSquare, color: 'text-emerald-400', fill: '' },
-
   { id: 'snake', label: 'Data Worm', icon: Gamepad2, color: 'text-emerald-400', fill: '' },
   { id: 'minesweeper', label: 'Cyber Sweeper', icon: Crosshair, color: 'text-red-400', fill: '' },
 ];
+
+// --- NEW COMPONENT: The Draggable Physics Engine for Icons ---
+function DraggableIcon({ 
+  item, index, isSelected, onClick, onDoubleClick 
+}: { 
+  item: any, index: number, isSelected: boolean, onClick: (e: React.MouseEvent, id: string) => void, onDoubleClick: (id: string) => void 
+}) {
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const [isReady, setIsReady] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0 });
+
+  // Calculate initial position on mount (Auto-wrapping grid on the right)
+  useEffect(() => {
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+    
+    const rightMargin = screenWidth < 768 ? 20 : 40;
+    const topMargin = 60;
+    const verticalSpacing = 100;
+    const horizontalSpacing = 90;
+    
+    // 1. Calculate how many icons can safely fit in one vertical column 
+    // (Subtracting 120px to leave room for the bottom dock)
+    const maxPerColumn = Math.max(1, Math.floor((screenHeight - topMargin - 120) / verticalSpacing));
+    
+    // 2. Determine which column and row this specific icon belongs in
+    const column = Math.floor(index / maxPerColumn);
+    const row = index % maxPerColumn;
+    
+    // 3. Apply the positions (stacking leftward as columns fill up)
+    setPos({
+      x: screenWidth - rightMargin - 80 - (column * horizontalSpacing),
+      y: topMargin + (row * verticalSpacing)
+    });
+    
+    setIsReady(true);
+  }, [index]);
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    onClick(e as unknown as React.MouseEvent, item.id);
+    setIsDragging(true);
+    dragStart.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isDragging) {
+      setPos({ x: e.clientX - dragStart.current.x, y: e.clientY - dragStart.current.y });
+    }
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    setIsDragging(false);
+    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+  };
+
+  if (!isReady) return null;
+
+  const Icon = item.icon;
+
+  return (
+    <div 
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick(item.id); }}
+      className={`absolute flex flex-col items-center gap-1 w-20 group touch-none
+        ${isDragging ? 'cursor-grabbing z-50' : 'cursor-default z-10'}
+      `}
+      style={{ left: pos.x, top: pos.y }}
+    >
+      <div className={`w-14 h-14 flex items-center justify-center rounded-lg transition-all duration-200
+        ${isSelected ? 'bg-white/20 border border-white/30 shadow-lg' : 'bg-transparent border border-transparent'}
+      `}>
+        <Icon size={32} className={`${item.color} ${item.fill} drop-shadow-lg`} strokeWidth={1.5} />
+      </div>
+      <div className={`text-[11px] font-medium px-1.5 py-0.5 rounded text-center leading-tight tracking-wide drop-shadow-md select-none
+        ${isSelected ? 'bg-blue-600 text-white' : 'text-zinc-100 bg-transparent'}
+      `}>
+        {item.label}
+      </div>
+    </div>
+  );
+}
 
 export default function Hero() {
   const [progress, setProgress] = useState(0);
@@ -34,7 +118,6 @@ export default function Hero() {
   const [contextMenu, setContextMenu] = useState({ show: false, x: 0, y: 0 });
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   
-  // Submit State Lock prevents double rapid-fire executions!
   const [isSubmittingLogin, setIsSubmittingLogin] = useState(false);
 
   const currentWallpaper = wallpapers[themeIdx];
@@ -74,8 +157,8 @@ export default function Hero() {
     
     setIsSubmittingLogin(true); 
     setBootStage('desktop');
-
-    window.dispatchEvent(new Event('system-unlock'));
+    
+    window.dispatchEvent(new Event('system-unlock')); 
     
     setTimeout(() => {
       window.dispatchEvent(new CustomEvent('launch-app', { detail: 'profile' }));
@@ -90,7 +173,7 @@ export default function Hero() {
   const handleIconClick = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     if (window.innerWidth < 768) {
-      launchApp(id);
+      launchApp(id); // Auto-launch on mobile tap
     } else {
       setSelectedIcon(id);
     }
@@ -119,35 +202,23 @@ export default function Hero() {
         )}
       </div>
 
+      {/* --- RENDER DRAGGABLE ICONS --- */}
       {bootStage === 'desktop' && (
-        <div className="absolute top-12 right-4 md:right-6 flex flex-col gap-4 md:gap-6 z-10 p-2 md:p-4">
-          {desktopIcons.map((item) => {
-            const isSelected = selectedIcon === item.id;
-            const Icon = item.icon;
-            
-            return (
-              <div 
+        <div className="absolute inset-0 z-10 overflow-hidden pointer-events-none">
+          <div className="relative w-full h-full pointer-events-auto">
+            {desktopIcons.map((item, index) => (
+              <DraggableIcon 
                 key={item.id}
-                className="flex flex-col items-center gap-1 w-20 cursor-default group touch-manipulation"
-                onClick={(e) => handleIconClick(e, item.id)}
-                onDoubleClick={(e) => {
-                  e.stopPropagation();
+                item={item}
+                index={index}
+                isSelected={selectedIcon === item.id}
+                onClick={handleIconClick}
+                onDoubleClick={() => {
                   if (window.innerWidth >= 768) launchApp(item.id);
                 }}
-              >
-                <div className={`w-14 h-14 flex items-center justify-center rounded-lg transition-all duration-200
-                  ${isSelected ? 'bg-white/20 border border-white/30 shadow-lg' : 'bg-transparent border border-transparent'}
-                `}>
-                  <Icon size={32} className={`${item.color} ${item.fill} drop-shadow-lg`} strokeWidth={1.5} />
-                </div>
-                <div className={`text-[11px] font-medium px-1.5 py-0.5 rounded text-center leading-tight tracking-wide drop-shadow-md
-                  ${isSelected ? 'bg-blue-600 text-white' : 'text-zinc-100 bg-transparent'}
-                `}>
-                  {item.label}
-                </div>
-              </div>
-            );
-          })}
+              />
+            ))}
+          </div>
         </div>
       )}
 
