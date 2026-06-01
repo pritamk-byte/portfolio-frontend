@@ -243,8 +243,6 @@ function DockItem({ item, isOpen, isActive, mouseX, onClick }: any) {
   }, [mouseX]);
 
   const Icon = item.icon;
-  // Determine if the mouse is actively in the dock
-  const isHovering = mouseX !== null;
 
   return (
     <div className="group relative flex flex-col items-center justify-end shrink-0">
@@ -257,13 +255,14 @@ function DockItem({ item, isOpen, isActive, mouseX, onClick }: any) {
         ref={ref}
         onClick={onClick}
         style={{ width: `${size}px`, height: `${size}px`, willChange: 'width, height' }}
-        // 👇 JITTER FIX: Disable CSS transitions while mouse is moving, re-enable when mouse leaves
+        // 👇 THE FIX: A constant, ultra-fast 100ms transition. 
+        // It tracks the mouse smoothly without lagging, and cushions the entry/exit!
         className={`flex items-center justify-center bg-zinc-900/80 border rounded-2xl hover:bg-zinc-800 origin-bottom shadow-lg interactive focus:outline-none mb-2
-          ${isHovering ? 'transition-none' : 'transition-all duration-300 ease-out'}
+          transition-all duration-100 ease-out
           ${isActive ? 'border-emerald-500/50' : 'border-zinc-700/50 hover:border-zinc-500'}
         `}
       >
-        <Icon className={`${item.color} w-[45%] h-[45%] transition-all duration-200`} />
+        <Icon className={`${item.color} w-[45%] h-[45%] transition-all duration-100`} />
       </button>
       <div className={`absolute bottom-0 w-1 h-1 rounded-full bg-zinc-400 transition-all duration-300 ${isOpen ? 'opacity-100 shadow-[0_0_8px_rgba(161,161,170,1)]' : 'opacity-0 translate-y-2'}`}></div>
     </div>
