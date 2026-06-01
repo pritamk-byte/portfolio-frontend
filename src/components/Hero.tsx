@@ -268,6 +268,18 @@ export default function Hero() {
           style={{ top: contextMenu.y, left: contextMenu.x }}
         >
           <button className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white">New Folder</button>
+          
+          {/* 👇 SPOTLIGHT SEARCH OPTION */}
+          <button 
+            className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"
+            onClick={() => {
+              window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }));
+            }}
+          >
+            <span>Spotlight Search</span>
+            <span className="text-[10px] opacity-60 font-mono tracking-widest">⌘K</span>
+          </button>
+
           <div className="h-px bg-white/10 my-1"></div>
           
           <div className="px-4 py-1 text-zinc-500 font-semibold text-[10px] tracking-wider uppercase">Wallpaper</div>

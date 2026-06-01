@@ -13,8 +13,16 @@ export default function TerminalGuide() {
 
         <div className="space-y-6">
           <p className="text-zinc-400">
-            Welcome to Pritam_OS. The terminal is a fully functional command-line interface connected to a live Java Spring Boot backend. Below is a list of commands you can use to interact with the system.
+            Welcome to Pritam_OS. The terminal is a fully functional command-line interface connected to a live Java Spring Boot backend. Below is a list of commands and system shortcuts you can use to interact with the environment.
           </p>
+
+          {/* Global Shortcuts */}
+          <section>
+            <h2 className="text-amber-400 font-bold mb-3 border-b border-zinc-800 pb-1">System Shortcuts</h2>
+            <ul className="space-y-2">
+              <li><code className="text-blue-400 font-bold">Cmd + K</code> or <code className="text-blue-400 font-bold">Ctrl + K</code> <span className="text-zinc-500">- Launch global Spotlight Search overlay</span></li>
+            </ul>
+          </section>
 
           {/* Core Profile */}
           <section>

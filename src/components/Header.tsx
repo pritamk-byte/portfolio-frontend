@@ -24,10 +24,10 @@ export default function Header() {
   const [wifiOn, setWifiOn] = useState(true);
   const [btOn, setBtOn] = useState(true);
 
-  // 👇 ADDED: The lock screen visibility state
+  // The lock screen visibility state
   const [isUnlocked, setIsUnlocked] = useState(false);
 
-  // 👇 ADDED: Listen for the unlock event from Hero.tsx
+  // Listen for the unlock event from Hero.tsx
   useEffect(() => {
     const handleUnlock = () => setIsUnlocked(true);
     window.addEventListener('system-unlock', handleUnlock);
@@ -56,13 +56,13 @@ export default function Header() {
       overlay.id = 'brightness-overlay';
       overlay.style.position = 'fixed';
       overlay.style.inset = '0';
-      overlay.style.zIndex = '99998'; // Just below Spotlight and Context Menus
+      overlay.style.zIndex = '99998'; 
       overlay.style.pointerEvents = 'none';
       overlay.style.backgroundColor = 'black';
       overlay.style.transition = 'opacity 0.1s ease-out';
       document.body.appendChild(overlay);
     }
-    // Convert 20-100 slider value into an opacity mask (max 80% darkness)
+    // Convert 20-100 slider value into an opacity mask
     overlay.style.opacity = `${(100 - brightness) / 100}`;
   }, [brightness]);
 
@@ -87,7 +87,7 @@ export default function Header() {
     }
   };
 
-  // 👇 ADDED: Abort rendering if the system is still locked!
+  // Abort rendering if the system is still locked!
   if (!isUnlocked) return null;
 
   const year = currentDateObj.getFullYear();
@@ -173,7 +173,15 @@ export default function Header() {
         <div className="hidden md:flex items-center gap-3 text-zinc-400">
           <BatteryMedium size={14} className="hover:text-emerald-400 transition-colors cursor-default" />
           <Wifi size={12} className={wifiOn ? 'text-white' : 'text-zinc-600'} />
-          <Search size={12} strokeWidth={2.5} className="hover:text-white transition-colors cursor-default" />
+          
+          {/* SEARCH ICON WITH ⌘K HINT */}
+          <div 
+            className="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded px-1.5 py-0.5 cursor-pointer hover:bg-white/10 transition-colors group interactive"
+            onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
+          >
+            <Search size={12} strokeWidth={2.5} className="text-zinc-400 group-hover:text-white transition-colors" />
+            <span className="text-[9px] font-mono text-zinc-500 group-hover:text-zinc-300 transition-colors">⌘K</span>
+          </div>
         </div>
 
         {/* --- CONTROL CENTER BUTTON --- */}
@@ -229,7 +237,6 @@ export default function Header() {
                 <span className="text-xs font-semibold text-white mb-2 ml-1">Display</span>
                 <div className="relative flex items-center bg-zinc-900 rounded-full h-7 border border-zinc-700 overflow-hidden">
                   <div className="absolute left-2 text-zinc-400 z-10 pointer-events-none"><Sun size={12} /></div>
-                  {/* Fake Fill Bar */}
                   <div className="absolute top-0 left-0 h-full bg-white transition-all duration-75" style={{ width: `${brightness}%` }}></div>
                   <input 
                     type="range" min="20" max="100" 
