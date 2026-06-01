@@ -14,10 +14,9 @@ const wallpapers = [
   { id: 'deep-space', type: 'image', name: 'Deep Space', url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2564&auto=format&fit=crop' },
   { id: 'neon-fluid', type: 'image', name: 'Neon Fluid', url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2564&auto=format&fit=crop' },
   { id: 'obsidian-peaks', type: 'image', name: 'Obsidian Peaks', url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'abyss', type: 'image', name: 'Ocean Abyss', url: 'https://images.unsplash.com/photo-1558470598-a5dda9640f68?q=80&w=2564&auto=format&fit=crop' },
   { id: 'sahara-dunes', type: 'image', name: 'Sahara Dunes', url: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=2564&auto=format&fit=crop' },
   { id: 'abstract-ink', type: 'image', name: 'Macro Fluid', url: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'circuit-board', type: 'image', name: 'Silicon Core', url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'misty-pines', type: 'image', name: 'Misty Pines', url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=2564&auto=format&fit=crop' },
   { id: 'vibrant-mesh', type: 'image', name: 'Vibrant Mesh', url: 'https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=2564&auto=format&fit=crop' }
 ];
 
@@ -44,7 +43,6 @@ function DraggableIcon({
   const dragStart = useRef({ x: 0, y: 0 });
   const originalPos = useRef({ x: 0, y: 0 });
 
-  // Calculate initial position on mount (Auto-wrapping grid)
   useEffect(() => {
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
@@ -87,7 +85,6 @@ function DraggableIcon({
       const topBarHeight = 28;
       const dockHeight = 100;
 
-      // Keep within viewport constraints
       newX = Math.max(0, Math.min(window.innerWidth - iconWidth, newX));
       newY = Math.max(topBarHeight, Math.min(window.innerHeight - dockHeight - iconHeight, newY));
 
@@ -99,7 +96,6 @@ function DraggableIcon({
     setIsDragging(false);
     (e.target as HTMLElement).releasePointerCapture(e.pointerId);
 
-    // Grid Element Collision Engine
     const currentRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const allIcons = document.querySelectorAll('.desktop-icon');
     let hasOverlap = false;
@@ -120,7 +116,6 @@ function DraggableIcon({
       }
     });
 
-    // Snap smoothly backwards to previous safe matrix spot if dropped on another item
     if (hasOverlap) {
       setPos({ x: originalPos.current.x, y: originalPos.current.y });
     }
@@ -167,9 +162,22 @@ export default function Hero() {
   
   const [isSubmittingLogin, setIsSubmittingLogin] = useState(false);
 
+  // --- SESSION PERSISTENCE & RANDOM WALLPAPER ---
   useEffect(() => {
+    // 1. Randomize desktop wallpaper secretly on mount
     const randomIdx = Math.floor(Math.random() * wallpapers.length);
     setThemeIdx(randomIdx);
+
+    // 2. Check if user already logged in during this session
+    const isUnlocked = sessionStorage.getItem('pritam_os_unlocked') === 'true';
+    if (isUnlocked) {
+      setProgress(100);
+      setBootStage('desktop');
+      // Fire unlock event slightly later to ensure components are mounted
+      setTimeout(() => {
+        window.dispatchEvent(new Event('system-unlock'));
+      }, 100);
+    }
   }, []);
 
   const currentWallpaper = wallpapers[themeIdx];
@@ -181,6 +189,10 @@ export default function Hero() {
 
   useEffect(() => {
     if (bootStage !== 'loading') return;
+    
+    // Safety check: don't start boot sequence if they are already unlocked
+    if (sessionStorage.getItem('pritam_os_unlocked') === 'true') return;
+
     const interval = setInterval(() => {
       setProgress(prev => {
         if (prev >= 100) {
@@ -213,6 +225,9 @@ export default function Hero() {
     if (bootStage !== 'login') return; 
     
     setIsSubmittingLogin(true); 
+    
+    // 👇 Save login state to the browser session!
+    sessionStorage.setItem('pritam_os_unlocked', 'true');
     setBootStage('desktop');
     
     window.dispatchEvent(new Event('system-unlock')); 
@@ -337,33 +352,41 @@ export default function Hero() {
         </div>
       )}
 
-      {/* LOGIN PROFILE SCREEN */}
+      {/* 👇 DEDICATED LOCKSCREEN WITH MACOS BLURRED WALLPAPER */}
       <div 
-        className={`absolute inset-0 z-40 flex flex-col items-center justify-center backdrop-blur-3xl bg-black/40 transition-all duration-1000 ease-in-out
+        className={`absolute inset-0 z-40 flex flex-col items-center justify-center bg-cover bg-center transition-all duration-1000 ease-in-out
           ${bootStage === 'login' ? 'opacity-100 pointer-events-auto scale-100' : 'opacity-0 pointer-events-none scale-105'}
           ${bootStage === 'loading' && 'hidden'}
         `}
+        style={{ backgroundImage: `url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop')` }}
       >
-        <div className="w-24 h-24 rounded-full bg-linear-to-tr from-zinc-700 to-zinc-500 flex items-center justify-center border border-zinc-500 shadow-2xl mb-4 overflow-hidden">
-           <span className="text-4xl text-white font-medium drop-shadow-md">P</span>
+        {/* Dark Glass Overlay */}
+        <div className="absolute inset-0 backdrop-blur-2xl bg-black/30"></div>
+
+        {/* Profile Content (z-10 to sit above the glass) */}
+        <div className="z-10 flex flex-col items-center">
+          <div className="w-24 h-24 rounded-full bg-linear-to-tr from-zinc-700 to-zinc-500 flex items-center justify-center border border-zinc-500 shadow-2xl mb-4 overflow-hidden">
+             <span className="text-4xl text-white font-medium drop-shadow-md">P</span>
+          </div>
+          <h1 className="text-xl font-semibold text-white mb-6 tracking-wide drop-shadow-lg">Pritam Poddar</h1>
+          <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} className="relative flex items-center group">
+            <input 
+              type="password"
+              placeholder="Enter Password"
+              className="w-48 h-8 rounded-full bg-white/10 border border-white/20 px-4 text-xs text-white placeholder:text-white/50 backdrop-blur-md outline-none focus:bg-white/20 focus:border-white/40 transition-all pr-8 tracking-widest text-center"
+              autoFocus
+            />
+            <button type="submit" className="absolute right-1 w-6 h-6 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/40 transition-colors opacity-0 group-hover:opacity-100 focus-within:opacity-100">
+              <ArrowRight size={12} className="text-white" />
+            </button>
+          </form>
+          <div className="text-[10px] text-white/40 mt-3 font-medium">Press Enter to log in</div>
+          <p className="mt-8 text-[10px] text-zinc-400 font-mono tracking-widest uppercase flex items-center gap-2">
+            <span className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse"></span>Software Engineer
+          </p>
         </div>
-        <h1 className="text-xl font-semibold text-white mb-6 tracking-wide drop-shadow-lg">Pritam Poddar</h1>
-        <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} className="relative flex items-center group">
-          <input 
-            type="password"
-            placeholder="Enter Password"
-            className="w-48 h-8 rounded-full bg-white/10 border border-white/20 px-4 text-xs text-white placeholder:text-white/50 backdrop-blur-md outline-none focus:bg-white/20 focus:border-white/40 transition-all pr-8 tracking-widest text-center"
-            autoFocus
-          />
-          <button type="submit" className="absolute right-1 w-6 h-6 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/40 transition-colors opacity-0 group-hover:opacity-100 focus-within:opacity-100">
-            <ArrowRight size={12} className="text-white" />
-          </button>
-        </form>
-        <div className="text-[10px] text-white/40 mt-3 font-medium">Press Enter to log in</div>
-        <p className="mt-8 text-[10px] text-zinc-400 font-mono tracking-widest uppercase flex items-center gap-2">
-          <span className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse"></span>Software Engineer
-        </p>
       </div>
+      
     </div>
   );
 }
