@@ -244,8 +244,10 @@ function DockItem({ item, isOpen, isActive, mouseX, onClick }: any) {
       <button
         ref={ref}
         onClick={onClick}
-        style={{ width: `${size}px`, height: `${size}px` }}
-        className={`flex items-center justify-center bg-zinc-900/80 border rounded-2xl hover:bg-zinc-800 transition-colors duration-150 origin-bottom shadow-lg interactive focus:outline-none mb-2
+        // 👇 ADDED willChange to optimize rendering
+        style={{ width: `${size}px`, height: `${size}px`, willChange: 'width, height' }}
+        // 👇 CHANGED transition-colors to transition-all duration-200 ease-out to smooth out the snap
+        className={`flex items-center justify-center bg-zinc-900/80 border rounded-2xl hover:bg-zinc-800 transition-all duration-200 ease-out origin-bottom shadow-lg interactive focus:outline-none mb-2
           ${isActive ? 'border-emerald-500/50' : 'border-zinc-700/50 hover:border-zinc-500'}
         `}
       >
@@ -257,7 +259,6 @@ function DockItem({ item, isOpen, isActive, mouseX, onClick }: any) {
 }
 
 export default function HUD() {
-  // ✅ MOVED INSIDE THE COMPONENT BODY:
   const [isUnlocked, setIsUnlocked] = useState(false);
 
   useEffect(() => {
