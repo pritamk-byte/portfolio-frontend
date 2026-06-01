@@ -13,18 +13,12 @@ const wallpapers = [
   { id: 'dark-matter', type: 'image', name: 'Dark Matter', url: 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?q=80&w=2564&auto=format&fit=crop' },
   { id: 'deep-space', type: 'image', name: 'Deep Space', url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2564&auto=format&fit=crop' },
   { id: 'neon-fluid', type: 'image', name: 'Neon Fluid', url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2564&auto=format&fit=crop' },
-  
-  // 👇 10 BRAND NEW HIGH-RES DESKTOP WALLPAPERS 👇
   { id: 'obsidian-peaks', type: 'image', name: 'Obsidian Peaks', url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'tokyo-night', type: 'image', name: 'Tokyo Neon', url: 'https://images.unsplash.com/photo-1542931287-023b922fa89b?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'geometric-dark', type: 'image', name: 'Minimal Geometry', url: 'https://images.unsplash.com/photo-1604147495798-57beb5d6af73?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'abyss', type: 'image', name: 'Ocean Abyss', url: 'https://images.unsplash.com/photo-1558470598-a5dda9640f68?q=80&w=2564&auto=format&fit=crop' },
   { id: 'sahara-dunes', type: 'image', name: 'Sahara Dunes', url: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=2564&auto=format&fit=crop' },
   { id: 'abstract-ink', type: 'image', name: 'Macro Fluid', url: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?q=80&w=2564&auto=format&fit=crop' },
   { id: 'circuit-board', type: 'image', name: 'Silicon Core', url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2564&auto=format&fit=crop' },
   { id: 'misty-pines', type: 'image', name: 'Misty Pines', url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'vibrant-mesh', type: 'image', name: 'Vibrant Mesh', url: 'https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'lunar-eclipse', type: 'image', name: 'Lunar Eclipse', url: 'https://images.unsplash.com/photo-1532693322450-2cb5c511067d?q=80&w=2564&auto=format&fit=crop' }
+  { id: 'vibrant-mesh', type: 'image', name: 'Vibrant Mesh', url: 'https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=2564&auto=format&fit=crop' }
 ];
 
 const desktopIcons = [
