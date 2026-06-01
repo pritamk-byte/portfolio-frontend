@@ -9,13 +9,22 @@ const wallpapers = [
   { id: 'big-sur', type: 'image', name: 'Big Sur Coast', url: 'https://images.unsplash.com/photo-1604871000636-074fa5117945?q=80&w=2564&auto=format&fit=crop' },
   { id: 'catalina', type: 'image', name: 'Catalina Island', url: 'https://images.unsplash.com/photo-1559825481-12a05cc00344?q=80&w=2564&auto=format&fit=crop' },
   { id: 'yosemite', type: 'image', name: 'Yosemite Valley', url: 'https://images.unsplash.com/photo-1426604966848-d7adac402bff?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'sonoma', type: 'image', name: 'Sonoma Horizon', url: 'https://images.unsplash.com/photo-1506744626753-1fa28f673b0c?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'mojave', type: 'image', name: 'Mojave Night', url: 'https://images.unsplash.com/photo-1542224566-6e85f2e6772f?q=80&w=2564&auto=format&fit=crop' },
   { id: 'aurora', type: 'image', name: 'Aurora Borealis', url: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'cyber-grid', type: 'image', name: 'Cyber Grid', url: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2564&auto=format&fit=crop' },
   { id: 'dark-matter', type: 'image', name: 'Dark Matter', url: 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?q=80&w=2564&auto=format&fit=crop' },
   { id: 'deep-space', type: 'image', name: 'Deep Space', url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'neon-fluid', type: 'image', name: 'Neon Fluid', url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2564&auto=format&fit=crop' }
+  { id: 'neon-fluid', type: 'image', name: 'Neon Fluid', url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2564&auto=format&fit=crop' },
+  
+  // 👇 10 BRAND NEW HIGH-RES DESKTOP WALLPAPERS 👇
+  { id: 'obsidian-peaks', type: 'image', name: 'Obsidian Peaks', url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'tokyo-night', type: 'image', name: 'Tokyo Neon', url: 'https://images.unsplash.com/photo-1542931287-023b922fa89b?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'geometric-dark', type: 'image', name: 'Minimal Geometry', url: 'https://images.unsplash.com/photo-1604147495798-57beb5d6af73?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'abyss', type: 'image', name: 'Ocean Abyss', url: 'https://images.unsplash.com/photo-1558470598-a5dda9640f68?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'sahara-dunes', type: 'image', name: 'Sahara Dunes', url: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'abstract-ink', type: 'image', name: 'Macro Fluid', url: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'circuit-board', type: 'image', name: 'Silicon Core', url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'misty-pines', type: 'image', name: 'Misty Pines', url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'vibrant-mesh', type: 'image', name: 'Vibrant Mesh', url: 'https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'lunar-eclipse', type: 'image', name: 'Lunar Eclipse', url: 'https://images.unsplash.com/photo-1532693322450-2cb5c511067d?q=80&w=2564&auto=format&fit=crop' }
 ];
 
 const desktopIcons = [
