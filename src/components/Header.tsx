@@ -267,7 +267,7 @@ export default function Header() {
                     </div>
                     <div>
                       <div className="text-xs font-semibold text-white">Wi-Fi</div>
-                      <div className="text-[10px] text-zinc-400">{wifiOn ? 'Home_Network' : 'Off'}</div>
+                      <div className="text-[10px] text-zinc-400">{wifiOn ? 'HomeNetwork' : 'Off'}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 cursor-pointer" onClick={() => setBtOn(!btOn)}>
