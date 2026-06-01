@@ -49,13 +49,21 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    // 1. Check if they saved a theme previously
-    const savedTheme = localStorage.getItem('pritam_os_theme') as 'Dark' | 'Light' | 'Midnight';
-    if (savedTheme) setThemeMode(savedTheme);
+    // 1. Check memory, but default to Dark if things get weird
+    const savedTheme = localStorage.getItem('pritam_os_theme');
+    
+    if (savedTheme === 'Midnight') {
+      setThemeMode('Midnight');
+    } else {
+      // Safely lock everything else (including broken Light mode memory) back to Dark
+      setThemeMode('Dark');
+      localStorage.setItem('pritam_os_theme', 'Dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
   }, []);
 
   useEffect(() => {
-    // 2. Whenever theme changes, update the HTML tag and save to memory
+    // 2. Whenever theme changes via the button, update the HTML tag
     document.documentElement.setAttribute('data-theme', themeMode.toLowerCase());
     localStorage.setItem('pritam_os_theme', themeMode);
   }, [themeMode]);

@@ -209,6 +209,17 @@ export default function Hero() {
     return () => clearInterval(interval);
   }, [bootStage]);
 
+  // --- LISTEN FOR WALLPAPER CHANGES FROM THE CONTROL CENTER ---
+  useEffect(() => {
+    const handleNextWallpaper = () => {
+      // This uses the exact same logic as your right-click menu!
+      setThemeIdx(prev => (prev + 1) % wallpapers.length);
+    };
+    
+    window.addEventListener('next-wallpaper', handleNextWallpaper);
+    return () => window.removeEventListener('next-wallpaper', handleNextWallpaper);
+  }, []);
+
   useEffect(() => {
     const closeMenu = () => setContextMenu(prev => ({ ...prev, show: false }));
     window.addEventListener('click', closeMenu);
