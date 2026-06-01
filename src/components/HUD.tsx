@@ -1,6 +1,9 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { Terminal as TerminalIcon, FileText, Mail, GitBranch, X, Minus, Maximize2, Globe, Users, User, LayoutGrid } from 'lucide-react';
+import { Terminal as TerminalIcon, FileText, Mail, GitBranch, X, Minus, Maximize2, Globe, Users, User, LayoutGrid, Gamepad2, Crosshair, FileCode } from 'lucide-react';
+import TerminalGuide from './TerminalGuide';
+import Game from './Game'; 
+import CyberSweeper from './CyberSweeper';
 import Finder from './Finder'; 
 import InteractiveTerminal from './Terminal';
 import Contact from './Contact'; 
@@ -367,6 +370,12 @@ export default function HUD() {
             <InteractiveTerminal />
           </DesktopWindow>
         )}
+        {openApps.includes('guide') && (
+          <DesktopWindow id="guide" title="commands.txt - Text Editor" icon={FileCode} isActive={activeApp === 'guide'} isMinimized={minimizedApps.includes('guide')} isMobile={isMobile} onFocus={() => setActiveApp('guide')} onMinimize={() => handleMinimizeApp('guide')} onClose={() => handleCloseApp('guide')}>
+            <TerminalGuide />
+          </DesktopWindow>
+        )}
+
         {openApps.includes('esp') && (
           <DesktopWindow id="esp" title="Preview - ESP Core" icon={Globe} isActive={activeApp === 'esp'} isMinimized={minimizedApps.includes('esp')} isMobile={isMobile} onFocus={() => setActiveApp('esp')} onMinimize={() => handleMinimizeApp('esp')} onClose={() => handleCloseApp('esp')}>
             <iframe src="https://esp-frontend-s719.vercel.app/" className="w-full h-full border-none bg-white" title="ESP Platform" />
@@ -385,6 +394,18 @@ export default function HUD() {
         {openApps.includes('contact') && (
           <DesktopWindow id="contact" title="pritam@os:~/mail_client" icon={Mail} isActive={activeApp === 'contact'} isMinimized={minimizedApps.includes('contact')} isMobile={isMobile} onFocus={() => setActiveApp('contact')} onMinimize={() => handleMinimizeApp('contact')} onClose={() => handleCloseApp('contact')}>
             <Contact />
+          </DesktopWindow>
+        )}
+
+        {openApps.includes('snake') && (
+          <DesktopWindow id="snake" title="Data_Worm.exe" icon={Gamepad2} isActive={activeApp === 'snake'} isMinimized={minimizedApps.includes('snake')} isMobile={isMobile} onFocus={() => setActiveApp('snake')} onMinimize={() => handleMinimizeApp('snake')} onClose={() => handleCloseApp('snake')}>
+            <Game />
+          </DesktopWindow>
+        )}
+
+        {openApps.includes('minesweeper') && (
+          <DesktopWindow id="minesweeper" title="Cyber_Sweeper.exe" icon={Crosshair} isActive={activeApp === 'minesweeper'} isMinimized={minimizedApps.includes('minesweeper')} isMobile={isMobile} onFocus={() => setActiveApp('minesweeper')} onMinimize={() => handleMinimizeApp('minesweeper')} onClose={() => handleCloseApp('minesweeper')}>
+            <CyberSweeper />
           </DesktopWindow>
         )}
       </>

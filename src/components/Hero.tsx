@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Command, ArrowRight, Folder, FileText, Globe, TerminalSquare } from 'lucide-react';
+import { Command, ArrowRight, Folder, FileText, Globe, TerminalSquare, Gamepad2, Crosshair, FileCode } from 'lucide-react';
 
 // --- NEW WALLPAPER ENGINE ---
 // Supports both your original CSS gradients and high-res image URLs
@@ -18,9 +18,13 @@ const wallpapers = [
 
 const desktopIcons = [
   { id: 'profile', label: 'Pritam_OS', icon: Folder, color: 'text-blue-400', fill: 'fill-blue-400/20' },
+  { id: 'guide', label: 'commands.txt', icon: FileCode, color: 'text-zinc-300', fill: '' },
   { id: 'alumni', label: 'ConnectAlumni', icon: Globe, color: 'text-orange-400', fill: '' },
   { id: 'resume', label: 'Resume.pdf', icon: FileText, color: 'text-white', fill: '' },
   { id: 'terminal', label: 'Terminal', icon: TerminalSquare, color: 'text-emerald-400', fill: '' },
+
+  { id: 'snake', label: 'Data Worm', icon: Gamepad2, color: 'text-emerald-400', fill: '' },
+  { id: 'minesweeper', label: 'Cyber Sweeper', icon: Crosshair, color: 'text-red-400', fill: '' },
 ];
 
 export default function Hero() {

@@ -153,7 +153,7 @@ const STATIC_COMMANDS: Record<string, CommandHistory[]> = {
     { type: 'error', text: '██████╔╝ ██║       ██████╔╝' },
     { type: 'error', text: '██╔══██╗ ██║       ██╔══██╗' },
     { type: 'error', text: '██║  ██║ ╚██████╗  ██████╔╝' },
-    { type: 'success', text: '>>> Ee Sala Cup Namde! <<<' }
+    { type: 'success', text: '>>> Ee Sala Nu Cup Namdu! <<<' }
   ],
   'help': [
     { type: 'system', text: 'AVAILABLE COMMANDS:' },
