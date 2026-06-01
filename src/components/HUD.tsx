@@ -1,6 +1,10 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { Terminal as TerminalIcon, FileText, Mail, GitBranch, X, Minus, Maximize2, Globe, Users, User, LayoutGrid, Gamepad2, Crosshair, FileCode, Palette } from 'lucide-react';
+import { Terminal as TerminalIcon, FileText, Mail, GitBranch, X, Minus, Maximize2, Globe, Users, User, LayoutGrid, Gamepad2, Crosshair, FileCode, Palette, SquarePen } from 'lucide-react';
+
+// 👇 ADD NOTES IMPORT
+import NetworkApp from './NetworkApp';
+import NotesApp from './NotesApp';
 import TerminalGuide from './TerminalGuide';
 import PaintApp from './PaintApp';
 import Game from './Game'; 
@@ -430,6 +434,18 @@ export default function HUD() {
         {openApps.includes('paint') && (
           <DesktopWindow id="paint" title="Studio" icon={Palette} isActive={activeApp === 'paint'} isMinimized={minimizedApps.includes('paint')} isMobile={isMobile} onFocus={() => setActiveApp('paint')} onMinimize={() => handleMinimizeApp('paint')} onClose={() => handleCloseApp('paint')}>
             <PaintApp />
+          </DesktopWindow>
+        )}
+
+        {openApps.includes('notes') && (
+          <DesktopWindow id="notes" title="Notes" icon={SquarePen} isActive={activeApp === 'notes'} isMinimized={minimizedApps.includes('notes')} isMobile={isMobile} onFocus={() => setActiveApp('notes')} onMinimize={() => handleMinimizeApp('notes')} onClose={() => handleCloseApp('notes')}>
+            <NotesApp />
+          </DesktopWindow>
+        )}
+
+        {openApps.includes('network') && (
+          <DesktopWindow id="network" title="Network & Contacts" icon={Users} isActive={activeApp === 'network'} isMinimized={minimizedApps.includes('network')} isMobile={isMobile} onFocus={() => setActiveApp('network')} onMinimize={() => handleMinimizeApp('network')} onClose={() => handleCloseApp('network')}>
+            <NetworkApp />
           </DesktopWindow>
         )}
       </>

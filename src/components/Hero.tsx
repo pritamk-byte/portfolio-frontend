@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { Command, ArrowRight, Folder, FileText, Globe, TerminalSquare, Gamepad2, Crosshair, FileCode, Palette } from 'lucide-react';
+import { Command, ArrowRight, Folder, FileText, Globe, TerminalSquare, Gamepad2, Crosshair, FileCode, Palette, SquarePen, Users } from 'lucide-react';
 
 const wallpapers = [
   { id: 'default-blur', type: 'css', name: 'Dynamic Aura' },
@@ -26,6 +26,8 @@ const desktopIcons = [
   { id: 'alumni', label: 'ConnectAlumni', icon: Globe, color: 'text-orange-400', fill: '' },
   { id: 'resume', label: 'Resume.pdf', icon: FileText, color: 'text-white', fill: '' },
   { id: 'paint', label: 'Studio.app', icon: Palette, color: 'text-pink-400', fill: '' },
+  { id: 'notes', label: 'Notes.app', icon: SquarePen, color: 'text-amber-400', fill: '' },
+  { id: 'network', label: 'Network.app', icon: Users, color: 'text-indigo-400', fill: '' },
   { id: 'terminal', label: 'Terminal', icon: TerminalSquare, color: 'text-emerald-400', fill: '' },
   { id: 'snake', label: 'Data Worm', icon: Gamepad2, color: 'text-emerald-400', fill: '' },
   { id: 'minesweeper', label: 'Cyber Sweeper', icon: Crosshair, color: 'text-red-400', fill: '' },
