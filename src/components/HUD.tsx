@@ -147,12 +147,18 @@ function DesktopWindow({
         onPointerDownCapture={onFocus}
         className={`fixed flex flex-col overflow-hidden bg-[#050505] border border-zinc-800 shadow-2xl rounded-xl
           ${isMinimized ? 'opacity-0 scale-50 translate-y-[20vh] pointer-events-none' : isActive ? 'z-[95] shadow-[0_0_40px_rgba(0,0,0,0.5)] opacity-100 scale-100 translate-y-0' : 'z-[80] opacity-0 pointer-events-none md:pointer-events-auto md:opacity-95 md:hover:opacity-100 scale-100 translate-y-0'}
-          ${isDragging || isResizing ? 'transition-none' : 'transition-all duration-300 ease-out'}
+          ${isDragging || isResizing ? 'transition-none' : 'transition-transform duration-300 ease-out'}
         `}
+        // 👇 HIGH-PERFORMANCE GPU ACCELERATION
         style={
           isMobile ? { left: '8px', top: '70px', right: '8px', bottom: '90px', width: 'auto', height: 'auto' } : 
-          isMaximized ? { left: '0px', top: '28px', right: '0px', bottom: '0px', width: 'auto', height: 'auto', borderRadius: '0px' } : 
-          { left: `${pos.x}px`, top: `${pos.y}px`, width: `${size.width}px`, height: `${size.height}px` }
+          isMaximized ? { left: '0px', top: '28px', right: '0px', bottom: '0px', width: 'auto', height: 'auto', borderRadius: '0px', transform: 'none' } : 
+          { 
+            left: 0, top: 0, 
+            transform: `translate3d(${pos.x}px, ${pos.y}px, 0)`, 
+            width: `${size.width}px`, height: `${size.height}px`,
+            willChange: 'transform'
+          }
         }
       >
         {!isMobile && (
@@ -185,6 +191,10 @@ function DesktopWindow({
         )}
 
         <div className="flex-1 w-full h-full relative bg-black overflow-hidden flex flex-col">
+          {/* 👇 INVISIBLE SHIELD: Prevents iframes from swallowing the mouse during drags/resizes */}
+          {(isDragging || isResizing) && (
+            <div className="absolute inset-0 z-[100] cursor-grabbing"></div>
+          )}
           {children}
         </div>
 
@@ -233,6 +243,8 @@ function DockItem({ item, isOpen, isActive, mouseX, onClick }: any) {
   }, [mouseX]);
 
   const Icon = item.icon;
+  // Determine if the mouse is actively in the dock
+  const isHovering = mouseX !== null;
 
   return (
     <div className="group relative flex flex-col items-center justify-end shrink-0">
@@ -244,10 +256,10 @@ function DockItem({ item, isOpen, isActive, mouseX, onClick }: any) {
       <button
         ref={ref}
         onClick={onClick}
-        // 👇 ADDED willChange to optimize rendering
         style={{ width: `${size}px`, height: `${size}px`, willChange: 'width, height' }}
-        // 👇 CHANGED transition-colors to transition-all duration-200 ease-out to smooth out the snap
-        className={`flex items-center justify-center bg-zinc-900/80 border rounded-2xl hover:bg-zinc-800 transition-all duration-200 ease-out origin-bottom shadow-lg interactive focus:outline-none mb-2
+        // 👇 JITTER FIX: Disable CSS transitions while mouse is moving, re-enable when mouse leaves
+        className={`flex items-center justify-center bg-zinc-900/80 border rounded-2xl hover:bg-zinc-800 origin-bottom shadow-lg interactive focus:outline-none mb-2
+          ${isHovering ? 'transition-none' : 'transition-all duration-300 ease-out'}
           ${isActive ? 'border-emerald-500/50' : 'border-zinc-700/50 hover:border-zinc-500'}
         `}
       >
