@@ -24,18 +24,7 @@ const desktopIcons = [
   { id: 'minesweeper', label: 'Cyber Sweeper', icon: Crosshair, color: 'text-red-400', fill: '' },
 ];
 
-// --- NEW COMPONENT: The Draggable Physics Engine for Icons ---
-function DraggableIcon({ 
-  item, index, isSelected, onClick, onDoubleClick 
-}: { 
-  item: any, index: number, isSelected: boolean, onClick: (e: React.MouseEvent, id: string) => void, onDoubleClick: (id: string) => void 
-}) {
-  const [pos, setPos] = useState({ x: 0, y: 0 });
-  const [isReady, setIsReady] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStart = useRef({ x: 0, y: 0 });
-
-// --- UPGRADED COMPONENT: Draggable Physics Engine with Collision & Bounding ---
+// --- DRAGGABLE PHYSICS ENGINE COMPONENT ---
 function DraggableIcon({ 
   item, index, isSelected, onClick, onDoubleClick 
 }: { 
@@ -46,7 +35,7 @@ function DraggableIcon({
   const [isDragging, setIsDragging] = useState(false);
   
   const dragStart = useRef({ x: 0, y: 0 });
-  const originalPos = useRef({ x: 0, y: 0 }); // Remembers where it was before the drag
+  const originalPos = useRef({ x: 0, y: 0 });
 
   // Calculate initial position on mount (Auto-wrapping grid)
   useEffect(() => {
@@ -75,7 +64,6 @@ function DraggableIcon({
     onClick(e as unknown as React.MouseEvent, item.id);
     setIsDragging(true);
     
-    // Save exact starting point in case we need to snap back
     originalPos.current = { x: pos.x, y: pos.y }; 
     dragStart.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
     
@@ -87,13 +75,12 @@ function DraggableIcon({
       let newX = e.clientX - dragStart.current.x;
       let newY = e.clientY - dragStart.current.y;
 
-      // 1. BOUNDING BOX LOGIC: Prevent dragging off-screen
-      const iconWidth = 80;  // 5rem (w-20)
-      const iconHeight = 100; // approximate height with text
+      const iconWidth = 80;  
+      const iconHeight = 100; 
       const topBarHeight = 28;
       const dockHeight = 100;
 
-      // Clamp coordinates between 0 and Max Screen Width/Height
+      // Keep within viewport constraints
       newX = Math.max(0, Math.min(window.innerWidth - iconWidth, newX));
       newY = Math.max(topBarHeight, Math.min(window.innerHeight - dockHeight - iconHeight, newY));
 
@@ -105,18 +92,17 @@ function DraggableIcon({
     setIsDragging(false);
     (e.target as HTMLElement).releasePointerCapture(e.pointerId);
 
-    // 2. COLLISION DETECTION: Check if we dropped it on another icon
+    // Grid Element Collision Engine
     const currentRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const allIcons = document.querySelectorAll('.desktop-icon');
     let hasOverlap = false;
-    const buffer = 15; // 15px personal space bubble around icons
+    const buffer = 15;
 
     allIcons.forEach(icon => {
-      if (icon === e.currentTarget) return; // Don't collide with yourself
+      if (icon === e.currentTarget) return; 
       
       const rect = icon.getBoundingClientRect();
       
-      // AABB (Axis-Aligned Bounding Box) Collision Math
       if (
         currentRect.left < rect.right + buffer &&
         currentRect.right > rect.left - buffer &&
@@ -127,7 +113,7 @@ function DraggableIcon({
       }
     });
 
-    // If it hit another icon, snap it smoothly back to where it started!
+    // Snap smoothly backwards to previous safe matrix spot if dropped on another item
     if (hasOverlap) {
       setPos({ x: originalPos.current.x, y: originalPos.current.y });
     }
@@ -144,11 +130,10 @@ function DraggableIcon({
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
       onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick(item.id); }}
-      // 👇 Notice the new "desktop-icon" class and the transition states
       className={`absolute flex flex-col items-center gap-1 w-20 group touch-none desktop-icon
         ${isDragging ? 'cursor-grabbing z-50 transition-none' : 'cursor-default z-10 transition-all duration-300 ease-out'}
       `}
-      style={{ left: pos.x, top: pos.y }}
+      style={{ left: `${pos.x}px`, top: `${pos.y}px` }}
     >
       <div className={`w-14 h-14 flex items-center justify-center rounded-lg transition-all duration-200
         ${isSelected ? 'bg-white/20 border border-white/30 shadow-lg' : 'bg-transparent border border-transparent'}
@@ -164,55 +149,7 @@ function DraggableIcon({
   );
 }
 
-  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    e.stopPropagation();
-    onClick(e as unknown as React.MouseEvent, item.id);
-    setIsDragging(true);
-    dragStart.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  };
-
-  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (isDragging) {
-      setPos({ x: e.clientX - dragStart.current.x, y: e.clientY - dragStart.current.y });
-    }
-  };
-
-  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    setIsDragging(false);
-    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
-  };
-
-  if (!isReady) return null;
-
-  const Icon = item.icon;
-
-  return (
-    <div 
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
-      onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick(item.id); }}
-      className={`absolute flex flex-col items-center gap-1 w-20 group touch-none
-        ${isDragging ? 'cursor-grabbing z-50' : 'cursor-default z-10'}
-      `}
-      style={{ left: pos.x, top: pos.y }}
-    >
-      <div className={`w-14 h-14 flex items-center justify-center rounded-lg transition-all duration-200
-        ${isSelected ? 'bg-white/20 border border-white/30 shadow-lg' : 'bg-transparent border border-transparent'}
-      `}>
-        <Icon size={32} className={`${item.color} ${item.fill} drop-shadow-lg`} strokeWidth={1.5} />
-      </div>
-      <div className={`text-[11px] font-medium px-1.5 py-0.5 rounded text-center leading-tight tracking-wide drop-shadow-md select-none
-        ${isSelected ? 'bg-blue-600 text-white' : 'text-zinc-100 bg-transparent'}
-      `}>
-        {item.label}
-      </div>
-    </div>
-  );
-}
-
+// --- MAIN HERO COMPONENT ---
 export default function Hero() {
   const [progress, setProgress] = useState(0);
   const [bootStage, setBootStage] = useState<'loading' | 'login' | 'desktop'>('loading');
@@ -275,7 +212,7 @@ export default function Hero() {
   const handleIconClick = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     if (window.innerWidth < 768) {
-      launchApp(id); // Auto-launch on mobile tap
+      launchApp(id); 
     } else {
       setSelectedIcon(id);
     }
@@ -304,7 +241,7 @@ export default function Hero() {
         )}
       </div>
 
-      {/* --- RENDER DRAGGABLE ICONS --- */}
+      {/* RENDER DRAGGABLE ICONS */}
       {bootStage === 'desktop' && (
         <div className="absolute inset-0 z-10 overflow-hidden pointer-events-none">
           <div className="relative w-full h-full pointer-events-auto">
@@ -324,6 +261,7 @@ export default function Hero() {
         </div>
       )}
 
+      {/* CONTEXT MENU */}
       {contextMenu.show && (
         <div 
           className="fixed z-[9999] w-56 bg-[#1e1e1e]/80 backdrop-blur-3xl border border-white/10 rounded-xl shadow-2xl py-1.5 text-[12px] font-sans text-zinc-200"
@@ -332,7 +270,6 @@ export default function Hero() {
           <button className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white">New Folder</button>
           <div className="h-px bg-white/10 my-1"></div>
           
-          {/* Wallpaper Change Button */}
           <div className="px-4 py-1 text-zinc-500 font-semibold text-[10px] tracking-wider uppercase">Wallpaper</div>
           <button 
             className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center" 
@@ -348,6 +285,7 @@ export default function Hero() {
         </div>
       )}
 
+      {/* BOOT SCREEN */}
       {bootStage === 'loading' && (
         <div className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center">
           <Command size={56} className="text-zinc-200 mb-12 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" strokeWidth={1.5} />
@@ -357,6 +295,7 @@ export default function Hero() {
         </div>
       )}
 
+      {/* LOGIN PROFILE SCREEN */}
       <div 
         className={`absolute inset-0 z-40 flex flex-col items-center justify-center backdrop-blur-3xl bg-black/40 transition-all duration-1000 ease-in-out
           ${bootStage === 'login' ? 'opacity-100 pointer-events-auto scale-100' : 'opacity-0 pointer-events-none scale-105'}
