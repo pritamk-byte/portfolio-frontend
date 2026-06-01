@@ -108,7 +108,7 @@ export default function CyberSweeper() {
   };
 
   return (
-    <div className="w-full h-full bg-[#111] flex flex-col items-center justify-center font-mono text-zinc-200 select-none">
+    <div className="w-full h-full bg-[#111] flex flex-col items-center justify-center font-mono text-os-text select-none">
       
       <div className="w-full max-w-[400px] flex justify-between items-center mb-6 px-4">
         <div>
@@ -127,7 +127,7 @@ export default function CyberSweeper() {
         </div>
       </div>
 
-      <div className="relative bg-black border border-zinc-800 rounded-lg p-2 shadow-2xl">
+      <div className="relative bg-black border border-os-border rounded-lg p-2 shadow-2xl">
         <div className="grid gap-[1px] bg-zinc-800 border border-zinc-700" style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))` }}>
           {board.map((row, y) => row.map((cell, x) => (
             <div 

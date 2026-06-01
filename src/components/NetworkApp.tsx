@@ -29,7 +29,7 @@ export default function NetworkApp() {
   };
 
   return (
-    <div className="w-full h-full bg-[#0a0a0a] text-zinc-200 font-sans relative overflow-hidden flex flex-col">
+    <div className="w-full h-full bg-[#0a0a0a] text-os-text font-sans relative overflow-hidden flex flex-col">
       
       {/* Animated Ambient Background (Tailwind v4 Optimized!) */}
       <div className="absolute top-[-20%] left-[-10%] w-125 h-125 rounded-full bg-indigo-600/20 blur-[120px] pointer-events-none"></div>
@@ -41,7 +41,7 @@ export default function NetworkApp() {
         <div className="flex flex-col items-center text-center mb-10 mt-4">
           <div className="relative group cursor-default mb-4">
             <div className="absolute -inset-1 bg-linear-to-r from-blue-500 to-indigo-500 rounded-full blur opacity-40 group-hover:opacity-70 transition duration-500"></div>
-            <div className="relative w-24 h-24 rounded-full bg-[#141414] border border-white/10 flex items-center justify-center overflow-hidden shadow-2xl">
+            <div className="relative w-24 h-24 rounded-full bg-os-panel border border-os-border flex items-center justify-center overflow-hidden shadow-2xl">
               <span className="text-4xl font-bold bg-linear-to-br from-white to-zinc-500 text-transparent bg-clip-text">P</span>
             </div>
           </div>
@@ -58,7 +58,7 @@ export default function NetworkApp() {
           <a href="https://github.com/pritamk-byte" target="_blank" rel="noreferrer" 
              className="group relative flex items-center gap-4 p-4 rounded-xl bg-white/3 border border-white/5 hover:bg-white/8 hover:border-white/15 transition-all duration-300 overflow-hidden">
             <div className="w-12 h-12 rounded-lg bg-[#1a1a1a] flex items-center justify-center border border-white/5 group-hover:scale-110 transition-transform duration-300">
-              <GithubIcon className="text-zinc-300 group-hover:text-white transition-colors" />
+              <GithubIcon className="text-os-text group-hover:text-white transition-colors" />
             </div>
             <div className="flex-1">
               <div className="text-sm font-medium text-white flex items-center gap-2">GitHub <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 transition-opacity -translate-y-1 group-hover:translate-y-0" /></div>
@@ -69,7 +69,7 @@ export default function NetworkApp() {
           <a href="https://linkedin.com/in/im-pritamk" target="_blank" rel="noreferrer" 
              className="group relative flex items-center gap-4 p-4 rounded-xl bg-white/3 border border-white/5 hover:bg-[#0a66c2]/10 hover:border-[#0a66c2]/30 transition-all duration-300 overflow-hidden">
             <div className="w-12 h-12 rounded-lg bg-[#1a1a1a] flex items-center justify-center border border-white/5 group-hover:scale-110 transition-transform duration-300 group-hover:bg-[#0a66c2]">
-              <LinkedinIcon className="text-zinc-300 group-hover:text-white transition-colors" />
+              <LinkedinIcon className="text-os-text group-hover:text-white transition-colors" />
             </div>
             <div className="flex-1">
               <div className="text-sm font-medium text-white flex items-center gap-2">LinkedIn <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 transition-opacity -translate-y-1 group-hover:translate-y-0" /></div>
@@ -101,14 +101,14 @@ export default function NetworkApp() {
                 </div>
                 <div>
                   <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Direct Email</div>
-                  <div className="text-sm text-zinc-200 font-mono mt-0.5">{email}</div>
+                  <div className="text-sm text-os-text font-mono mt-0.5">{email}</div>
                 </div>
               </div>
               
               <button 
                 onClick={handleCopyEmail}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all duration-300
-                  ${copied ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-white/5 text-zinc-300 border border-white/10 hover:bg-white/10 hover:text-white'}
+                  ${copied ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-white/5 text-os-text border border-os-border hover:bg-white/10 hover:text-white'}
                 `}
               >
                 {copied ? <Check size={14} /> : <Copy size={14} />}

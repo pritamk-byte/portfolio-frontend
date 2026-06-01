@@ -85,10 +85,10 @@ export default function Spotlight() {
       ></div>
 
       {/* Spotlight Modal */}
-      <div className="relative w-full max-w-[650px] bg-[#1e1e1e]/90 backdrop-blur-3xl border border-zinc-700 rounded-xl shadow-[0_30px_60px_rgba(0,0,0,0.6)] overflow-hidden flex flex-col animate-[fadeIn_0.15s_ease-out]">
+      <div className="relative w-full max-w-[650px] bg-os-window/90 backdrop-blur-3xl border border-zinc-700 rounded-xl shadow-[0_30px_60px_rgba(0,0,0,0.6)] overflow-hidden flex flex-col animate-[fadeIn_0.15s_ease-out]">
         
         {/* Search Bar */}
-        <div className="flex items-center px-4 h-14 border-b border-zinc-800">
+        <div className="flex items-center px-4 h-14 border-b border-os-border">
           <Search size={22} className="text-zinc-400 mr-3" strokeWidth={1.5} />
           <input
             ref={inputRef}
@@ -120,7 +120,7 @@ export default function Spotlight() {
                   onMouseEnter={() => setSelectedIndex(idx)}
                   onClick={() => launchApp(item.id)}
                   className={`flex items-center px-4 py-2 mx-2 rounded-lg cursor-default transition-colors
-                    ${isSelected ? 'bg-[#0058d0] text-white' : 'text-zinc-300 hover:bg-zinc-800'}
+                    ${isSelected ? 'bg-[#0058d0] text-white' : 'text-os-text hover:bg-zinc-800'}
                   `}
                 >
                   <Icon size={18} className={`mr-3 ${isSelected ? 'text-white' : 'text-zinc-400'}`} />

@@ -1,31 +1,73 @@
 @import "tailwindcss";
 
+/* 1. Base Variables (Defaults to Dark Mode) */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Standard Next.js vars */
+  --background: #000000;
+  --foreground: #ededed;
+
+  /* Pritam_OS Custom Theme Vars */
+  --os-bg: #000000;
+  --os-window: #1e1e1e;
+  --os-panel: #141414;
+  --os-text: #f4f4f4;
+  --os-border: rgba(255, 255, 255, 0.1);
 }
 
+/* 2. Light Mode Override */
+[data-theme="light"] {
+  --background: #f3f4f6;
+  --foreground: #171717;
+
+  --os-bg: #f3f4f6;          /* Light gray desktop */
+  --os-window: #ffffff;      /* Pure white windows */
+  --os-panel: #f9fafb;       /* Slightly off-white sidebars */
+  --os-text: #111827;        /* Near-black text */
+  --os-border: rgba(0, 0, 0, 0.1); /* Dark border */
+}
+
+/* 3. Midnight Mode Override */
+[data-theme="midnight"] {
+  --background: #020617;
+  --foreground: #e2e8f0;
+
+  --os-bg: #020617;          /* Extremely dark slate */
+  --os-window: #0f172a;      /* Dark blue window */
+  --os-panel: #090e1a;       /* Darker blue sidebar */
+  --os-text: #e2e8f0;        /* Soft blue-white text */
+  --os-border: rgba(148, 163, 184, 0.1); /* Soft blue border */
+}
+
+/* 4. Tailwind v4 Theme Mapping */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  
+  /* Expose OS variables as Tailwind utility classes (e.g., bg-os-window) */
+  --color-os-bg: var(--os-bg);
+  --color-os-window: var(--os-window);
+  --color-os-panel: var(--os-panel);
+  --color-os-text: var(--os-text);
+  --color-os-border: var(--os-border);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
-/* --- X-RAY MODE --- */
+html {
+  scroll-behavior: smooth;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
 /* --- X-RAY MODE --- */
 .xray-mode * {
   outline: 1px solid rgba(16, 185, 129, 0.4) !important;
@@ -34,11 +76,4 @@ body {
 .xray-mode img, .xray-mode video, .xray-mode iframe {
   opacity: 0.3 !important;
   filter: grayscale(100%) !important;
-}
-html {
-  scroll-behavior: smooth;
-}
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(200%); }
 }

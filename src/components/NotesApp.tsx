@@ -87,13 +87,13 @@ export default function NotesApp() {
     n.content.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (!isLoaded) return <div className="w-full h-full bg-[#1e1e1e]"></div>;
+  if (!isLoaded) return <div className="w-full h-full bg-os-window"></div>;
 
   return (
-    <div className="w-full h-full flex bg-[#1e1e1e] font-sans text-zinc-200 overflow-hidden">
+    <div className="w-full h-full flex bg-os-window font-sans text-os-text overflow-hidden">
       
       {/* LEFT SIDEBAR: Note List */}
-      <div className="w-64 border-r border-white/10 bg-[#141414] flex flex-col shrink-0">
+      <div className="w-64 border-r border-os-border bg-os-panel flex flex-col shrink-0">
         
         {/* Sidebar Header */}
         <div className="h-14 px-4 border-b border-white/5 flex items-center justify-between shrink-0">
@@ -104,7 +104,7 @@ export default function NotesApp() {
               placeholder="Search" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-md py-1 pl-8 pr-3 text-xs text-zinc-300 outline-none focus:border-white/20 transition-all placeholder:text-zinc-600"
+              className="w-full bg-white/5 border border-os-border rounded-md py-1 pl-8 pr-3 text-xs text-os-text outline-none focus:border-white/20 transition-all placeholder:text-zinc-600"
             />
           </div>
           <button 
@@ -143,7 +143,7 @@ export default function NotesApp() {
       </div>
 
       {/* RIGHT SIDE: Editor Area */}
-      <div className="flex-1 flex flex-col bg-[#1e1e1e] relative">
+      <div className="flex-1 flex flex-col bg-os-window relative">
         {activeNote ? (
           <>
             <div className="h-14 px-6 border-b border-white/5 flex items-center justify-between shrink-0">
@@ -160,7 +160,7 @@ export default function NotesApp() {
             <textarea
               value={activeNote.content}
               onChange={(e) => updateNote(e.target.value)}
-              className="flex-1 w-full p-6 bg-transparent border-none outline-none resize-none text-sm leading-relaxed text-zinc-300 custom-scrollbar"
+              className="flex-1 w-full p-6 bg-transparent border-none outline-none resize-none text-sm leading-relaxed text-os-text custom-scrollbar"
               placeholder="Start typing..."
               spellCheck={false}
             />

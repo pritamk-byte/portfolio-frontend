@@ -150,7 +150,7 @@ function DesktopWindow({
       <div 
         ref={windowRef}
         onPointerDownCapture={onFocus}
-        className={`fixed flex flex-col overflow-hidden bg-[#050505] border border-zinc-800 shadow-2xl rounded-xl
+        className={`fixed flex flex-col overflow-hidden bg-[#050505] border border-os-border shadow-2xl rounded-xl
           ${isMinimized ? 'opacity-0 scale-50 translate-y-[20vh] pointer-events-none' : isActive ? 'z-[95] shadow-[0_0_40px_rgba(0,0,0,0.5)] opacity-100 scale-100 translate-y-0' : 'z-[80] opacity-0 pointer-events-none md:pointer-events-auto md:opacity-95 md:hover:opacity-100 scale-100 translate-y-0'}
           ${isDragging || isResizing ? 'transition-none' : 'transition-transform duration-300 ease-out'}
         `}
@@ -173,7 +173,7 @@ function DesktopWindow({
             onPointerUp={handleDragUp}
             onPointerCancel={handleDragUp}
             onDoubleClick={() => setIsMaximized(!isMaximized)}
-            className="h-12 bg-[#111] border-b border-zinc-800 flex items-center justify-between px-4 select-none touch-none shrink-0 cursor-grab active:cursor-grabbing"
+            className="h-12 bg-[#111] border-b border-os-border flex items-center justify-between px-4 select-none touch-none shrink-0 cursor-grab active:cursor-grabbing"
           >
             <div className="flex gap-2 w-20">
               <button onClick={(e) => { e.stopPropagation(); playSystemSound('click'); onClose(); }} className="w-3.5 h-3.5 rounded-full bg-red-500 hover:bg-red-400 flex items-center justify-center group interactive">
@@ -351,7 +351,7 @@ export default function HUD() {
   return (
     <>
       {isMobile && openApps.length > 0 && (
-        <div className="fixed top-8 left-2 right-2 h-8 z-[110] flex gap-1 overflow-x-auto bg-[#111111]/80 backdrop-blur-md rounded-lg p-1 border border-zinc-800 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="fixed top-8 left-2 right-2 h-8 z-[110] flex gap-1 overflow-x-auto bg-[#111111]/80 backdrop-blur-md rounded-lg p-1 border border-os-border [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {openApps.map(appId => {
             const appInfo = dockItems.find(item => item.id === appId);
             const isActive = activeApp === appId;
@@ -454,7 +454,7 @@ export default function HUD() {
         <div 
           onMouseMove={(e) => setMouseX(e.clientX)}
           onMouseLeave={() => setMouseX(null)}
-          className="flex items-end gap-2 md:gap-3 px-3 md:px-4 pb-2 pt-4 bg-[#0a0a0a]/90 backdrop-blur-2xl border border-zinc-800/80 rounded-3xl shadow-[0_20px_40px_rgba(0,0,0,0.8)] h-[75px] overflow-x-auto md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex items-end gap-2 md:gap-3 px-3 md:px-4 pb-2 pt-4 bg-[#0a0a0a]/90 backdrop-blur-2xl border border-os-border/80 rounded-3xl shadow-[0_20px_40px_rgba(0,0,0,0.8)] h-[75px] overflow-x-auto md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {dockItems.map((item) => (
             <DockItem 

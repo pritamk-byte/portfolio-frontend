@@ -23,7 +23,7 @@ export default function SystemProfile() {
     <div className="absolute inset-0 w-full h-full bg-[#000000] font-sans flex text-[13px] overflow-hidden select-none">
       
       {/* LEFT PANE: Sidebar */}
-      <div className="w-60 bg-[#1e1e1e]/60 backdrop-blur-2xl border-r border-white/[0.05] flex flex-col shrink-0 z-10">
+      <div className="w-60 bg-os-window/60 backdrop-blur-2xl border-r border-white/[0.05] flex flex-col shrink-0 z-10">
         
         {/* Search Bar */}
         <div className="px-4 py-4">
@@ -32,7 +32,7 @@ export default function SystemProfile() {
             <input 
               type="text" 
               placeholder="Search" 
-              className="bg-transparent border-none outline-none w-full text-[13px] text-zinc-200 placeholder:text-zinc-500"
+              className="bg-transparent border-none outline-none w-full text-[13px] text-os-text placeholder:text-zinc-500"
             />
           </div>
         </div>
@@ -57,7 +57,7 @@ export default function SystemProfile() {
             <button 
               onClick={() => setActiveTab('general')}
               className={`flex items-center gap-3 px-2 py-1.5 rounded-lg transition-colors text-left
-                ${activeTab === 'general' ? 'bg-[#0058d0] text-white' : 'text-zinc-200 hover:bg-white/[0.05]'}
+                ${activeTab === 'general' ? 'bg-[#0058d0] text-white' : 'text-os-text hover:bg-white/[0.05]'}
               `}
             >
               <SettingIcon icon={Fingerprint} colorClass="bg-zinc-500" />
@@ -67,7 +67,7 @@ export default function SystemProfile() {
             <button 
               onClick={() => setActiveTab('developer')}
               className={`flex items-center gap-3 px-2 py-1.5 rounded-lg transition-colors text-left
-                ${activeTab === 'developer' ? 'bg-[#0058d0] text-white' : 'text-zinc-200 hover:bg-white/[0.05]'}
+                ${activeTab === 'developer' ? 'bg-[#0058d0] text-white' : 'text-os-text hover:bg-white/[0.05]'}
               `}
             >
               <SettingIcon icon={Code2} colorClass="bg-[#0058d0]" />
@@ -77,7 +77,7 @@ export default function SystemProfile() {
             <button 
               onClick={() => setActiveTab('vibe')}
               className={`flex items-center gap-3 px-2 py-1.5 rounded-lg transition-colors text-left
-                ${activeTab === 'vibe' ? 'bg-[#0058d0] text-white' : 'text-zinc-200 hover:bg-white/[0.05]'}
+                ${activeTab === 'vibe' ? 'bg-[#0058d0] text-white' : 'text-os-text hover:bg-white/[0.05]'}
               `}
             >
               <SettingIcon icon={Zap} colorClass="bg-orange-500" />
@@ -107,7 +107,7 @@ export default function SystemProfile() {
                 </div>
               </div>
               
-              <div className="p-5 text-[13px] text-zinc-300 leading-relaxed border-t border-white/[0.05]">
+              <div className="p-5 text-[13px] text-os-text leading-relaxed border-t border-white/[0.05]">
                 I build digital solutions where code strictly dictates the form. My approach favors logical clarity over unnecessary complexity.<br /><br />
                 I am a developer who genuinely enjoys translating complex computational problems into practical, grounded solutions. I let the code speak for itself.
               </div>
@@ -118,14 +118,14 @@ export default function SystemProfile() {
               <div className="flex items-center justify-between p-3.5">
                 <div className="flex items-center gap-3.5">
                   <SettingIcon icon={Cpu} colorClass="bg-purple-500" />
-                  <span className="text-zinc-200">Full-Stack Core Focus</span>
+                  <span className="text-os-text">Full-Stack Core Focus</span>
                 </div>
                 <Check size={16} className="text-[#34c759] mr-1" strokeWidth={3} />
               </div>
               <div className="flex items-center justify-between p-3.5">
                 <div className="flex items-center gap-3.5">
                   <SettingIcon icon={Monitor} colorClass="bg-zinc-500" />
-                  <span className="text-zinc-200">Minimalist UI Aesthetic</span>
+                  <span className="text-os-text">Minimalist UI Aesthetic</span>
                 </div>
                 <Check size={16} className="text-[#34c759] mr-1" strokeWidth={3} />
               </div>
@@ -143,21 +143,21 @@ export default function SystemProfile() {
               <div className="flex items-center justify-between p-3.5">
                 <div className="flex items-center gap-3.5">
                   <SettingIcon icon={TerminalSquare} colorClass="bg-red-500" />
-                  <span className="text-zinc-200">Java</span>
+                  <span className="text-os-text">Java</span>
                 </div>
                 <span className="text-zinc-500 text-xs mr-1">Stable Build</span>
               </div>
               <div className="flex items-center justify-between p-3.5">
                 <div className="flex items-center gap-3.5">
                   <SettingIcon icon={TerminalSquare} colorClass="bg-yellow-500" />
-                  <span className="text-zinc-200">Python</span>
+                  <span className="text-os-text">Python</span>
                 </div>
                 <span className="text-zinc-500 text-xs mr-1">Stable Build</span>
               </div>
               <div className="flex items-center justify-between p-3.5">
                 <div className="flex items-center gap-3.5">
                   <SettingIcon icon={TerminalSquare} colorClass="bg-indigo-500" />
-                  <span className="text-zinc-200">C</span>
+                  <span className="text-os-text">C</span>
                 </div>
                 <span className="text-zinc-500 text-xs mr-1">Stable Build</span>
               </div>
@@ -168,7 +168,7 @@ export default function SystemProfile() {
               <div className="flex items-center justify-between p-3.5">
                 <div className="flex items-center gap-3.5">
                   <SettingIcon icon={Database} colorClass="bg-blue-500" />
-                  <span className="text-zinc-200">PostgreSQL / SQL</span>
+                  <span className="text-os-text">PostgreSQL / SQL</span>
                 </div>
                 <span className="text-zinc-500 text-xs mr-1">Active Connect</span>
               </div>
@@ -179,19 +179,19 @@ export default function SystemProfile() {
               <div className="flex items-center justify-between p-3.5">
                 <div className="flex items-center gap-3.5">
                   <SettingIcon icon={Layers} colorClass="bg-[#00c7b7]" />
-                  <span className="text-zinc-200">React.js</span>
+                  <span className="text-os-text">React.js</span>
                 </div>
               </div>
               <div className="flex items-center justify-between p-3.5">
                 <div className="flex items-center gap-3.5">
                   <SettingIcon icon={Layers} colorClass="bg-[#34c759]" />
-                  <span className="text-zinc-200">Node.js</span>
+                  <span className="text-os-text">Node.js</span>
                 </div>
               </div>
               <div className="flex items-center justify-between p-3.5">
                 <div className="flex items-center gap-3.5">
                   <SettingIcon icon={Code2} colorClass="bg-zinc-600" />
-                  <span className="text-zinc-200">JavaScript / HTML / CSS</span>
+                  <span className="text-os-text">JavaScript / HTML / CSS</span>
                 </div>
               </div>
             </div>
@@ -217,12 +217,12 @@ export default function SystemProfile() {
 
               <div className="flex flex-col divide-y divide-white/[0.05]">
                 <div className="flex items-center justify-between p-4">
-                  <span className="text-zinc-200 text-[14px]">State Flow</span>
+                  <span className="text-os-text text-[14px]">State Flow</span>
                   <Toggle active={true} />
                 </div>
                 
                 <div className="flex items-center justify-between p-4">
-                  <span className="text-zinc-200 text-[14px]">Overthinking</span>
+                  <span className="text-os-text text-[14px]">Overthinking</span>
                   <Toggle active={false} />
                 </div>
               </div>

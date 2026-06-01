@@ -22,7 +22,7 @@ const wallpapers = [
 
 const desktopIcons = [
   { id: 'profile', label: 'Pritam_OS', icon: Folder, color: 'text-blue-400', fill: 'fill-blue-400/20' },
-  { id: 'guide', label: 'commands.txt', icon: FileCode, color: 'text-zinc-300', fill: '' },
+  { id: 'guide', label: 'commands.txt', icon: FileCode, color: 'text-os-text', fill: '' },
   { id: 'alumni', label: 'ConnectAlumni', icon: Globe, color: 'text-orange-400', fill: '' },
   { id: 'resume', label: 'Resume.pdf', icon: FileText, color: 'text-white', fill: '' },
   { id: 'paint', label: 'Studio.app', icon: Palette, color: 'text-pink-400', fill: '' },
@@ -312,7 +312,7 @@ export default function Hero() {
       {/* CONTEXT MENU */}
       {contextMenu.show && (
         <div 
-          className="fixed z-[9999] w-56 bg-[#1e1e1e]/80 backdrop-blur-3xl border border-white/10 rounded-xl shadow-2xl py-1.5 text-[12px] font-sans text-zinc-200"
+          className="fixed z-[9999] w-56 bg-os-window/80 backdrop-blur-3xl border border-os-border rounded-xl shadow-2xl py-1.5 text-[12px] font-sans text-os-text"
           style={{ top: contextMenu.y, left: contextMenu.x }}
         >
           <button className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white">New Folder</button>
@@ -348,7 +348,7 @@ export default function Hero() {
       {/* BOOT SCREEN */}
       {bootStage === 'loading' && (
         <div className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center">
-          <Command size={56} className="text-zinc-200 mb-12 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" strokeWidth={1.5} />
+          <Command size={56} className="text-os-text mb-12 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" strokeWidth={1.5} />
           <div className="w-48 h-1 bg-zinc-800 rounded-full overflow-hidden">
             <div className="h-full bg-zinc-200 transition-all duration-150 ease-out" style={{ width: `${progress}%` }}></div>
           </div>

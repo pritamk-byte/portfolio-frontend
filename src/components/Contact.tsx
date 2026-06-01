@@ -72,10 +72,10 @@ export default function Contact() {
   };
 
   return (
-    <div className="absolute inset-0 w-full h-full bg-[#1e1e1e] font-sans flex text-sm overflow-hidden">
+    <div className="absolute inset-0 w-full h-full bg-os-window font-sans flex text-sm overflow-hidden">
       
       {/* 1. LEFT PANE: Folders (Hidden on small screens) */}
-      <div className="hidden lg:flex flex-col w-48 bg-[#181818] border-r border-zinc-800/50 pt-2">
+      <div className="hidden lg:flex flex-col w-48 bg-[#181818] border-r border-os-border/50 pt-2">
         <div className="px-4 py-2 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Favorites</div>
         
         <button 
@@ -85,7 +85,7 @@ export default function Contact() {
           <div className="flex items-center gap-3">
             <Inbox size={16} /> Inbox
           </div>
-          <span className="text-xs bg-zinc-700 text-zinc-200 px-1.5 py-0.5 rounded-full">3</span>
+          <span className="text-xs bg-zinc-700 text-os-text px-1.5 py-0.5 rounded-full">3</span>
         </button>
 
         <button className="flex items-center gap-3 px-4 py-2 mx-2 rounded-md text-zinc-400 hover:bg-[#252525] transition-colors mt-1">
@@ -94,10 +94,10 @@ export default function Contact() {
       </div>
 
       {/* 2. MIDDLE PANE: Message List */}
-      <div className="w-full md:w-72 flex-shrink-0 bg-[#1e1e1e] border-r border-zinc-800/50 flex flex-col">
+      <div className="w-full md:w-72 flex-shrink-0 bg-os-window border-r border-os-border/50 flex flex-col">
         {/* Toolbar */}
-        <div className="h-12 border-b border-zinc-800/50 flex items-center justify-between px-4 shrink-0 bg-[#252525]">
-          <div className="font-semibold text-zinc-200">Inbox</div>
+        <div className="h-12 border-b border-os-border/50 flex items-center justify-between px-4 shrink-0 bg-[#252525]">
+          <div className="font-semibold text-os-text">Inbox</div>
           <button 
             onClick={() => setActiveTab('compose')}
             className="text-zinc-400 hover:text-emerald-400 transition-colors"
@@ -108,13 +108,13 @@ export default function Contact() {
         </div>
 
         {/* Search Bar */}
-        <div className="p-2 border-b border-zinc-800/50 shrink-0">
+        <div className="p-2 border-b border-os-border/50 shrink-0">
           <div className="bg-[#2d2d2d] rounded-md flex items-center px-2 py-1.5 text-zinc-400">
             <Search size={14} className="mr-2" />
             <input 
               type="text" 
               placeholder="Search" 
-              className="bg-transparent border-none outline-none w-full text-xs text-zinc-200 placeholder:text-zinc-500"
+              className="bg-transparent border-none outline-none w-full text-xs text-os-text placeholder:text-zinc-500"
             />
           </div>
         </div>
@@ -128,10 +128,10 @@ export default function Contact() {
                 setSelectedMailId(mail.id);
                 setActiveTab('inbox');
               }}
-              className={`w-full text-left p-3 border-b border-zinc-800/30 transition-colors
+              className={`w-full text-left p-3 border-b border-os-border/30 transition-colors
                 ${activeTab === 'inbox' && selectedMailId === mail.id 
                   ? 'bg-[#0058d0] text-white' 
-                  : 'hover:bg-[#252525] text-zinc-300'
+                  : 'hover:bg-[#252525] text-os-text'
                 }
               `}
             >
@@ -151,15 +151,15 @@ export default function Contact() {
       </div>
 
       {/* 3. RIGHT PANE: Message Viewer OR Compose Window */}
-      <div className="flex-1 bg-[#1e1e1e] flex flex-col hidden md:flex">
+      <div className="flex-1 bg-os-window flex flex-col hidden md:flex">
         
         {/* Right Pane Toolbar */}
-        <div className="h-12 border-b border-zinc-800/50 flex items-center justify-end px-4 shrink-0 gap-4 text-zinc-400 bg-[#252525]">
+        <div className="h-12 border-b border-os-border/50 flex items-center justify-end px-4 shrink-0 gap-4 text-zinc-400 bg-[#252525]">
           {activeTab === 'compose' ? (
             <span className="text-xs font-mono text-emerald-500 animate-pulse">Establishing Secure SMTP Relay...</span>
           ) : (
             <>
-              <button className="hover:text-zinc-200"><Archive size={16} /></button>
+              <button className="hover:text-os-text"><Archive size={16} /></button>
               <button className="hover:text-red-400"><Trash2 size={16} /></button>
             </>
           )}
@@ -175,7 +175,7 @@ export default function Contact() {
                 {selectedMail.sender.charAt(0)}
               </div>
               <div>
-                <div className="font-semibold text-zinc-200">{selectedMail.sender}</div>
+                <div className="font-semibold text-os-text">{selectedMail.sender}</div>
                 <div className="text-xs text-zinc-500">
                   To: Pritam Poddar &lt;contact@pritam.dev&gt;
                 </div>
@@ -183,7 +183,7 @@ export default function Contact() {
               <div className="ml-auto text-xs text-zinc-500">{selectedMail.time}</div>
             </div>
 
-            <div className="text-zinc-300 leading-relaxed whitespace-pre-wrap">
+            <div className="text-os-text leading-relaxed whitespace-pre-wrap">
               {selectedMail.body}
             </div>
           </div>
@@ -193,14 +193,14 @@ export default function Contact() {
         {activeTab === 'compose' && (
           <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
             
-            <div className="px-6 py-3 border-b border-zinc-800/50 flex items-center text-zinc-300">
+            <div className="px-6 py-3 border-b border-os-border/50 flex items-center text-os-text">
               <span className="text-zinc-500 w-20">To:</span>
               <span className="bg-[#2d2d2d] px-2 py-1 rounded text-sm flex items-center gap-2">
                 Pritam Poddar &lt;contact@pritam.dev&gt;
               </span>
             </div>
 
-            <div className="px-6 py-3 border-b border-zinc-800/50 flex items-center">
+            <div className="px-6 py-3 border-b border-os-border/50 flex items-center">
               <span className="text-zinc-500 w-20">From:</span>
               <input 
                 type="email" 
@@ -208,11 +208,11 @@ export default function Contact() {
                 required
                 disabled={formState !== 'idle'}
                 placeholder="your.email@example.com" 
-                className="flex-1 bg-transparent border-none outline-none text-zinc-200 placeholder:text-zinc-700"
+                className="flex-1 bg-transparent border-none outline-none text-os-text placeholder:text-zinc-700"
               />
             </div>
 
-            <div className="px-6 py-3 border-b border-zinc-800/50 flex items-center">
+            <div className="px-6 py-3 border-b border-os-border/50 flex items-center">
               <span className="text-zinc-500 w-20">Identity:</span>
               <input 
                 type="text" 
@@ -220,7 +220,7 @@ export default function Contact() {
                 required
                 disabled={formState !== 'idle'}
                 placeholder="Your Name / Company" 
-                className="flex-1 bg-transparent border-none outline-none text-zinc-200 placeholder:text-zinc-700"
+                className="flex-1 bg-transparent border-none outline-none text-os-text placeholder:text-zinc-700"
               />
             </div>
 
@@ -230,12 +230,12 @@ export default function Contact() {
                 required
                 disabled={formState !== 'idle'}
                 placeholder="Compose your message..." 
-                className="w-full h-full bg-transparent border-none outline-none text-zinc-200 placeholder:text-zinc-700 resize-none mac-scrollbar"
+                className="w-full h-full bg-transparent border-none outline-none text-os-text placeholder:text-zinc-700 resize-none mac-scrollbar"
               ></textarea>
             </div>
 
             {/* Compose Footer / Send Button */}
-            <div className="p-4 border-t border-zinc-800/50 bg-[#252525] flex justify-end">
+            <div className="p-4 border-t border-os-border/50 bg-[#252525] flex justify-end">
               <button 
                 type="submit" 
                 disabled={formState !== 'idle'}

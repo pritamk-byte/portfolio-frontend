@@ -18,7 +18,7 @@ const fileSystem: Record<string, any[]> = {
     { id: 'github', name: 'GitHub_Repo.link', type: 'file', icon: FileText, color: 'text-white' }
   ],
   'Documents': [
-    { id: 'profile', name: 'System_Profile.app', type: 'file', icon: UserCircle, color: 'text-zinc-300' },
+    { id: 'profile', name: 'System_Profile.app', type: 'file', icon: UserCircle, color: 'text-os-text' },
     { id: 'contact', name: 'Secure_Mail.app', type: 'file', icon: Mail, color: 'text-purple-400' },
   ],
   'Downloads': [
@@ -89,7 +89,7 @@ export default function Finder() {
   };
 
   return (
-    <div className="flex w-full h-full bg-[#1e1e1e] text-zinc-200 select-none font-sans" onClick={() => setSelectedFile(null)}>
+    <div className="flex w-full h-full bg-os-window text-os-text select-none font-sans" onClick={() => setSelectedFile(null)}>
       
       {/* SIDEBAR */}
       <div className="w-48 bg-[#2a2a2b]/90 backdrop-blur-xl border-r border-black/50 flex flex-col shrink-0 hidden sm:flex">
@@ -113,10 +113,10 @@ export default function Finder() {
         <div className="h-14 border-b border-black/50 flex items-center justify-between px-4 bg-[#2d2d2d] shrink-0">
           <div className="flex items-center gap-4">
             <div className="flex gap-1">
-              <button onClick={goBack} disabled={historyIndex === 0} className={`p-1 rounded ${historyIndex === 0 ? 'text-zinc-600' : 'text-zinc-300 hover:bg-white/10'}`}>
+              <button onClick={goBack} disabled={historyIndex === 0} className={`p-1 rounded ${historyIndex === 0 ? 'text-zinc-600' : 'text-os-text hover:bg-white/10'}`}>
                 <ChevronLeft size={18} />
               </button>
-              <button onClick={goForward} disabled={historyIndex === history.length - 1} className={`p-1 rounded ${historyIndex === history.length - 1 ? 'text-zinc-600' : 'text-zinc-300 hover:bg-white/10'}`}>
+              <button onClick={goForward} disabled={historyIndex === history.length - 1} className={`p-1 rounded ${historyIndex === history.length - 1 ? 'text-zinc-600' : 'text-os-text hover:bg-white/10'}`}>
                 <ChevronRight size={18} />
               </button>
             </div>
@@ -152,7 +152,7 @@ export default function Finder() {
                     <div className={`w-16 h-16 flex items-center justify-center rounded-xl transition-colors ${isSelected ? 'bg-white/10 ring-1 ring-white/20' : ''}`}>
                       <Icon size={42} className={item.color} strokeWidth={1.5} />
                     </div>
-                    <span className={`text-[11px] text-center leading-tight px-1.5 py-0.5 rounded ${isSelected ? 'bg-blue-600 text-white' : 'text-zinc-300'}`}>
+                    <span className={`text-[11px] text-center leading-tight px-1.5 py-0.5 rounded ${isSelected ? 'bg-blue-600 text-white' : 'text-os-text'}`}>
                       {item.name}
                     </span>
                   </div>
@@ -162,7 +162,7 @@ export default function Finder() {
             </div>
           ) : (
             <div className="flex flex-col">
-              <div className="flex text-xs font-semibold text-zinc-500 border-b border-zinc-800 pb-2 mb-2 px-2">
+              <div className="flex text-xs font-semibold text-zinc-500 border-b border-os-border pb-2 mb-2 px-2">
                 <div className="flex-1">Name</div>
                 <div className="w-32 hidden sm:block">Kind</div>
               </div>
@@ -196,7 +196,7 @@ function SidebarItem({ icon: Icon, label, active, onClick }: { icon: any, label:
   return (
     <div 
       onClick={onClick}
-      className={`flex items-center gap-2 px-2 py-1.5 rounded-md cursor-default interactive ${active ? 'bg-white/20 text-white font-semibold' : 'text-zinc-400 hover:bg-white/10 hover:text-zinc-200'}`}
+      className={`flex items-center gap-2 px-2 py-1.5 rounded-md cursor-default interactive ${active ? 'bg-white/20 text-white font-semibold' : 'text-zinc-400 hover:bg-white/10 hover:text-os-text'}`}
     >
       <Icon size={14} className={active ? 'text-blue-400' : ''} />
       <span>{label}</span>

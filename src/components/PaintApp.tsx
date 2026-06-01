@@ -120,7 +120,7 @@ export default function PaintApp() {
   };
 
   return (
-    <div className="w-full h-full bg-[#1e1e1e] flex flex-col font-sans select-none">
+    <div className="w-full h-full bg-os-window flex flex-col font-sans select-none">
       {/* Top Engineering Toolbar */}
       <div className="h-12 border-b border-white/5 bg-[#161616] px-4 flex items-center justify-between gap-4">
         
@@ -128,13 +128,13 @@ export default function PaintApp() {
         <div className="flex items-center gap-1.5 bg-white/5 p-1 rounded-lg border border-white/5">
           <button 
             onClick={() => setTool('brush')}
-            className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${tool === 'brush' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}`}
+            className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${tool === 'brush' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-400 hover:text-os-text'}`}
           >
             Brush
           </button>
           <button 
             onClick={() => setTool('eraser')}
-            className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${tool === 'eraser' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}`}
+            className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${tool === 'eraser' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-400 hover:text-os-text'}`}
           >
             Eraser
           </button>
@@ -192,7 +192,7 @@ export default function PaintApp() {
       </div>
 
       {/* The Native HTML5 Interactive Drawing Area */}
-      <div className="flex-1 bg-[#141414] relative overflow-hidden">
+      <div className="flex-1 bg-os-panel relative overflow-hidden">
         <canvas
           ref={canvasRef}
           onMouseDown={startDrawing}

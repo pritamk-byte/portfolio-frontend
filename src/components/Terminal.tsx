@@ -609,7 +609,7 @@ export default function InteractiveTerminal() {
             key={i} 
             className={`
               ${line.type === 'input' ? 'text-zinc-400' : ''}
-              ${line.type === 'output' ? 'text-zinc-200' : ''}
+              ${line.type === 'output' ? 'text-os-text' : ''}
               ${line.type === 'system' ? 'text-zinc-500' : ''}
               ${line.type === 'error' ? 'text-red-500' : ''}
               ${line.type === 'game' ? 'text-orange-400 font-semibold' : ''}

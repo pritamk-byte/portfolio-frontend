@@ -71,7 +71,7 @@ export default function Projects() {
   return (
     <section className="py-32 px-[5%] md:px-16 max-w-[1400px] mx-auto relative z-10 overflow-hidden" id="projects">
       
-      <div className="mb-12 border-b border-zinc-800 pb-6 flex items-end justify-between">
+      <div className="mb-12 border-b border-os-border pb-6 flex items-end justify-between">
         <div>
           <div className="text-base font-mono uppercase tracking-widest text-zinc-100 mb-4">03 // Active Deployments</div>
           <h2 className="text-[clamp(2rem,3vw,3rem)] font-medium tracking-tight leading-[1.1]">
@@ -82,7 +82,7 @@ export default function Projects() {
 
       {/* The Movable macOS Window */}
       <div 
-        className="w-full max-w-5xl mx-auto bg-[#050505] border border-zinc-800 rounded-xl shadow-2xl flex flex-col font-mono relative z-20 transition-shadow hover:shadow-emerald-500/5"
+        className="w-full max-w-5xl mx-auto bg-[#050505] border border-os-border rounded-xl shadow-2xl flex flex-col font-mono relative z-20 transition-shadow hover:shadow-emerald-500/5"
         style={{ 
           transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
           height: '700px'
@@ -96,7 +96,7 @@ export default function Projects() {
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
           onDoubleClick={resetPosition}
-          className={`h-12 bg-[#111] border-b border-zinc-800 rounded-t-xl flex items-center justify-between px-4 select-none touch-none
+          className={`h-12 bg-[#111] border-b border-os-border rounded-t-xl flex items-center justify-between px-4 select-none touch-none
             ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}
           `}
         >
@@ -123,7 +123,7 @@ export default function Projects() {
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           
           {/* Left Sidebar (File Explorer) */}
-          <div className="w-full md:w-64 bg-[#0a0a0a] border-b md:border-b-0 md:border-r border-zinc-800 p-4 flex flex-col gap-1 overflow-y-auto">
+          <div className="w-full md:w-64 bg-[#0a0a0a] border-b md:border-b-0 md:border-r border-os-border p-4 flex flex-col gap-1 overflow-y-auto">
             <div className="text-[10px] uppercase tracking-widest text-zinc-500 mb-2 px-2 flex items-center gap-2">
               <Folder size={12} />
               projects/
@@ -136,7 +136,7 @@ export default function Projects() {
                 className={`flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors w-full text-left interactive
                   ${activeIndex === idx 
                     ? 'bg-zinc-800/50 text-emerald-400' 
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
+                    : 'text-zinc-400 hover:text-os-text hover:bg-zinc-900'
                   }
                 `}
               >
@@ -150,16 +150,16 @@ export default function Projects() {
           <div className="flex-1 flex flex-col bg-[#000] overflow-hidden">
             
             {/* Editor Tabs */}
-            <div className="flex bg-[#0a0a0a] border-b border-zinc-800 text-xs">
+            <div className="flex bg-[#0a0a0a] border-b border-os-border text-xs">
               <button 
                 onClick={() => setViewMode('code')}
-                className={`px-6 py-3 flex items-center gap-2 interactive border-r border-zinc-800 ${viewMode === 'code' ? 'bg-[#000] text-emerald-400 border-t-2 border-t-emerald-500' : 'text-zinc-500 hover:bg-zinc-900'}`}
+                className={`px-6 py-3 flex items-center gap-2 interactive border-r border-os-border ${viewMode === 'code' ? 'bg-[#000] text-emerald-400 border-t-2 border-t-emerald-500' : 'text-zinc-500 hover:bg-zinc-900'}`}
               >
                 <FileCode2 size={14} /> config.json
               </button>
               <button 
                 onClick={() => setViewMode('preview')}
-                className={`px-6 py-3 flex items-center gap-2 interactive border-r border-zinc-800 ${viewMode === 'preview' ? 'bg-[#000] text-emerald-400 border-t-2 border-t-emerald-500' : 'text-zinc-500 hover:bg-zinc-900'}`}
+                className={`px-6 py-3 flex items-center gap-2 interactive border-r border-os-border ${viewMode === 'preview' ? 'bg-[#000] text-emerald-400 border-t-2 border-t-emerald-500' : 'text-zinc-500 hover:bg-zinc-900'}`}
               >
                 <Play size={14} /> live_preview.sh
               </button>
@@ -170,7 +170,7 @@ export default function Projects() {
               
               {/* CODE VIEW */}
               {viewMode === 'code' && (
-                <div className="p-6 md:p-8 text-sm md:text-base leading-relaxed text-zinc-300">
+                <div className="p-6 md:p-8 text-sm md:text-base leading-relaxed text-os-text">
                   <div className="flex justify-between items-start mb-6">
                     <span className="text-zinc-500">/* SYSTEM CONFIGURATION DATA */</span>
                     <a href={activeProject.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-xs text-emerald-500 hover:text-emerald-400 border border-emerald-500/30 hover:border-emerald-500 px-3 py-1 rounded transition-colors interactive">
@@ -182,7 +182,7 @@ export default function Projects() {
                     <span className="text-purple-400">const</span> <span className="text-blue-400">projectData</span> <span className="text-purple-400">=</span> {'{'}
                   </div>
                   
-                  <div className="pl-4 md:pl-8 border-l border-zinc-800/50 ml-2">
+                  <div className="pl-4 md:pl-8 border-l border-os-border/50 ml-2">
                     <div className="py-1">
                       <span className="text-zinc-400">title:</span> <span className="text-emerald-400">"{activeProject.title}"</span>,
                     </div>

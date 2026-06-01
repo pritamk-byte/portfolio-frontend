@@ -120,7 +120,7 @@ export default function Game() {
   }, [direction, food, isPaused, gameOver, generateFood, highScore]);
 
   return (
-    <div className="w-full h-full bg-[#111] flex flex-col items-center justify-center font-mono text-zinc-200 select-none">
+    <div className="w-full h-full bg-[#111] flex flex-col items-center justify-center font-mono text-os-text select-none">
       
       {/* Game Header */}
       <div className="w-full max-w-[400px] flex justify-between items-center mb-6 px-4">
@@ -139,9 +139,9 @@ export default function Game() {
       </div>
 
       {/* Game Board */}
-      <div className="relative bg-black border border-zinc-800 rounded-lg shadow-2xl p-2">
+      <div className="relative bg-black border border-os-border rounded-lg shadow-2xl p-2">
         <div 
-          className="grid gap-[1px] bg-zinc-900/50 border border-zinc-800/50"
+          className="grid gap-[1px] bg-zinc-900/50 border border-os-border/50"
           style={{ 
             gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
             width: 'min(80vw, 400px)',
