@@ -35,7 +35,20 @@ function DraggableIcon({
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
 
-  // Calculate initial position on mount (Auto-wrapping grid on the right)
+// --- UPGRADED COMPONENT: Draggable Physics Engine with Collision & Bounding ---
+function DraggableIcon({ 
+  item, index, isSelected, onClick, onDoubleClick 
+}: { 
+  item: any, index: number, isSelected: boolean, onClick: (e: React.MouseEvent, id: string) => void, onDoubleClick: (id: string) => void 
+}) {
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const [isReady, setIsReady] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  
+  const dragStart = useRef({ x: 0, y: 0 });
+  const originalPos = useRef({ x: 0, y: 0 }); // Remembers where it was before the drag
+
+  // Calculate initial position on mount (Auto-wrapping grid)
   useEffect(() => {
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
@@ -45,15 +58,10 @@ function DraggableIcon({
     const verticalSpacing = 100;
     const horizontalSpacing = 90;
     
-    // 1. Calculate how many icons can safely fit in one vertical column 
-    // (Subtracting 120px to leave room for the bottom dock)
     const maxPerColumn = Math.max(1, Math.floor((screenHeight - topMargin - 120) / verticalSpacing));
-    
-    // 2. Determine which column and row this specific icon belongs in
     const column = Math.floor(index / maxPerColumn);
     const row = index % maxPerColumn;
     
-    // 3. Apply the positions (stacking leftward as columns fill up)
     setPos({
       x: screenWidth - rightMargin - 80 - (column * horizontalSpacing),
       y: topMargin + (row * verticalSpacing)
@@ -61,6 +69,100 @@ function DraggableIcon({
     
     setIsReady(true);
   }, [index]);
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    onClick(e as unknown as React.MouseEvent, item.id);
+    setIsDragging(true);
+    
+    // Save exact starting point in case we need to snap back
+    originalPos.current = { x: pos.x, y: pos.y }; 
+    dragStart.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
+    
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isDragging) {
+      let newX = e.clientX - dragStart.current.x;
+      let newY = e.clientY - dragStart.current.y;
+
+      // 1. BOUNDING BOX LOGIC: Prevent dragging off-screen
+      const iconWidth = 80;  // 5rem (w-20)
+      const iconHeight = 100; // approximate height with text
+      const topBarHeight = 28;
+      const dockHeight = 100;
+
+      // Clamp coordinates between 0 and Max Screen Width/Height
+      newX = Math.max(0, Math.min(window.innerWidth - iconWidth, newX));
+      newY = Math.max(topBarHeight, Math.min(window.innerHeight - dockHeight - iconHeight, newY));
+
+      setPos({ x: newX, y: newY });
+    }
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    setIsDragging(false);
+    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+
+    // 2. COLLISION DETECTION: Check if we dropped it on another icon
+    const currentRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const allIcons = document.querySelectorAll('.desktop-icon');
+    let hasOverlap = false;
+    const buffer = 15; // 15px personal space bubble around icons
+
+    allIcons.forEach(icon => {
+      if (icon === e.currentTarget) return; // Don't collide with yourself
+      
+      const rect = icon.getBoundingClientRect();
+      
+      // AABB (Axis-Aligned Bounding Box) Collision Math
+      if (
+        currentRect.left < rect.right + buffer &&
+        currentRect.right > rect.left - buffer &&
+        currentRect.top < rect.bottom + buffer &&
+        currentRect.bottom > rect.top - buffer
+      ) {
+        hasOverlap = true;
+      }
+    });
+
+    // If it hit another icon, snap it smoothly back to where it started!
+    if (hasOverlap) {
+      setPos({ x: originalPos.current.x, y: originalPos.current.y });
+    }
+  };
+
+  if (!isReady) return null;
+
+  const Icon = item.icon;
+
+  return (
+    <div 
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick(item.id); }}
+      // 👇 Notice the new "desktop-icon" class and the transition states
+      className={`absolute flex flex-col items-center gap-1 w-20 group touch-none desktop-icon
+        ${isDragging ? 'cursor-grabbing z-50 transition-none' : 'cursor-default z-10 transition-all duration-300 ease-out'}
+      `}
+      style={{ left: pos.x, top: pos.y }}
+    >
+      <div className={`w-14 h-14 flex items-center justify-center rounded-lg transition-all duration-200
+        ${isSelected ? 'bg-white/20 border border-white/30 shadow-lg' : 'bg-transparent border border-transparent'}
+      `}>
+        <Icon size={32} className={`${item.color} ${item.fill} drop-shadow-lg`} strokeWidth={1.5} />
+      </div>
+      <div className={`text-[11px] font-medium px-1.5 py-0.5 rounded text-center leading-tight tracking-wide drop-shadow-md select-none
+        ${isSelected ? 'bg-blue-600 text-white' : 'text-zinc-100 bg-transparent'}
+      `}>
+        {item.label}
+      </div>
+    </div>
+  );
+}
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     e.stopPropagation();
