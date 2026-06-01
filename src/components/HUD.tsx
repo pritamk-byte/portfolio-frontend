@@ -1,7 +1,8 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { Terminal as TerminalIcon, FileText, Mail, GitBranch, X, Minus, Maximize2, Globe, Users, User, LayoutGrid, Gamepad2, Crosshair, FileCode } from 'lucide-react';
+import { Terminal as TerminalIcon, FileText, Mail, GitBranch, X, Minus, Maximize2, Globe, Users, User, LayoutGrid, Gamepad2, Crosshair, FileCode, Palette } from 'lucide-react';
 import TerminalGuide from './TerminalGuide';
+import PaintApp from './PaintApp';
 import Game from './Game'; 
 import CyberSweeper from './CyberSweeper';
 import Finder from './Finder'; 
@@ -423,6 +424,12 @@ export default function HUD() {
         {openApps.includes('minesweeper') && (
           <DesktopWindow id="minesweeper" title="Cyber_Sweeper.exe" icon={Crosshair} isActive={activeApp === 'minesweeper'} isMinimized={minimizedApps.includes('minesweeper')} isMobile={isMobile} onFocus={() => setActiveApp('minesweeper')} onMinimize={() => handleMinimizeApp('minesweeper')} onClose={() => handleCloseApp('minesweeper')}>
             <CyberSweeper />
+          </DesktopWindow>
+        )}
+        
+        {openApps.includes('paint') && (
+          <DesktopWindow id="paint" title="Studio" icon={Palette} isActive={activeApp === 'paint'} isMinimized={minimizedApps.includes('paint')} isMobile={isMobile} onFocus={() => setActiveApp('paint')} onMinimize={() => handleMinimizeApp('paint')} onClose={() => handleCloseApp('paint')}>
+            <PaintApp />
           </DesktopWindow>
         )}
       </>
