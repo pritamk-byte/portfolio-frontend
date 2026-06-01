@@ -23,7 +23,8 @@ export default function Header() {
   const [brightness, setBrightness] = useState(100);
   const [wifiOn, setWifiOn] = useState(true);
   const [btOn, setBtOn] = useState(true);
-  
+  const [volume, setVolume] = useState(25);
+  const [airDropText, setAirDropText] = useState('AirDrop');  
   const [themeMode, setThemeMode] = useState<'Dark' | 'Light' | 'Midnight'>('Dark');
   const [lang, setLang] = useState('EN');
 
@@ -63,6 +64,12 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
+    const savedVol = localStorage.getItem('pritam_os_volume');
+    if (savedVol) setVolume(parseInt(savedVol));
+    else localStorage.setItem('pritam_os_volume', '25');
+  }, []);
+
+  useEffect(() => {
     // 2. Whenever theme changes via the button, update the HTML tag
     document.documentElement.setAttribute('data-theme', themeMode.toLowerCase());
     localStorage.setItem('pritam_os_theme', themeMode);
@@ -99,6 +106,33 @@ export default function Header() {
     setOpenMenu(null);
   };
 
+  const handleAirDrop = async () => {
+    const shareData = {
+      title: 'Pritam Poddar - Software Engineer',
+      text: 'Check out this incredible web-based OS portfolio!',
+      url: window.location.href
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback for older browsers: Copy to clipboard
+        await navigator.clipboard.writeText(window.location.href);
+        setAirDropText('Copied!');
+        setTimeout(() => setAirDropText('AirDrop'), 2000);
+      }
+    } catch (err) {
+      console.log('Share canceled or failed');
+    }
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVol = parseInt(e.target.value);
+    setVolume(newVol);
+    localStorage.setItem('pritam_os_volume', newVol.toString());
+  };
+
   const handleMenuHover = (menuName: string) => {
     if (openMenu && !['clock', 'control'].includes(openMenu)) {
       setOpenMenu(menuName);
@@ -106,8 +140,11 @@ export default function Header() {
   };
 
   const cycleTheme = () => {
-    const modes: ('Dark' | 'Light' | 'Midnight')[] = ['Dark', 'Light', 'Midnight'];
-    setThemeMode(modes[(modes.indexOf(themeMode) + 1) % modes.length]);
+    // 👇 Removed 'Light' so it NEVER breaks your UI again!
+    const modes: ('Dark' | 'Midnight')[] = ['Dark', 'Midnight'];
+    // Fallback to 'Dark' if it gets confused
+    const currentIndex = modes.indexOf(themeMode as 'Dark' | 'Midnight');
+    setThemeMode(modes[(currentIndex === -1 ? 0 : currentIndex + 1) % modes.length]);
   };
 
   const cycleLang = () => {
@@ -224,7 +261,8 @@ export default function Header() {
               <div className="grid grid-cols-2 gap-3 mb-3">
                 <div className="bg-zinc-800/40 border border-zinc-700/50 rounded-xl p-3 flex flex-col gap-3">
                   <div className="flex items-center gap-3 cursor-pointer" onClick={() => setWifiOn(!wifiOn)}>
-                    <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${wifiOn ? 'bg-blue-500 text-white' : 'bg-zinc-700 text-zinc-400'}`}>
+                    {/* 👇 Added shrink-0 right here */}
+                    <div className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors ${wifiOn ? 'bg-blue-500 text-white' : 'bg-zinc-700 text-zinc-400'}`}>
                       <Wifi size={14} />
                     </div>
                     <div>
@@ -233,7 +271,8 @@ export default function Header() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 cursor-pointer" onClick={() => setBtOn(!btOn)}>
-                    <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${btOn ? 'bg-blue-500 text-white' : 'bg-zinc-700 text-zinc-400'}`}>
+                    {/* 👇 Added shrink-0 right here too */}
+                    <div className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors ${btOn ? 'bg-blue-500 text-white' : 'bg-zinc-700 text-zinc-400'}`}>
                       <Bluetooth size={14} />
                     </div>
                     <div>
@@ -243,10 +282,14 @@ export default function Header() {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3">
-                  <div className="flex-1 bg-zinc-800/40 border border-zinc-700/50 rounded-xl flex flex-col justify-center items-center text-zinc-400 hover:text-white transition-colors cursor-pointer interactive">
+               <div className="flex flex-col gap-3">
+                  {/* 👇 Now triggers the Native Share API */}
+                  <div 
+                    onClick={handleAirDrop}
+                    className="flex-1 bg-zinc-800/40 border border-zinc-700/50 rounded-xl flex flex-col justify-center items-center text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all cursor-pointer interactive active:scale-95"
+                  >
                     <Monitor size={16} className="mb-1" />
-                    <span className="text-[10px]">AirDrop</span>
+                    <span className="text-[10px]">{airDropText}</span>
                   </div>
                 </div>
               </div>
@@ -267,11 +310,20 @@ export default function Header() {
               <div className="bg-zinc-800/40 border border-zinc-700/50 rounded-xl p-3 mb-3 flex flex-col">
                 <span className="text-xs font-semibold text-white mb-2 ml-1">Sound</span>
                 <div className="relative flex items-center bg-zinc-900 rounded-full h-7 border border-zinc-700 overflow-hidden">
-                  <div className="absolute left-2 text-zinc-400 z-10 pointer-events-none"><Volume2 size={12} /></div>
-                  <div className="absolute top-0 left-0 h-full bg-white transition-all duration-75" style={{ width: '65%' }}></div>
-                  <input type="range" min="0" max="100" defaultValue="65" className="w-full h-full opacity-0 cursor-pointer z-20" />
+                  <div className="absolute left-2 text-zinc-400 z-10 pointer-events-none">
+                    <Volume2 size={12} className={volume === 0 ? "opacity-30" : ""} />
+                  </div>
+                  {/* 👇 Now uses real state */}
+                  <div className="absolute top-0 left-0 h-full bg-white transition-all duration-75" style={{ width: `${volume}%` }}></div>
+                  <input 
+                    type="range" min="0" max="100" 
+                    value={volume} 
+                    onChange={handleVolumeChange} 
+                    className="w-full h-full opacity-0 cursor-pointer z-20" 
+                  />
                 </div>
               </div>
+
 
               <div className="bg-zinc-800/40 border border-zinc-700/50 rounded-xl p-3 flex flex-col">
                 <span className="text-xs font-semibold text-white mb-2 ml-1">Personalization</span>

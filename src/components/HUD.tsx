@@ -17,6 +17,14 @@ import SystemProfile from './SystemProfile';
 // --- ZERO-DEPENDENCY SYNTHETIC AUDIO ENGINE ---
 const playSystemSound = (type: 'pop' | 'click') => {
   if (typeof window === 'undefined') return;
+
+  // 👇 Read the master volume from memory (0.0 to 1.0 multiplier)
+  const savedVol = localStorage.getItem('pritam_os_volume');
+  const masterVolume = savedVol !== null ? parseInt(savedVol) / 100 : 0.25;
+
+  // If muted, completely abort playing sound
+  if (masterVolume === 0) return;
+
   try {
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
     const ctx = new AudioContext();
@@ -30,7 +38,8 @@ const playSystemSound = (type: 'pop' | 'click') => {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(600, ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.1);
-      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      // Multiply base gain (0.2) by master volume
+      gain.gain.setValueAtTime(0.2 * masterVolume, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
       osc.start();
       osc.stop(ctx.currentTime + 0.1);
@@ -38,7 +47,8 @@ const playSystemSound = (type: 'pop' | 'click') => {
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(800, ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.05);
-      gain.gain.setValueAtTime(0.05, ctx.currentTime);
+      // Multiply base gain (0.08) by master volume
+      gain.gain.setValueAtTime(0.08 * masterVolume, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
       osc.start();
       osc.stop(ctx.currentTime + 0.05);

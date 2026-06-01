@@ -78,14 +78,3 @@ html {
   filter: grayscale(100%) !important;
 }
 
-/* Instantly inverts the dark theme to light */
-[data-theme="light"] {
-  filter: invert(1) hue-rotate(180deg);
-}
-
-/* Prevents your photos, canvas, and iframes from looking like X-ray negatives */
-[data-theme="light"] img,
-[data-theme="light"] canvas,
-[data-theme="light"] iframe {
-  filter: invert(1) hue-rotate(180deg);
-}
