@@ -11,7 +11,11 @@ const wallpapers = [
   { id: 'yosemite', type: 'image', name: 'Yosemite Valley', url: 'https://images.unsplash.com/photo-1426604966848-d7adac402bff?q=80&w=2564&auto=format&fit=crop' },
   { id: 'sonoma', type: 'image', name: 'Sonoma Horizon', url: 'https://images.unsplash.com/photo-1506744626753-1fa28f673b0c?q=80&w=2564&auto=format&fit=crop' },
   { id: 'mojave', type: 'image', name: 'Mojave Night', url: 'https://images.unsplash.com/photo-1542224566-6e85f2e6772f?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'aurora', type: 'image', name: 'Aurora Borealis', url: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?q=80&w=2564&auto=format&fit=crop' }
+  { id: 'aurora', type: 'image', name: 'Aurora Borealis', url: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'cyber-grid', type: 'image', name: 'Cyber Grid', url: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'dark-matter', type: 'image', name: 'Dark Matter', url: 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'deep-space', type: 'image', name: 'Deep Space', url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'neon-fluid', type: 'image', name: 'Neon Fluid', url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2564&auto=format&fit=crop' }
 ];
 
 const desktopIcons = [
@@ -154,12 +158,23 @@ export default function Hero() {
   const [progress, setProgress] = useState(0);
   const [bootStage, setBootStage] = useState<'loading' | 'login' | 'desktop'>('loading');
   const [themeIdx, setThemeIdx] = useState(1);
+  const [imageError, setImageError] = useState(false);
   const [contextMenu, setContextMenu] = useState({ show: false, x: 0, y: 0 });
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   
   const [isSubmittingLogin, setIsSubmittingLogin] = useState(false);
 
+  useEffect(() => {
+    const randomIdx = Math.floor(Math.random() * wallpapers.length);
+    setThemeIdx(randomIdx);
+  }, []);
+
   const currentWallpaper = wallpapers[themeIdx];
+
+  // Reset image error state whenever wallpaper changes
+  useEffect(() => {
+    setImageError(false);
+  }, [themeIdx]);
 
   useEffect(() => {
     if (bootStage !== 'loading') return;
@@ -225,19 +240,31 @@ export default function Hero() {
       onClick={() => setSelectedIcon(null)}
     >
       
-      {/* THE WALLPAPER LAYER */}
+      {/* THE WALLPAPER LAYER WITH FALLBACK */}
       <div className="absolute inset-0 bg-[#000000] transition-all duration-1000">
-        {currentWallpaper.type === 'css' ? (
-          <>
+        {currentWallpaper.type === 'css' || imageError ? (
+          <div className="absolute inset-0 w-full h-full overflow-hidden">
             <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full bg-purple-900/30 blur-[120px] transition-colors duration-1000"></div>
             <div className="absolute top-[10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-blue-900/20 blur-[130px] transition-colors duration-1000"></div>
             <div className="absolute bottom-[-20%] left-[15%] w-[70vw] h-[70vw] rounded-full bg-emerald-900/15 blur-[140px] transition-colors duration-1000"></div>
-          </>
+            
+            {imageError && (
+              <div className="absolute inset-0 backdrop-blur-3xl bg-white/5"></div>
+            )}
+          </div>
         ) : (
-          <div 
-            className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 opacity-90"
-            style={{ backgroundImage: `url(${currentWallpaper.url})` }}
-          />
+          <>
+            <img 
+              src={currentWallpaper.url} 
+              alt="preload" 
+              className="hidden" 
+              onError={() => setImageError(true)} 
+            />
+            <div 
+              className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 opacity-90"
+              style={{ backgroundImage: `url(${currentWallpaper.url})` }}
+            />
+          </>
         )}
       </div>
 
@@ -269,7 +296,7 @@ export default function Hero() {
         >
           <button className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white">New Folder</button>
           
-          {/* 👇 SPOTLIGHT SEARCH OPTION */}
+          {/* SPOTLIGHT SEARCH OPTION */}
           <button 
             className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"
             onClick={() => {
