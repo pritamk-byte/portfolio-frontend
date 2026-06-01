@@ -167,7 +167,18 @@ export default function Hero() {
     // 1. Randomize desktop wallpaper secretly on mount
     const randomIdx = Math.floor(Math.random() * wallpapers.length);
     setThemeIdx(randomIdx);
-
+// --- HARD REFRESH INTERCEPTOR ---
+  // Listens for Ctrl+Shift+R or Cmd+Shift+R and wipes the login memory before reloading
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'r') {
+        sessionStorage.removeItem('pritam_os_unlocked');
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
     // 2. Check if user already logged in during this session
     const isUnlocked = sessionStorage.getItem('pritam_os_unlocked') === 'true';
     if (isUnlocked) {
