@@ -119,9 +119,10 @@ export default function Header() {
   const weekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
   return (
-    <header className="fixed top-0 left-0 w-full h-7 px-4 flex justify-between items-center z-[120] bg-black/60 backdrop-blur-xl border-b border-os-border/80 text-[11px] font-sans tracking-wide text-os-text select-none shadow-md">
+    <header ref={menuRef} className="fixed top-0 left-0 w-full h-7 px-4 flex justify-between items-center z-[120] bg-os-panel/60 backdrop-blur-xl border-b border-os-border text-[11px] font-sans tracking-wide text-os-text select-none shadow-md transition-colors duration-300">
       
-      <div className="flex items-center gap-1 md:gap-4" ref={menuRef}>
+      {/* 👇 REMOVED THE DUPLICATE ref={menuRef} FROM THIS DIV */}
+      <div className="flex items-center gap-1 md:gap-4">
         <div className="relative" onMouseEnter={() => handleMenuHover('apple')}>
           <button 
             onClick={() => setOpenMenu(openMenu === 'apple' ? null : 'apple')}
@@ -264,12 +265,10 @@ export default function Header() {
                 </div>
               </div>
 
-              {/* 👇 NEW: Personalization & System Module */}
               <div className="bg-zinc-800/40 border border-zinc-700/50 rounded-xl p-3 flex flex-col">
                 <span className="text-xs font-semibold text-white mb-2 ml-1">Personalization</span>
                 <div className="grid grid-cols-3 gap-2">
                   
-                  {/* Fire an event to Hero.tsx to change wallpaper */}
                   <button 
                     onClick={() => window.dispatchEvent(new Event('next-wallpaper'))}
                     className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg transition-colors group"
