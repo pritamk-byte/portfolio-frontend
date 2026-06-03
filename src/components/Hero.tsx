@@ -33,6 +33,9 @@ const desktopIcons = [
   { id: 'minesweeper', label: 'Cyber Sweeper', icon: Crosshair, color: 'text-red-400', fill: '' },
 ];
 
+// 👇 SET YOUR TIMEOUT DURATION HERE (Currently set to 1 Hour)
+const EXPIRATION_TIME_MS = 60 * 60 * 1000;
+
 // --- DRAGGABLE PHYSICS ENGINE COMPONENT ---
 function DraggableIcon({ 
   item, index, isSelected, onClick, onDoubleClick 
@@ -165,36 +168,50 @@ export default function Hero() {
   
   const [isSubmittingLogin, setIsSubmittingLogin] = useState(false);
 
-  // --- SESSION PERSISTENCE & RANDOM WALLPAPER ---
+  // --- SESSION PERSISTENCE & WALLPAPER MEMORY ---
   useEffect(() => {
-    // 1. Randomize desktop wallpaper secretly on mount
-    const randomIdx = Math.floor(Math.random() * wallpapers.length);
-    setThemeIdx(randomIdx);
+    // 1. Restore their saved wallpaper (or default to 1)
+    const savedWallpaper = localStorage.getItem('pritam_os_wallpaper_idx');
+    if (savedWallpaper !== null) {
+      setThemeIdx(parseInt(savedWallpaper));
+    } else {
+      setThemeIdx(1); 
+    }
 
-    // 2. Check if user already logged in during this session
-    const isUnlocked = sessionStorage.getItem('pritam_os_unlocked') === 'true';
-    if (isUnlocked) {
+    // 2. Check the time-based session lock
+    const lastActive = localStorage.getItem('pritam_os_last_active');
+    const now = Date.now();
+
+    if (lastActive && (now - parseInt(lastActive) < EXPIRATION_TIME_MS)) {
+      // Still within the 1-hour window! Extend the session timer.
+      localStorage.setItem('pritam_os_last_active', now.toString());
+      
       setProgress(100);
       setBootStage('desktop');
       // Fire unlock event slightly later to ensure components are mounted
       setTimeout(() => {
         window.dispatchEvent(new Event('system-unlock'));
       }, 100);
+    } else {
+      // Time expired or first visit - force lockscreen.
+      localStorage.removeItem('pritam_os_last_active');
     }
   }, []);
 
   const currentWallpaper = wallpapers[themeIdx];
 
-  // Reset image error state whenever wallpaper changes
+  // Save wallpaper selection to memory whenever it changes
   useEffect(() => {
     setImageError(false);
+    localStorage.setItem('pritam_os_wallpaper_idx', themeIdx.toString());
   }, [themeIdx]);
 
   useEffect(() => {
     if (bootStage !== 'loading') return;
     
-    // Safety check: don't start boot sequence if they are already unlocked
-    if (sessionStorage.getItem('pritam_os_unlocked') === 'true') return;
+    // Safety check: Don't show loading bar if they have a valid active session
+    const lastActive = localStorage.getItem('pritam_os_last_active');
+    if (lastActive && (Date.now() - parseInt(lastActive) < EXPIRATION_TIME_MS)) return;
 
     const interval = setInterval(() => {
       setProgress(prev => {
@@ -212,7 +229,6 @@ export default function Hero() {
   // --- LISTEN FOR WALLPAPER CHANGES FROM THE CONTROL CENTER ---
   useEffect(() => {
     const handleNextWallpaper = () => {
-      // This uses the exact same logic as your right-click menu!
       setThemeIdx(prev => (prev + 1) % wallpapers.length);
     };
     
@@ -240,8 +256,8 @@ export default function Hero() {
     
     setIsSubmittingLogin(true); 
     
-    // 👇 Save login state to the browser session!
-    sessionStorage.setItem('pritam_os_unlocked', 'true');
+    // 👇 Save login timestamp to memory to start the 1-hour clock
+    localStorage.setItem('pritam_os_last_active', Date.now().toString());
     setBootStage('desktop');
     
     window.dispatchEvent(new Event('system-unlock')); 
