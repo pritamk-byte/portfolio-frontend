@@ -2,7 +2,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Terminal as TerminalIcon, FileText, Mail, GitBranch, X, Minus, Maximize2, Globe, Users, User, LayoutGrid, Gamepad2, Crosshair, FileCode, Palette, SquarePen } from 'lucide-react';
 
-// 👇 ADD NOTES IMPORT
 import NetworkApp from './NetworkApp';
 import NotesApp from './NotesApp';
 import TerminalGuide from './TerminalGuide';
@@ -18,11 +17,9 @@ import SystemProfile from './SystemProfile';
 const playSystemSound = (type: 'pop' | 'click') => {
   if (typeof window === 'undefined') return;
 
-  // 👇 Read the master volume from memory (0.0 to 1.0 multiplier)
   const savedVol = localStorage.getItem('pritam_os_volume');
   const masterVolume = savedVol !== null ? parseInt(savedVol) / 100 : 0.25;
 
-  // If muted, completely abort playing sound
   if (masterVolume === 0) return;
 
   try {
@@ -38,7 +35,6 @@ const playSystemSound = (type: 'pop' | 'click') => {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(600, ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.1);
-      // Multiply base gain (0.2) by master volume
       gain.gain.setValueAtTime(0.2 * masterVolume, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
       osc.start();
@@ -47,7 +43,6 @@ const playSystemSound = (type: 'pop' | 'click') => {
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(800, ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.05);
-      // Multiply base gain (0.08) by master volume
       gain.gain.setValueAtTime(0.08 * masterVolume, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
       osc.start();
@@ -164,7 +159,6 @@ function DesktopWindow({
           ${isMinimized ? 'opacity-0 scale-50 translate-y-[20vh] pointer-events-none' : isActive ? 'z-[95] shadow-[0_0_40px_rgba(0,0,0,0.5)] opacity-100 scale-100 translate-y-0' : 'z-[80] opacity-0 pointer-events-none md:pointer-events-auto md:opacity-95 md:hover:opacity-100 scale-100 translate-y-0'}
           ${isDragging || isResizing ? 'transition-none' : 'transition-transform duration-300 ease-out'}
         `}
-        // 👇 HIGH-PERFORMANCE GPU ACCELERATION
         style={
           isMobile ? { left: '8px', top: '70px', right: '8px', bottom: '90px', width: 'auto', height: 'auto' } : 
           isMaximized ? { left: '0px', top: '28px', right: '0px', bottom: '0px', width: 'auto', height: 'auto', borderRadius: '0px', transform: 'none' } : 
@@ -206,7 +200,6 @@ function DesktopWindow({
         )}
 
         <div className="flex-1 w-full h-full relative bg-black overflow-hidden flex flex-col">
-          {/* 👇 INVISIBLE SHIELD: Prevents iframes from swallowing the mouse during drags/resizes */}
           {(isDragging || isResizing) && (
             <div className="absolute inset-0 z-[100] cursor-grabbing"></div>
           )}
@@ -270,8 +263,6 @@ function DockItem({ item, isOpen, isActive, mouseX, onClick }: any) {
       <button
         ref={ref}
         onClick={onClick}
-        // 👇 THE FIX: Dynamic CSS Transitions injected directly into the style object.
-        // It uses 50ms for snappy side-to-side tracking, and 250ms for a gentle settling when you leave.
         style={{ 
           width: `${size}px`, 
           height: `${size}px`, 
@@ -304,6 +295,18 @@ export default function HUD() {
   
   const [mouseX, setMouseX] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+
+  // 👇 ADDED STATE AND LISTENER FOR TOGGLING THE DOCK
+  const [showDock, setShowDock] = useState(true);
+
+  useEffect(() => {
+    const handleToggleDock = (e: Event) => {
+      const customEvent = e as CustomEvent<boolean>;
+      setShowDock(customEvent.detail);
+    };
+    window.addEventListener('toggle-dock', handleToggleDock);
+    return () => window.removeEventListener('toggle-dock', handleToggleDock);
+  }, []);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -460,7 +463,8 @@ export default function HUD() {
         )}
       </>
 
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] max-w-[95vw] md:max-w-none">
+      {/* 👇 APPLIED CSS TRANSITION TO SLIDE THE DOCK ON AND OFF */}
+      <div className={`fixed left-1/2 -translate-x-1/2 z-[100] max-w-[95vw] md:max-w-none transition-all duration-500 ease-in-out ${showDock ? 'bottom-4 opacity-100' : '-bottom-32 opacity-0 pointer-events-none'}`}>
         <div 
           onMouseMove={(e) => setMouseX(e.clientX)}
           onMouseLeave={() => setMouseX(null)}

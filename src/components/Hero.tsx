@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { Command, ArrowRight, Folder, FileText, Globe, TerminalSquare, Gamepad2, Crosshair, FileCode, Palette, SquarePen, Users } from 'lucide-react';
+import { Command, ArrowRight, Folder, FileText, Globe, TerminalSquare, Gamepad2, Crosshair, FileCode, Palette, SquarePen, Users, EyeOff, Eye } from 'lucide-react';
 
 const wallpapers = [
   { id: 'default-blur', type: 'css', name: 'Dynamic Aura' },
@@ -33,10 +33,8 @@ const desktopIcons = [
   { id: 'minesweeper', label: 'Cyber Sweeper', icon: Crosshair, color: 'text-red-400', fill: '' },
 ];
 
-// 👇 SET YOUR TIMEOUT DURATION HERE (Currently set to 1 Hour)
 const EXPIRATION_TIME_MS = 60 * 60 * 1000;
 
-// --- DRAGGABLE PHYSICS ENGINE COMPONENT ---
 function DraggableIcon({ 
   item, index, isSelected, onClick, onDoubleClick 
 }: { 
@@ -157,7 +155,6 @@ function DraggableIcon({
   );
 }
 
-// --- MAIN HERO COMPONENT ---
 export default function Hero() {
   const [progress, setProgress] = useState(0);
   const [bootStage, setBootStage] = useState<'loading' | 'login' | 'desktop'>('loading');
@@ -165,42 +162,43 @@ export default function Hero() {
   const [imageError, setImageError] = useState(false);
   const [contextMenu, setContextMenu] = useState({ show: false, x: 0, y: 0 });
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
-  
   const [isSubmittingLogin, setIsSubmittingLogin] = useState(false);
 
-  // --- SESSION PERSISTENCE & WALLPAPER MEMORY ---
+  // 👇 NEW: State for hiding/showing UI elements
+  const [showIcons, setShowIcons] = useState(true);
+  const [showDock, setShowDock] = useState(true);
+
+  // --- SESSION PERSISTENCE & SETTINGS MEMORY ---
   useEffect(() => {
-    // 1. Restore their saved wallpaper (or default to 1)
     const savedWallpaper = localStorage.getItem('pritam_os_wallpaper_idx');
-    if (savedWallpaper !== null) {
-      setThemeIdx(parseInt(savedWallpaper));
-    } else {
-      setThemeIdx(1); 
+    if (savedWallpaper !== null) setThemeIdx(parseInt(savedWallpaper));
+
+    // Load view settings
+    const savedIcons = localStorage.getItem('pritam_os_show_icons');
+    if (savedIcons !== null) setShowIcons(savedIcons === 'true');
+
+    const savedDock = localStorage.getItem('pritam_os_show_dock');
+    if (savedDock !== null) {
+      setShowDock(savedDock === 'true');
+      // Dispatch immediately so the HUD knows on boot
+      setTimeout(() => window.dispatchEvent(new CustomEvent('toggle-dock', { detail: savedDock === 'true' })), 500);
     }
 
-    // 2. Check the time-based session lock
     const lastActive = localStorage.getItem('pritam_os_last_active');
     const now = Date.now();
 
     if (lastActive && (now - parseInt(lastActive) < EXPIRATION_TIME_MS)) {
-      // Still within the 1-hour window! Extend the session timer.
       localStorage.setItem('pritam_os_last_active', now.toString());
-      
       setProgress(100);
       setBootStage('desktop');
-      // Fire unlock event slightly later to ensure components are mounted
-      setTimeout(() => {
-        window.dispatchEvent(new Event('system-unlock'));
-      }, 100);
+      setTimeout(() => window.dispatchEvent(new Event('system-unlock')), 100);
     } else {
-      // Time expired or first visit - force lockscreen.
       localStorage.removeItem('pritam_os_last_active');
     }
   }, []);
 
   const currentWallpaper = wallpapers[themeIdx];
 
-  // Save wallpaper selection to memory whenever it changes
   useEffect(() => {
     setImageError(false);
     localStorage.setItem('pritam_os_wallpaper_idx', themeIdx.toString());
@@ -208,8 +206,6 @@ export default function Hero() {
 
   useEffect(() => {
     if (bootStage !== 'loading') return;
-    
-    // Safety check: Don't show loading bar if they have a valid active session
     const lastActive = localStorage.getItem('pritam_os_last_active');
     if (lastActive && (Date.now() - parseInt(lastActive) < EXPIRATION_TIME_MS)) return;
 
@@ -226,12 +222,8 @@ export default function Hero() {
     return () => clearInterval(interval);
   }, [bootStage]);
 
-  // --- LISTEN FOR WALLPAPER CHANGES FROM THE CONTROL CENTER ---
   useEffect(() => {
-    const handleNextWallpaper = () => {
-      setThemeIdx(prev => (prev + 1) % wallpapers.length);
-    };
-    
+    const handleNextWallpaper = () => setThemeIdx(prev => (prev + 1) % wallpapers.length);
     window.addEventListener('next-wallpaper', handleNextWallpaper);
     return () => window.removeEventListener('next-wallpaper', handleNextWallpaper);
   }, []);
@@ -251,20 +243,12 @@ export default function Hero() {
   };
 
   const handleLogin = () => {
-    if (isSubmittingLogin) return; 
-    if (bootStage !== 'login') return; 
-    
+    if (isSubmittingLogin || bootStage !== 'login') return; 
     setIsSubmittingLogin(true); 
-    
-    // 👇 Save login timestamp to memory to start the 1-hour clock
     localStorage.setItem('pritam_os_last_active', Date.now().toString());
     setBootStage('desktop');
-    
     window.dispatchEvent(new Event('system-unlock')); 
-    
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('launch-app', { detail: 'profile' }));
-    }, 800);
+    setTimeout(() => window.dispatchEvent(new CustomEvent('launch-app', { detail: 'profile' })), 800);
   };
 
   const launchApp = (appId: string) => {
@@ -274,11 +258,22 @@ export default function Hero() {
 
   const handleIconClick = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (window.innerWidth < 768) {
-      launchApp(id); 
-    } else {
-      setSelectedIcon(id);
-    }
+    if (window.innerWidth < 768) launchApp(id); 
+    else setSelectedIcon(id);
+  };
+
+  // 👇 Toggles that save to memory and trigger events
+  const toggleIcons = () => {
+    const newVal = !showIcons;
+    setShowIcons(newVal);
+    localStorage.setItem('pritam_os_show_icons', String(newVal));
+  };
+
+  const toggleDock = () => {
+    const newVal = !showDock;
+    setShowDock(newVal);
+    localStorage.setItem('pritam_os_show_dock', String(newVal));
+    window.dispatchEvent(new CustomEvent('toggle-dock', { detail: newVal }));
   };
 
   return (
@@ -295,19 +290,11 @@ export default function Hero() {
             <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full bg-purple-900/30 blur-[120px] transition-colors duration-1000"></div>
             <div className="absolute top-[10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-blue-900/20 blur-[130px] transition-colors duration-1000"></div>
             <div className="absolute bottom-[-20%] left-[15%] w-[70vw] h-[70vw] rounded-full bg-emerald-900/15 blur-[140px] transition-colors duration-1000"></div>
-            
-            {imageError && (
-              <div className="absolute inset-0 backdrop-blur-3xl bg-white/5"></div>
-            )}
+            {imageError && <div className="absolute inset-0 backdrop-blur-3xl bg-white/5"></div>}
           </div>
         ) : (
           <>
-            <img 
-              src={currentWallpaper.url} 
-              alt="preload" 
-              className="hidden" 
-              onError={() => setImageError(true)} 
-            />
+            <img src={currentWallpaper.url} alt="preload" className="hidden" onError={() => setImageError(true)} />
             <div 
               className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 opacity-90"
               style={{ backgroundImage: `url(${currentWallpaper.url})` }}
@@ -316,8 +303,8 @@ export default function Hero() {
         )}
       </div>
 
-      {/* RENDER DRAGGABLE ICONS */}
-      {bootStage === 'desktop' && (
+      {/* RENDER DRAGGABLE ICONS (Now controlled by showIcons state!) */}
+      {bootStage === 'desktop' && showIcons && (
         <div className="absolute inset-0 z-10 overflow-hidden pointer-events-none">
           <div className="relative w-full h-full pointer-events-auto">
             {desktopIcons.map((item, index) => (
@@ -327,9 +314,7 @@ export default function Hero() {
                 index={index}
                 isSelected={selectedIcon === item.id}
                 onClick={handleIconClick}
-                onDoubleClick={() => {
-                  if (window.innerWidth >= 768) launchApp(item.id);
-                }}
+                onDoubleClick={() => { if (window.innerWidth >= 768) launchApp(item.id); }}
               />
             ))}
           </div>
@@ -344,15 +329,25 @@ export default function Hero() {
         >
           <button className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white">New Folder</button>
           
-          {/* SPOTLIGHT SEARCH OPTION */}
           <button 
             className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"
-            onClick={() => {
-              window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }));
-            }}
+            onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
           >
             <span>Spotlight Search</span>
             <span className="text-[10px] opacity-60 font-mono tracking-widest">⌘K</span>
+          </button>
+
+          <div className="h-px bg-white/10 my-1"></div>
+          
+          {/* 👇 NEW VIEW TOGGLES */}
+          <div className="px-4 py-1 text-zinc-500 font-semibold text-[10px] tracking-wider uppercase">View</div>
+          <button className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center group" onClick={toggleIcons}>
+            <span>{showIcons ? 'Hide Desktop Icons' : 'Show Desktop Icons'}</span>
+            {showIcons ? <EyeOff size={12} className="opacity-0 group-hover:opacity-100" /> : <Eye size={12} className="opacity-0 group-hover:opacity-100" />}
+          </button>
+          <button className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center group" onClick={toggleDock}>
+            <span>{showDock ? 'Hide Dock' : 'Show Dock'}</span>
+            {showDock ? <EyeOff size={12} className="opacity-0 group-hover:opacity-100" /> : <Eye size={12} className="opacity-0 group-hover:opacity-100" />}
           </button>
 
           <div className="h-px bg-white/10 my-1"></div>
@@ -363,7 +358,7 @@ export default function Hero() {
             onClick={() => setThemeIdx(p => (p + 1) % wallpapers.length)}
           >
             <span>Next Background</span>
-            <span className="text-zinc-500 text-[10px]">{currentWallpaper.name}</span>
+            <span className="text-zinc-500 text-[10px] truncate max-w-[80px] text-right">{currentWallpaper.name}</span>
           </button>
           
           <div className="h-px bg-white/10 my-1"></div>
@@ -372,7 +367,7 @@ export default function Hero() {
         </div>
       )}
 
-      {/* BOOT SCREEN */}
+      {/* BOOT SCREEN & LOCKSCREEN UNCHANGED */}
       {bootStage === 'loading' && (
         <div className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center">
           <Command size={56} className="text-os-text mb-12 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" strokeWidth={1.5} />
@@ -382,7 +377,6 @@ export default function Hero() {
         </div>
       )}
 
-      {/* 👇 DEDICATED LOCKSCREEN WITH MACOS BLURRED WALLPAPER */}
       <div 
         className={`absolute inset-0 z-40 flex flex-col items-center justify-center bg-cover bg-center transition-all duration-1000 ease-in-out
           ${bootStage === 'login' ? 'opacity-100 pointer-events-auto scale-100' : 'opacity-0 pointer-events-none scale-105'}
@@ -390,10 +384,7 @@ export default function Hero() {
         `}
         style={{ backgroundImage: `url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop')` }}
       >
-        {/* Dark Glass Overlay */}
         <div className="absolute inset-0 backdrop-blur-2xl bg-black/30"></div>
-
-        {/* Profile Content (z-10 to sit above the glass) */}
         <div className="z-10 flex flex-col items-center">
           <div className="w-24 h-24 rounded-full bg-linear-to-tr from-zinc-700 to-zinc-500 flex items-center justify-center border border-zinc-500 shadow-2xl mb-4 overflow-hidden">
              <span className="text-4xl text-white font-medium drop-shadow-md">P</span>
@@ -401,10 +392,8 @@ export default function Hero() {
           <h1 className="text-xl font-semibold text-white mb-6 tracking-wide drop-shadow-lg">Pritam Poddar</h1>
           <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} className="relative flex items-center group">
             <input 
-              type="password"
-              placeholder="Enter Password"
+              type="password" placeholder="Enter Password" autoFocus
               className="w-48 h-8 rounded-full bg-white/10 border border-white/20 px-4 text-xs text-white placeholder:text-white/50 backdrop-blur-md outline-none focus:bg-white/20 focus:border-white/40 transition-all pr-8 tracking-widest text-center"
-              autoFocus
             />
             <button type="submit" className="absolute right-1 w-6 h-6 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/40 transition-colors opacity-0 group-hover:opacity-100 focus-within:opacity-100">
               <ArrowRight size={12} className="text-white" />
@@ -416,7 +405,6 @@ export default function Hero() {
           </p>
         </div>
       </div>
-      
     </div>
   );
 }
