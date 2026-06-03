@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { SquarePen, Trash2, Search } from 'lucide-react';
+import { SquarePen, Trash2, Search, ArrowLeft } from 'lucide-react';
 
 type Note = {
   id: string;
@@ -14,6 +14,9 @@ export default function NotesApp() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoaded, setIsLoaded] = useState(false);
+
+  // 👇 Mobile View Management
+  const [mobileView, setMobileView] = useState<'list' | 'editor'>('list');
 
   // Load from LocalStorage on mount (with custom Easter Egg defaults!)
   useEffect(() => {
@@ -59,6 +62,7 @@ export default function NotesApp() {
     };
     setNotes([newNote, ...notes]);
     setActiveId(newNote.id);
+    setMobileView('editor'); // Auto-open the new note on mobile
   };
 
   const deleteNote = (idToDelete: string) => {
@@ -67,6 +71,7 @@ export default function NotesApp() {
     if (activeId === idToDelete) {
       setActiveId(filtered.length > 0 ? filtered[0].id : null);
     }
+    setMobileView('list'); // Return to list view on mobile after deletion
   };
 
   const updateNote = (text: string) => {
@@ -93,7 +98,7 @@ export default function NotesApp() {
     <div className="w-full h-full flex bg-os-window font-sans text-os-text overflow-hidden">
       
       {/* LEFT SIDEBAR: Note List */}
-      <div className="w-64 border-r border-os-border bg-os-panel flex flex-col shrink-0">
+      <div className={`w-full md:w-64 border-r border-os-border bg-os-panel flex flex-col shrink-0 ${mobileView !== 'list' ? 'hidden md:flex' : 'flex'}`}>
         
         {/* Sidebar Header */}
         <div className="h-14 px-4 border-b border-white/5 flex items-center justify-between shrink-0">
@@ -104,25 +109,28 @@ export default function NotesApp() {
               placeholder="Search" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/5 border border-os-border rounded-md py-1 pl-8 pr-3 text-xs text-os-text outline-none focus:border-white/20 transition-all placeholder:text-zinc-600"
+              className="w-full bg-white/5 border border-os-border rounded-md py-1.5 pl-8 pr-3 text-xs text-os-text outline-none focus:border-white/20 transition-all placeholder:text-zinc-600"
             />
           </div>
           <button 
             onClick={createNote}
             className="ml-3 p-1.5 text-zinc-400 hover:text-white hover:bg-white/10 rounded-md transition-colors"
           >
-            <SquarePen size={16} />
+            <SquarePen size={18} />
           </button>
         </div>
 
         {/* Notes List */}
-        <div className="flex-1 overflow-y-auto [scrollbar-width:none] p-2 space-y-1">
+        <div className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden p-2 space-y-1">
           {filteredNotes.map(note => (
             <button
               key={note.id}
-              onClick={() => setActiveId(note.id)}
+              onClick={() => {
+                setActiveId(note.id);
+                setMobileView('editor');
+              }}
               className={`w-full text-left p-3 rounded-lg transition-all border ${
-                activeId === note.id 
+                activeId === note.id && mobileView !== 'list'
                   ? 'bg-amber-500/20 border-amber-500/30 text-amber-50' 
                   : 'border-transparent hover:bg-white/5 text-zinc-400'
               }`}
@@ -143,14 +151,24 @@ export default function NotesApp() {
       </div>
 
       {/* RIGHT SIDE: Editor Area */}
-      <div className="flex-1 flex flex-col bg-os-window relative">
+      <div className={`flex-1 flex flex-col bg-os-window relative ${mobileView === 'list' ? 'hidden md:flex' : 'flex'}`}>
         {activeNote ? (
           <>
-            <div className="h-14 px-6 border-b border-white/5 flex items-center justify-between shrink-0">
-              <span className="text-xs font-medium text-zinc-500">{activeNote.date}</span>
+            <div className="h-14 px-4 sm:px-6 border-b border-white/5 flex items-center justify-between shrink-0">
+              
+              {/* Mobile Back Button */}
+              <button 
+                onClick={() => setMobileView('list')} 
+                className="flex md:hidden items-center gap-1 text-zinc-400 hover:text-white transition-colors"
+              >
+                <ArrowLeft size={18} /> <span className="text-xs font-medium">Notes</span>
+              </button>
+
+              <span className="text-xs font-medium text-zinc-500 hidden md:block">{activeNote.date}</span>
+              
               <button 
                 onClick={() => deleteNote(activeNote.id)}
-                className="p-1.5 text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-md transition-colors"
+                className="p-1.5 text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-md transition-colors ml-auto"
                 title="Delete Note"
               >
                 <Trash2 size={16} />
@@ -160,7 +178,7 @@ export default function NotesApp() {
             <textarea
               value={activeNote.content}
               onChange={(e) => updateNote(e.target.value)}
-              className="flex-1 w-full p-6 bg-transparent border-none outline-none resize-none text-sm leading-relaxed text-os-text custom-scrollbar"
+              className="flex-1 w-full p-4 sm:p-6 bg-transparent border-none outline-none resize-none text-sm sm:text-base leading-relaxed text-os-text [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               placeholder="Start typing..."
               spellCheck={false}
             />
