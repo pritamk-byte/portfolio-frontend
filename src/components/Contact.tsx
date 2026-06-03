@@ -1,19 +1,19 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Send, Inbox, Send as SendIcon, PenSquare, Trash2, Archive, Search, CheckCircle2, AlertCircle, ArrowLeft, MailX } from 'lucide-react';
+import { Send, Inbox, Send as SendIcon, PenSquare, Trash2, Archive, Search, CheckCircle2, AlertCircle, ArrowLeft, MailX, RefreshCw, XCircle } from 'lucide-react';
 
 type Email = {
   id: string;
+  folder: 'inbox' | 'sent' | 'archive' | 'trash';
   sender: string;
   email: string;
   subject: string;
   snippet: string;
   time: string;
   body: string;
-  folder: 'inbox' | 'sent' | 'archive' | 'trash';
 };
 
-// --- DEFAULT GREETING EMAILS ---
+// --- DEFAULT GREETING EMAILS & FAKE HISTORY ---
 const DEFAULT_EMAILS: Email[] = [
   {
     id: '1',
@@ -44,12 +44,42 @@ const DEFAULT_EMAILS: Email[] = [
     snippet: 'If you are looking for a dedicated software engineer...',
     time: 'Monday',
     body: 'Hello,\n\nIf you are a recruiter, fellow developer, or just someone passing by, I would love to connect!\n\nYou can use the "Compose" button right here in this app to send me a real message (it connects directly to my backend API). Your sent messages will automatically save to your Sent folder here on the OS.\n\nLooking forward to hearing from you!\n\nBest,\nPritam Poddar'
+  },
+  {
+    id: '4',
+    folder: 'archive',
+    sender: 'GitHub',
+    email: 'noreply@github.com',
+    subject: 'Dependabot Alert: 3 updates available',
+    snippet: 'Dependabot has found 3 updates for your repositories...',
+    time: 'May 12',
+    body: 'Dependabot has successfully updated the following dependencies in your React frontend environment:\n\n- lucide-react (v0.290.0)\n- tailwindcss (v3.4.1)\n- next (v14.1.0)\n\nAll automated testing suites passed. These PRs have been merged.'
+  },
+  {
+    id: '5',
+    folder: 'archive',
+    sender: 'Vercel',
+    email: 'deploy@vercel.com',
+    subject: 'Deployment Successful',
+    snippet: 'Your production deployment for Pritam_OS is live...',
+    time: 'May 10',
+    body: 'Deployment Complete!\n\nYour project "pritam-os-portfolio" has been successfully deployed to production. The edge network has cached your static assets and Serverless functions are nominal.'
+  },
+  {
+    id: '6',
+    folder: 'trash',
+    sender: 'Spam Filter',
+    email: 'marketing@fakecompany.com',
+    subject: 'Grow your LinkedIn network by 5000%!',
+    snippet: 'Are you tired of not having enough connections? Click here...',
+    time: 'May 01',
+    body: 'WARNING: This message was flagged as spam.\n\n"Hey there! We noticed you have an amazing profile. Pay us $50 and we will use bots to artificially inflate your LinkedIn connections!"'
   }
 ];
 
 export default function Contact() {
   const [mails, setMails] = useState<Email[]>([]);
-  const [activeFolder, setActiveFolder] = useState<'inbox' | 'sent'>('inbox');
+  const [activeFolder, setActiveFolder] = useState<'inbox' | 'sent' | 'archive' | 'trash'>('inbox');
   const [activeTab, setActiveTab] = useState<'read' | 'compose'>('read');
   const [selectedMailId, setSelectedMailId] = useState<string | null>(null);
   
@@ -81,7 +111,7 @@ export default function Contact() {
   const currentFolderMails = mails.filter(m => m.folder === activeFolder);
   const selectedMail = mails.find(m => m.id === selectedMailId);
 
-  const handleFolderChange = (folder: 'inbox' | 'sent') => {
+  const handleFolderChange = (folder: 'inbox' | 'sent' | 'archive' | 'trash') => {
     setActiveFolder(folder);
     setActiveTab('read');
     setMobileView('list');
@@ -89,19 +119,34 @@ export default function Contact() {
     setSelectedMailId(folderMails.length > 0 ? folderMails[0].id : null);
   };
 
-  const handleMoveMail = (id: string, targetFolder: 'archive' | 'trash') => {
+  // Move an email to a different folder
+  const handleMoveMail = (id: string, targetFolder: 'inbox' | 'archive' | 'trash') => {
     const updatedMails = mails.map(m => m.id === id ? { ...m, folder: targetFolder } : m);
     saveMailsToMemory(updatedMails);
     
     // Auto-select the next available mail in the current folder
     const remainingInFolder = updatedMails.filter(m => m.folder === activeFolder);
-    if (remainingInFolder.length > 0) {
-      setSelectedMailId(remainingInFolder[0].id);
-    } else {
-      setSelectedMailId(null);
-    }
+    setSelectedMailId(remainingInFolder.length > 0 ? remainingInFolder[0].id : null);
     
-    // If on mobile, kick them back to the list view so they aren't stuck on a deleted email
+    if (mobileView === 'details') setMobileView('list');
+  };
+
+  // Permanently delete a single email
+  const handlePermanentDelete = (id: string) => {
+    const updatedMails = mails.filter(m => m.id !== id);
+    saveMailsToMemory(updatedMails);
+    
+    const remainingInFolder = updatedMails.filter(m => m.folder === activeFolder);
+    setSelectedMailId(remainingInFolder.length > 0 ? remainingInFolder[0].id : null);
+    
+    if (mobileView === 'details') setMobileView('list');
+  };
+
+  // Empty the entire trash folder
+  const handleEmptyTrash = () => {
+    const updatedMails = mails.filter(m => m.folder !== 'trash');
+    saveMailsToMemory(updatedMails);
+    setSelectedMailId(null);
     if (mobileView === 'details') setMobileView('list');
   };
 
@@ -121,7 +166,7 @@ export default function Contact() {
 
       if (!response.ok) throw new Error('Transmission failed');
 
-      // 👇 Save the sent mail locally to the Sent folder!
+      // Save the sent mail locally to the Sent folder!
       const newSentMail: Email = {
         id: Date.now().toString(),
         folder: 'sent',
@@ -138,7 +183,7 @@ export default function Contact() {
       setFormState('success');
       setTimeout(() => {
         setFormState('idle');
-        handleFolderChange('sent'); // Automatically switch to sent folder to show them it saved!
+        handleFolderChange('sent'); // Automatically switch to sent folder
       }, 3000);
       
     } catch (error) {
@@ -153,25 +198,28 @@ export default function Contact() {
       
       {/* 1. LEFT PANE: Folders (Visible on tablets and desktop) */}
       <div className="hidden md:flex flex-col w-40 lg:w-48 bg-[#181818] border-r border-os-border/50 pt-2 shrink-0">
-        <div className="px-4 py-2 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Favorites</div>
+        <div className="px-4 py-2 text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Favorites</div>
         
-        <button 
-          onClick={() => handleFolderChange('inbox')}
-          className={`flex items-center justify-between px-4 py-2 mx-2 rounded-md transition-colors ${activeFolder === 'inbox' && activeTab !== 'compose' ? 'bg-[#2d2d2d] text-zinc-100' : 'text-zinc-400 hover:bg-[#252525]'}`}
-        >
+        <button onClick={() => handleFolderChange('inbox')} className={`flex items-center justify-between px-4 py-2 mx-2 rounded-md transition-colors ${activeFolder === 'inbox' && activeTab !== 'compose' ? 'bg-[#2d2d2d] text-zinc-100' : 'text-zinc-400 hover:bg-[#252525]'}`}>
           <div className="flex items-center gap-3"><Inbox size={16} /> Inbox</div>
           {mails.filter(m => m.folder === 'inbox').length > 0 && (
-            <span className="text-xs bg-zinc-700 text-os-text px-1.5 py-0.5 rounded-full">
-              {mails.filter(m => m.folder === 'inbox').length}
-            </span>
+            <span className="text-xs bg-zinc-700 text-os-text px-1.5 py-0.5 rounded-full">{mails.filter(m => m.folder === 'inbox').length}</span>
           )}
         </button>
 
-        <button 
-          onClick={() => handleFolderChange('sent')}
-          className={`flex items-center gap-3 px-4 py-2 mx-2 rounded-md transition-colors mt-1 ${activeFolder === 'sent' && activeTab !== 'compose' ? 'bg-[#2d2d2d] text-zinc-100' : 'text-zinc-400 hover:bg-[#252525]'}`}
-        >
+        <button onClick={() => handleFolderChange('sent')} className={`flex items-center gap-3 px-4 py-2 mx-2 rounded-md transition-colors mt-1 ${activeFolder === 'sent' && activeTab !== 'compose' ? 'bg-[#2d2d2d] text-zinc-100' : 'text-zinc-400 hover:bg-[#252525]'}`}>
           <SendIcon size={16} /> Sent
+        </button>
+
+        <button onClick={() => handleFolderChange('archive')} className={`flex items-center gap-3 px-4 py-2 mx-2 rounded-md transition-colors mt-1 ${activeFolder === 'archive' && activeTab !== 'compose' ? 'bg-[#2d2d2d] text-zinc-100' : 'text-zinc-400 hover:bg-[#252525]'}`}>
+          <Archive size={16} /> Archive
+        </button>
+
+        <button onClick={() => handleFolderChange('trash')} className={`flex items-center justify-between px-4 py-2 mx-2 rounded-md transition-colors mt-1 ${activeFolder === 'trash' && activeTab !== 'compose' ? 'bg-[#2d2d2d] text-zinc-100' : 'text-zinc-400 hover:bg-[#252525]'}`}>
+          <div className="flex items-center gap-3"><Trash2 size={16} /> Trash</div>
+          {mails.filter(m => m.folder === 'trash').length > 0 && (
+            <span className="text-xs bg-zinc-700/50 text-zinc-500 px-1.5 py-0.5 rounded-full">{mails.filter(m => m.folder === 'trash').length}</span>
+          )}
         </button>
       </div>
 
@@ -193,35 +241,29 @@ export default function Contact() {
           </button>
         </div>
 
-        {/* 👇 Mobile Only: Folder Segmented Control */}
-        <div className="flex md:hidden p-2 bg-[#181818] border-b border-os-border/50 gap-2 shrink-0">
-          <button 
-            onClick={() => handleFolderChange('inbox')}
-            className={`flex-1 text-center py-1.5 rounded text-xs font-medium transition-colors ${activeFolder === 'inbox' ? 'bg-[#0058d0] text-white' : 'bg-[#2d2d2d] text-zinc-400'}`}
-          >
-            Inbox
-          </button>
-          <button 
-            onClick={() => handleFolderChange('sent')}
-            className={`flex-1 text-center py-1.5 rounded text-xs font-medium transition-colors ${activeFolder === 'sent' ? 'bg-[#0058d0] text-white' : 'bg-[#2d2d2d] text-zinc-400'}`}
-          >
-            Sent
-          </button>
+        {/* 👇 Mobile Only: Scrollable Folder Segmented Control */}
+        <div className="flex md:hidden p-2 bg-[#181818] border-b border-os-border/50 gap-2 shrink-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <button onClick={() => handleFolderChange('inbox')} className={`px-4 py-1.5 rounded text-xs font-medium transition-colors shrink-0 ${activeFolder === 'inbox' ? 'bg-[#0058d0] text-white' : 'bg-[#2d2d2d] text-zinc-400'}`}>Inbox</button>
+          <button onClick={() => handleFolderChange('sent')} className={`px-4 py-1.5 rounded text-xs font-medium transition-colors shrink-0 ${activeFolder === 'sent' ? 'bg-[#0058d0] text-white' : 'bg-[#2d2d2d] text-zinc-400'}`}>Sent</button>
+          <button onClick={() => handleFolderChange('archive')} className={`px-4 py-1.5 rounded text-xs font-medium transition-colors shrink-0 ${activeFolder === 'archive' ? 'bg-[#0058d0] text-white' : 'bg-[#2d2d2d] text-zinc-400'}`}>Archive</button>
+          <button onClick={() => handleFolderChange('trash')} className={`px-4 py-1.5 rounded text-xs font-medium transition-colors shrink-0 ${activeFolder === 'trash' ? 'bg-[#0058d0] text-white' : 'bg-[#2d2d2d] text-zinc-400'}`}>Trash</button>
         </div>
 
-        {/* Search Bar */}
-        <div className="p-2 border-b border-os-border/50 shrink-0 hidden md:block">
-          <div className="bg-[#2d2d2d] rounded-md flex items-center px-2 py-1.5 text-zinc-400">
-            <Search size={14} className="mr-2" />
-            <input type="text" placeholder="Search" className="bg-transparent border-none outline-none w-full text-xs text-os-text placeholder:text-zinc-500" />
+        {/* Trash Auto-Delete Warning Banner */}
+        {activeFolder === 'trash' && (
+          <div className="bg-[#1e1e1e] p-2 flex flex-col items-center justify-center border-b border-os-border/50 shrink-0">
+            <span className="text-[10px] text-zinc-500 mb-1.5 text-center">Items in Trash will be automatically deleted after 30 days.</span>
+            {currentFolderMails.length > 0 && (
+              <button onClick={handleEmptyTrash} className="text-xs text-blue-400 hover:text-blue-300 font-medium">Empty Trash Now</button>
+            )}
           </div>
-        </div>
+        )}
 
         {/* Email List */}
         <div className="flex-1 overflow-y-auto mac-scrollbar">
           {currentFolderMails.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-zinc-500 p-8 text-center">
-              <MailX size={32} className="mb-2 opacity-50" />
+              <MailX size={32} className="mb-2 opacity-30" />
               <div className="text-xs">No messages in {activeFolder}</div>
             </div>
           ) : (
@@ -273,8 +315,22 @@ export default function Contact() {
           ) : (
             selectedMail && (
               <div className="flex items-center gap-4">
-                <button onClick={() => handleMoveMail(selectedMail.id, 'archive')} className="hover:text-os-text" title="Archive"><Archive size={16} /></button>
-                <button onClick={() => handleMoveMail(selectedMail.id, 'trash')} className="hover:text-red-400" title="Delete"><Trash2 size={16} /></button>
+                {activeFolder === 'trash' ? (
+                  <>
+                    <button onClick={() => handleMoveMail(selectedMail.id, 'inbox')} className="hover:text-emerald-400" title="Restore to Inbox"><RefreshCw size={16} /></button>
+                    <button onClick={() => handlePermanentDelete(selectedMail.id)} className="hover:text-red-500 text-red-400/70" title="Delete Permanently"><XCircle size={16} /></button>
+                  </>
+                ) : activeFolder === 'archive' ? (
+                  <>
+                    <button onClick={() => handleMoveMail(selectedMail.id, 'inbox')} className="hover:text-os-text" title="Move to Inbox"><Inbox size={16} /></button>
+                    <button onClick={() => handleMoveMail(selectedMail.id, 'trash')} className="hover:text-red-400" title="Move to Trash"><Trash2 size={16} /></button>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={() => handleMoveMail(selectedMail.id, 'archive')} className="hover:text-os-text" title="Archive"><Archive size={16} /></button>
+                    <button onClick={() => handleMoveMail(selectedMail.id, 'trash')} className="hover:text-red-400" title="Move to Trash"><Trash2 size={16} /></button>
+                  </>
+                )}
               </div>
             )
           )}
