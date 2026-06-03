@@ -1,6 +1,6 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { Terminal as TerminalIcon, FileText, Mail, GitBranch, X, Minus, Maximize2, Globe, Users, User, LayoutGrid, Gamepad2, Crosshair, FileCode, Palette, SquarePen } from 'lucide-react';
+import { Terminal as TerminalIcon, FileText, Mail, GitBranch, X, Minus, Maximize2, Globe, Users, User, LayoutGrid, Gamepad2, Crosshair, FileCode, Palette, SquarePen, Monitor } from 'lucide-react';
 
 import NetworkApp from './NetworkApp';
 import NotesApp from './NotesApp';
@@ -296,8 +296,32 @@ export default function HUD() {
   const [mouseX, setMouseX] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  // 👇 ADDED STATE AND LISTENER FOR TOGGLING THE DOCK
+  // Added state and listener for toggling the dock
   const [showDock, setShowDock] = useState(true);
+  
+  // 👇 NEW: State for Mobile Desktop Warning Notice
+  const [showMobileNotice, setShowMobileNotice] = useState(false);
+
+  // 👇 NEW: Check if mobile, and trigger the notification after login
+  useEffect(() => {
+    if (isUnlocked && isMobile) {
+      const hasSeenNotice = localStorage.getItem('pritam_os_mobile_notice');
+      if (!hasSeenNotice) {
+        // Wait 2.5 seconds after login so it feels natural
+        const timer = setTimeout(() => {
+          setShowMobileNotice(true);
+          playSystemSound('pop');
+        }, 2500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isUnlocked, isMobile]);
+
+  // 👇 NEW: Dismiss and save to memory
+  const dismissMobileNotice = () => {
+    setShowMobileNotice(false);
+    localStorage.setItem('pritam_os_mobile_notice', 'true');
+  };
 
   useEffect(() => {
     const handleToggleDock = (e: Event) => {
@@ -363,6 +387,22 @@ export default function HUD() {
   
   return (
     <>
+      {/* 👇 NEW: macOS Style Mobile Warning Toast */}
+      <div className={`fixed top-4 left-4 right-4 z-[9999] transition-all duration-500 ease-out transform ${showMobileNotice ? 'translate-y-0 opacity-100' : '-translate-y-24 opacity-0 pointer-events-none'}`}>
+        <div className="bg-[#18181b]/95 backdrop-blur-2xl border border-white/10 p-4 rounded-2xl shadow-2xl flex items-start gap-4 max-w-sm mx-auto">
+          <div className="bg-blue-500/20 p-2 rounded-full shrink-0">
+            <Monitor size={20} className="text-blue-400" />
+          </div>
+          <div className="flex-1 mt-0.5">
+            <h4 className="text-white text-sm font-semibold mb-1">Desktop Recommended</h4>
+            <p className="text-zinc-400 text-xs leading-relaxed">For the full Pritam_OS experience with draggable windows and multitasking, please visit on a PC.</p>
+          </div>
+          <button onClick={dismissMobileNotice} className="text-zinc-500 hover:text-white p-1 shrink-0 bg-white/5 rounded-full hover:bg-white/10 transition-colors">
+            <X size={14} />
+          </button>
+        </div>
+      </div>
+
       {isMobile && openApps.length > 0 && (
         <div className="fixed top-8 left-2 right-2 h-8 z-[110] flex gap-1 overflow-x-auto bg-[#111111]/80 backdrop-blur-md rounded-lg p-1 border border-os-border [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {openApps.map(appId => {
@@ -463,7 +503,7 @@ export default function HUD() {
         )}
       </>
 
-      {/* 👇 APPLIED CSS TRANSITION TO SLIDE THE DOCK ON AND OFF */}
+      {/* APPLIED CSS TRANSITION TO SLIDE THE DOCK ON AND OFF */}
       <div className={`fixed left-1/2 -translate-x-1/2 z-[100] max-w-[95vw] md:max-w-none transition-all duration-500 ease-in-out ${showDock ? 'bottom-4 opacity-100' : '-bottom-32 opacity-0 pointer-events-none'}`}>
         <div 
           onMouseMove={(e) => setMouseX(e.clientX)}
