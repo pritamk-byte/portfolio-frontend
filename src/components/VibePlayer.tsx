@@ -1,76 +1,112 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Play, Pause, SkipBack, SkipForward, Volume2, Shuffle, Repeat, Music2, ListMusic } from 'lucide-react';
 
+// 👇 1. UPDATE THESE 'src' PATHS TO MATCH YOUR MP3 FILES IN THE PUBLIC FOLDER
 const PLAYLIST = [
   { 
     id: 1, 
     title: 'Deep Focus (Code Mode)', 
     artist: 'Pritam_OS', 
     cover: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=500&auto=format&fit=crop', 
-    duration: 245 
+    src: '/audio/track1.mp3' 
   },
   { 
     id: 2, 
     title: 'RCB Stadium Anthem', 
     artist: 'Chinnaswamy Vibes', 
     cover: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=500&auto=format&fit=crop', 
-    duration: 184 
+    src: '/audio/track2.mp3' 
   },
   { 
     id: 3, 
     title: 'Midnight Deployment', 
     artist: 'The Backends', 
     cover: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=500&auto=format&fit=crop', 
-    duration: 210 
+    src: '/audio/track3.mp3' 
   }
 ];
 
 const formatTime = (seconds: number) => {
+  if (isNaN(seconds)) return '0:00';
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
   return `${m}:${s < 10 ? '0' : ''}${s}`;
 };
 
 export default function VibePlayer() {
+  // 👇 Real Audio Reference
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  
   const [currentTrackIdx, setCurrentTrackIdx] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
 
   const currentTrack = PLAYLIST[currentTrackIdx];
 
-  // Simulate progress bar moving
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
+  // Handle Play/Pause Button
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    
     if (isPlaying) {
-      interval = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= currentTrack.duration) {
-            handleNext();
-            return 0;
-          }
-          return prev + 1;
-        });
-      }, 1000);
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play().catch(e => console.error("Playback failed:", e));
     }
-    return () => clearInterval(interval);
-  }, [isPlaying, currentTrackIdx]);
+    setIsPlaying(!isPlaying);
+  };
+
+  // Auto-play when song changes (if already playing)
+  useEffect(() => {
+    if (isPlaying && audioRef.current) {
+      audioRef.current.play().catch(e => console.error("Playback failed:", e));
+    }
+  }, [currentTrackIdx]);
+
+  // Audio Event Listeners
+  const handleTimeUpdate = () => {
+    if (audioRef.current) setProgress(audioRef.current.currentTime);
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) setDuration(audioRef.current.duration);
+  };
 
   const handleNext = () => {
     setCurrentTrackIdx((prev) => (prev + 1) % PLAYLIST.length);
-    setProgress(0);
   };
 
   const handlePrev = () => {
     setCurrentTrackIdx((prev) => (prev - 1 + PLAYLIST.length) % PLAYLIST.length);
-    setProgress(0);
   };
 
-  const togglePlay = () => setIsPlaying(!isPlaying);
+  // 👇 Allow clicking on the progress bar to seek
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!audioRef.current || !progressBarRef.current) return;
+    
+    const rect = progressBarRef.current.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const percentage = clickX / rect.width;
+    const newTime = percentage * duration;
+    
+    audioRef.current.currentTime = newTime;
+    setProgress(newTime);
+  };
 
   return (
     <div className="w-full h-full flex flex-col md:flex-row bg-[#121212] text-white font-sans select-none overflow-hidden">
       
+      {/* 👇 THE HIDDEN HTML5 AUDIO ENGINE */}
+      <audio 
+        ref={audioRef}
+        src={currentTrack.src}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={handleNext}
+      />
+
       {/* Sidebar / Playlist (Hidden on small screens) */}
       <div className="hidden md:flex w-64 bg-[#0a0a0a] border-r border-white/5 flex-col shrink-0">
         <div className="p-6 pb-2">
@@ -84,7 +120,10 @@ export default function VibePlayer() {
           {PLAYLIST.map((track, idx) => (
             <div 
               key={track.id}
-              onClick={() => { setCurrentTrackIdx(idx); setProgress(0); setIsPlaying(true); }}
+              onClick={() => { 
+                setCurrentTrackIdx(idx); 
+                setIsPlaying(true); 
+              }}
               className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${currentTrackIdx === idx ? 'bg-white/10' : 'hover:bg-white/5'}`}
             >
               <img src={track.cover} alt="cover" className="w-10 h-10 rounded shadow-sm object-cover" />
@@ -126,17 +165,21 @@ export default function VibePlayer() {
         {/* Controls (Bottom) */}
         <div className="p-6 sm:p-8 bg-black/40 backdrop-blur-xl border-t border-white/5 shrink-0">
           
-          {/* Progress Bar */}
+          {/* Interactive Scrubbable Progress Bar */}
           <div className="mb-6">
-            <div className="h-1.5 bg-white/10 rounded-full overflow-hidden cursor-pointer">
+            <div 
+              ref={progressBarRef}
+              onClick={handleSeek}
+              className="h-2 bg-white/10 rounded-full overflow-hidden cursor-pointer group relative"
+            >
               <div 
-                className="h-full bg-rose-500 transition-all duration-1000 ease-linear"
-                style={{ width: `${(progress / currentTrack.duration) * 100}%` }}
+                className="h-full bg-rose-500 transition-all duration-100 ease-linear group-hover:bg-rose-400"
+                style={{ width: `${duration > 0 ? (progress / duration) * 100 : 0}%` }}
               ></div>
             </div>
             <div className="flex justify-between text-[11px] font-medium text-zinc-500 mt-2">
               <span>{formatTime(progress)}</span>
-              <span>{formatTime(currentTrack.duration)}</span>
+              <span>{formatTime(duration)}</span>
             </div>
           </div>
 
