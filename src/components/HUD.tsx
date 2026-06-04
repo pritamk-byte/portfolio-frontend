@@ -1,6 +1,10 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { Terminal as TerminalIcon, FileText, Mail, GitBranch, X, Minus, Maximize2, Globe, Users, User, LayoutGrid, Gamepad2, Crosshair, FileCode, Palette, SquarePen, Monitor } from 'lucide-react';
+import { 
+  Terminal as TerminalIcon, FileText, Mail, GitBranch, X, Minus, Maximize2, 
+  Globe, Users, User, LayoutGrid, Gamepad2, Crosshair, FileCode, Palette, 
+  SquarePen, Monitor, Code2, Calculator as CalcIcon, Check
+} from 'lucide-react';
 
 import NetworkApp from './NetworkApp';
 import NotesApp from './NotesApp';
@@ -12,6 +16,8 @@ import Finder from './Finder';
 import InteractiveTerminal from './Terminal';
 import Contact from './Contact'; 
 import SystemProfile from './SystemProfile'; 
+import CodeViewer from './CodeViewer';
+import Calculator from './Calculator';
 
 // --- ZERO-DEPENDENCY SYNTHETIC AUDIO ENGINE ---
 const playSystemSound = (type: 'pop' | 'click') => {
@@ -52,6 +58,26 @@ const playSystemSound = (type: 'pop' | 'click') => {
     console.error("Audio API not supported");
   }
 };
+
+// --- SYSTEM APP REGISTRY ---
+const SYSTEM_APPS = [
+  { id: 'finder', label: 'Finder', icon: LayoutGrid, color: 'text-blue-400', title: 'Finder' },
+  { id: 'profile', label: 'System Profile', icon: User, color: 'text-zinc-100', title: 'System Profile' },
+  { id: 'vscode', label: 'VS Code', icon: Code2, color: 'text-blue-500', title: 'Code Viewer' },
+  { id: 'calc', label: 'Calculator', icon: CalcIcon, color: 'text-orange-400', title: 'Calculator' },
+  { id: 'terminal', label: 'Terminal', icon: TerminalIcon, color: 'text-emerald-400', title: 'Terminal' }, 
+  { id: 'esp', label: 'ESP Platform', icon: Globe, color: 'text-blue-400', title: 'ESP Core' },
+  { id: 'alumni', label: 'ConnectAlumni', icon: Users, color: 'text-orange-400', title: 'ConnectAlumni' },
+  { id: 'resume', label: 'Resume.pdf', icon: FileText, color: 'text-yellow-400', title: 'Document Viewer' },
+  { id: 'contact', label: 'Secure Channel', icon: Mail, color: 'text-purple-400', title: 'Mail Client' },
+  { id: 'github', label: 'Repository', icon: GitBranch, color: 'text-zinc-100', title: 'GitHub' },
+  { id: 'snake', label: 'Data Worm', icon: Gamepad2, color: 'text-emerald-400', title: 'Data Worm' },
+  { id: 'minesweeper', label: 'Cyber Sweeper', icon: Crosshair, color: 'text-red-400', title: 'Cyber Sweeper' },
+  { id: 'paint', label: 'Studio', icon: Palette, color: 'text-pink-400', title: 'Studio' },
+  { id: 'notes', label: 'Notes', icon: SquarePen, color: 'text-amber-400', title: 'Notes' },
+  { id: 'network', label: 'Network', icon: Users, color: 'text-indigo-400', title: 'Network' },
+  { id: 'guide', label: 'commands.txt', icon: FileCode, color: 'text-os-text', title: 'Text Editor' }
+];
 
 // --- 1. THE REUSABLE OS WINDOW COMPONENT ---
 function DesktopWindow({ 
@@ -183,11 +209,9 @@ function DesktopWindow({
               <button onClick={(e) => { e.stopPropagation(); playSystemSound('click'); onClose(); }} className="w-3.5 h-3.5 rounded-full bg-red-500 hover:bg-red-400 flex items-center justify-center group interactive">
                 <X size={10} className="text-red-900 opacity-0 group-hover:opacity-100" />
               </button>
-              
               <button onClick={(e) => { e.stopPropagation(); playSystemSound('click'); onMinimize(); }} className="w-3.5 h-3.5 rounded-full bg-yellow-500 hover:bg-yellow-400 flex items-center justify-center group interactive">
                 <Minus size={10} className="text-yellow-900 opacity-0 group-hover:opacity-100" />
               </button>
-              
               <button onClick={(e) => { e.stopPropagation(); playSystemSound('click'); setIsMaximized(!isMaximized); }} className="w-3.5 h-3.5 rounded-full bg-emerald-500 hover:bg-emerald-400 flex items-center justify-center group interactive">
                 <Maximize2 size={8} className="text-emerald-900 opacity-0 group-hover:opacity-100" />
               </button>
@@ -200,9 +224,7 @@ function DesktopWindow({
         )}
 
         <div className="flex-1 w-full h-full relative bg-black overflow-hidden flex flex-col">
-          {(isDragging || isResizing) && (
-            <div className="absolute inset-0 z-[100] cursor-grabbing"></div>
-          )}
+          {(isDragging || isResizing) && <div className="absolute inset-0 z-[100] cursor-grabbing"></div>}
           {children}
         </div>
 
@@ -221,7 +243,7 @@ function DesktopWindow({
   );
 }
 
-function DockItem({ item, isOpen, isActive, mouseX, onClick }: any) {
+function DockItem({ item, isOpen, isActive, mouseX, onClick, onContextMenu }: any) {
   const ref = useRef<HTMLButtonElement>(null);
   const [size, setSize] = useState(52);
 
@@ -263,10 +285,9 @@ function DockItem({ item, isOpen, isActive, mouseX, onClick }: any) {
       <button
         ref={ref}
         onClick={onClick}
+        onContextMenu={(e) => onContextMenu(e, item.id)} // 👇 Added Context Menu Trigger
         style={{ 
-          width: `${size}px`, 
-          height: `${size}px`, 
-          willChange: 'width, height',
+          width: `${size}px`, height: `${size}px`, willChange: 'width, height',
           transition: `width ${isHovering ? '50ms' : '250ms'} ease-out, height ${isHovering ? '50ms' : '250ms'} ease-out`
         }}
         className={`flex items-center justify-center bg-zinc-900/80 border rounded-2xl hover:bg-zinc-800 origin-bottom shadow-lg interactive focus:outline-none mb-2
@@ -295,19 +316,49 @@ export default function HUD() {
   
   const [mouseX, setMouseX] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
-
-  // Added state and listener for toggling the dock
   const [showDock, setShowDock] = useState(true);
-  
-  // 👇 NEW: State for Mobile Desktop Warning Notice
   const [showMobileNotice, setShowMobileNotice] = useState(false);
 
-  // 👇 NEW: Check if mobile, and trigger the notification after login
+  // 👇 NEW: Dock Pinning State & Memory
+  const [pinnedApps, setPinnedApps] = useState<string[]>(['finder', 'profile', 'contact', 'github']);
+  const [dockContextMenu, setDockContextMenu] = useState<{show: boolean, x: number, appId: string | null}>({ show: false, x: 0, appId: null });
+
+  useEffect(() => {
+    const savedPinned = localStorage.getItem('pritam_os_dock_pinned');
+    if (savedPinned) {
+      setPinnedApps(JSON.parse(savedPinned));
+    }
+  }, []);
+
+  const togglePinApp = (id: string) => {
+    setPinnedApps(prev => {
+      const newPinned = prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id];
+      localStorage.setItem('pritam_os_dock_pinned', JSON.stringify(newPinned));
+      return newPinned;
+    });
+  };
+
+  // Close context menu on global click
+  useEffect(() => {
+    const closeMenu = () => setDockContextMenu(prev => ({ ...prev, show: false }));
+    window.addEventListener('click', closeMenu);
+    return () => window.removeEventListener('click', closeMenu);
+  }, []);
+
+  // 👇 DERIVED: Calculate which items should be visible in the dock right now
+  const visibleDockItemIds = Array.from(new Set([...pinnedApps, ...openApps]));
+  // Sort them so pinned items appear first in their defined order, then unpinned open items
+  const sortedDockItemIds = [
+    ...pinnedApps.filter(id => visibleDockItemIds.includes(id)),
+    ...openApps.filter(id => !pinnedApps.includes(id))
+  ];
+  const currentDockItems = sortedDockItemIds.map(id => SYSTEM_APPS.find(app => app.id === id)).filter(Boolean) as any[];
+
+
   useEffect(() => {
     if (isUnlocked && isMobile) {
       const hasSeenNotice = localStorage.getItem('pritam_os_mobile_notice');
       if (!hasSeenNotice) {
-        // Wait 2.5 seconds after login so it feels natural
         const timer = setTimeout(() => {
           setShowMobileNotice(true);
           playSystemSound('pop');
@@ -317,7 +368,6 @@ export default function HUD() {
     }
   }, [isUnlocked, isMobile]);
 
-  // 👇 NEW: Dismiss and save to memory
   const dismissMobileNotice = () => {
     setShowMobileNotice(false);
     localStorage.setItem('pritam_os_mobile_notice', 'true');
@@ -372,22 +422,10 @@ export default function HUD() {
     setActiveApp(null);
   };
 
-  const dockItems = [
-    { id: 'finder', label: 'Finder', icon: LayoutGrid, color: 'text-blue-400', title: 'Finder' },
-    { id: 'profile', label: 'System Profile', icon: User, color: 'text-zinc-100', title: 'System Profile' },
-    { id: 'terminal', label: 'Terminal', icon: TerminalIcon, color: 'text-emerald-400', title: 'Terminal' }, 
-    { id: 'esp', label: 'ESP Platform', icon: Globe, color: 'text-blue-400', title: 'ESP Core' },
-    { id: 'alumni', label: 'ConnectAlumni', icon: Users, color: 'text-orange-400', title: 'ConnectAlumni' },
-    { id: 'resume', label: 'Resume.pdf', icon: FileText, color: 'text-yellow-400', title: 'Document Viewer' },
-    { id: 'contact', label: 'Secure Channel', icon: Mail, color: 'text-purple-400', title: 'Mail Client' },
-    { id: 'github', label: 'Repository', icon: GitBranch, color: 'text-zinc-100', title: '' },
-  ];
-
   if (!isUnlocked) return null;
   
   return (
     <>
-      {/* 👇 NEW: macOS Style Mobile Warning Toast */}
       <div className={`fixed top-4 left-4 right-4 z-[9999] transition-all duration-500 ease-out transform ${showMobileNotice ? 'translate-y-0 opacity-100' : '-translate-y-24 opacity-0 pointer-events-none'}`}>
         <div className="bg-[#18181b]/95 backdrop-blur-2xl border border-white/10 p-4 rounded-2xl shadow-2xl flex items-start gap-4 max-w-sm mx-auto">
           <div className="bg-blue-500/20 p-2 rounded-full shrink-0">
@@ -403,10 +441,37 @@ export default function HUD() {
         </div>
       </div>
 
+      {/* Dock Context Menu */}
+      {dockContextMenu.show && dockContextMenu.appId && (
+        <div 
+          className="fixed z-[9999] w-48 bg-os-window/90 backdrop-blur-3xl border border-os-border rounded-xl shadow-2xl py-1.5 text-[12px] font-sans text-os-text"
+          style={{ bottom: '90px', left: dockContextMenu.x }}
+        >
+          {openApps.includes(dockContextMenu.appId) && (
+            <>
+              <button 
+                className="w-full text-left px-4 py-1.5 hover:bg-blue-600 hover:text-white"
+                onClick={() => handleCloseApp(dockContextMenu.appId!)}
+              >
+                Quit
+              </button>
+              <div className="h-px bg-white/10 my-1"></div>
+            </>
+          )}
+          <button 
+            className="w-full text-left px-4 py-1.5 hover:bg-blue-600 hover:text-white flex justify-between items-center"
+            onClick={() => togglePinApp(dockContextMenu.appId!)}
+          >
+            <span>{pinnedApps.includes(dockContextMenu.appId) ? 'Remove from Dock' : 'Keep in Dock'}</span>
+            {pinnedApps.includes(dockContextMenu.appId) && <Check size={12} />}
+          </button>
+        </div>
+      )}
+
       {isMobile && openApps.length > 0 && (
         <div className="fixed top-8 left-2 right-2 h-8 z-[110] flex gap-1 overflow-x-auto bg-[#111111]/80 backdrop-blur-md rounded-lg p-1 border border-os-border [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {openApps.map(appId => {
-            const appInfo = dockItems.find(item => item.id === appId);
+            const appInfo = SYSTEM_APPS.find(item => item.id === appId);
             const isActive = activeApp === appId;
             return (
               <div 
@@ -434,10 +499,19 @@ export default function HUD() {
             <Finder />
           </DesktopWindow>
         )}
-        
         {openApps.includes('profile') && (
           <DesktopWindow id="profile" title="System Profile" icon={User} isActive={activeApp === 'profile'} isMinimized={minimizedApps.includes('profile')} isMobile={isMobile} onFocus={() => setActiveApp('profile')} onMinimize={() => handleMinimizeApp('profile')} onClose={() => handleCloseApp('profile')}>
             <SystemProfile />
+          </DesktopWindow>
+        )}
+        {openApps.includes('vscode') && (
+          <DesktopWindow id="vscode" title="VS Code - Portfolio Workspace" icon={Code2} isActive={activeApp === 'vscode'} isMinimized={minimizedApps.includes('vscode')} isMobile={isMobile} onFocus={() => setActiveApp('vscode')} onMinimize={() => handleMinimizeApp('vscode')} onClose={() => handleCloseApp('vscode')}>
+            <CodeViewer />
+          </DesktopWindow>
+        )}
+        {openApps.includes('calc') && (
+          <DesktopWindow id="calc" title="Calculator" icon={CalcIcon} isActive={activeApp === 'calc'} isMinimized={minimizedApps.includes('calc')} isMobile={isMobile} onFocus={() => setActiveApp('calc')} onMinimize={() => handleMinimizeApp('calc')} onClose={() => handleCloseApp('calc')}>
+            <Calculator />
           </DesktopWindow>
         )}
         {openApps.includes('terminal') && (
@@ -450,7 +524,6 @@ export default function HUD() {
             <TerminalGuide />
           </DesktopWindow>
         )}
-
         {openApps.includes('esp') && (
           <DesktopWindow id="esp" title="Preview - ESP Core" icon={Globe} isActive={activeApp === 'esp'} isMinimized={minimizedApps.includes('esp')} isMobile={isMobile} onFocus={() => setActiveApp('esp')} onMinimize={() => handleMinimizeApp('esp')} onClose={() => handleCloseApp('esp')}>
             <iframe src="https://esp-frontend-s719.vercel.app/" className="w-full h-full border-none bg-white" title="ESP Platform" />
@@ -471,31 +544,26 @@ export default function HUD() {
             <Contact />
           </DesktopWindow>
         )}
-
         {openApps.includes('snake') && (
           <DesktopWindow id="snake" title="Data_Worm.exe" icon={Gamepad2} isActive={activeApp === 'snake'} isMinimized={minimizedApps.includes('snake')} isMobile={isMobile} onFocus={() => setActiveApp('snake')} onMinimize={() => handleMinimizeApp('snake')} onClose={() => handleCloseApp('snake')}>
             <Game />
           </DesktopWindow>
         )}
-
         {openApps.includes('minesweeper') && (
           <DesktopWindow id="minesweeper" title="Cyber_Sweeper.exe" icon={Crosshair} isActive={activeApp === 'minesweeper'} isMinimized={minimizedApps.includes('minesweeper')} isMobile={isMobile} onFocus={() => setActiveApp('minesweeper')} onMinimize={() => handleMinimizeApp('minesweeper')} onClose={() => handleCloseApp('minesweeper')}>
             <CyberSweeper />
           </DesktopWindow>
         )}
-        
         {openApps.includes('paint') && (
           <DesktopWindow id="paint" title="Studio" icon={Palette} isActive={activeApp === 'paint'} isMinimized={minimizedApps.includes('paint')} isMobile={isMobile} onFocus={() => setActiveApp('paint')} onMinimize={() => handleMinimizeApp('paint')} onClose={() => handleCloseApp('paint')}>
             <PaintApp />
           </DesktopWindow>
         )}
-
         {openApps.includes('notes') && (
           <DesktopWindow id="notes" title="Notes" icon={SquarePen} isActive={activeApp === 'notes'} isMinimized={minimizedApps.includes('notes')} isMobile={isMobile} onFocus={() => setActiveApp('notes')} onMinimize={() => handleMinimizeApp('notes')} onClose={() => handleCloseApp('notes')}>
             <NotesApp />
           </DesktopWindow>
         )}
-
         {openApps.includes('network') && (
           <DesktopWindow id="network" title="Network & Contacts" icon={Users} isActive={activeApp === 'network'} isMinimized={minimizedApps.includes('network')} isMobile={isMobile} onFocus={() => setActiveApp('network')} onMinimize={() => handleMinimizeApp('network')} onClose={() => handleCloseApp('network')}>
             <NetworkApp />
@@ -510,13 +578,22 @@ export default function HUD() {
           onMouseLeave={() => setMouseX(null)}
           className="flex items-end gap-2 md:gap-3 px-3 md:px-4 pb-2 pt-4 bg-[#0a0a0a]/90 backdrop-blur-2xl border border-os-border/80 rounded-3xl shadow-[0_20px_40px_rgba(0,0,0,0.8)] h-[75px] overflow-x-auto md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          {dockItems.map((item) => (
+          {currentDockItems.map((item) => (
             <DockItem 
               key={item.id} 
               item={item} 
               isOpen={openApps.includes(item.id)}
               isActive={activeApp === item.id && !minimizedApps.includes(item.id)}
               mouseX={mouseX}
+              onContextMenu={(e: React.MouseEvent, id: string) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setDockContextMenu({
+                  show: true,
+                  x: Math.min(e.clientX, window.innerWidth - 200),
+                  appId: id
+                });
+              }}
               onClick={(e: any) => {
                 e.preventDefault();
                 playSystemSound('click');
