@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { 
   Terminal as TerminalIcon, FileText, Mail, GitBranch, X, Minus, Maximize2, 
   Globe, Users, User, LayoutGrid, Gamepad2, Crosshair, FileCode, Palette, 
-  SquarePen, Monitor, Code2, Calculator as CalcIcon, Check
+  SquarePen, Monitor, Code2, Calculator as CalcIcon, Check, Music, Camera, CloudSun, Activity, Compass, Folder
 } from 'lucide-react';
 
 import NetworkApp from './NetworkApp';
@@ -19,13 +19,11 @@ import SystemProfile from './SystemProfile';
 import CodeViewer from './CodeViewer';
 import Calculator from './Calculator';
 import VibePlayer from './VibePlayer';
-import { Music } from 'lucide-react'; 
 import LensApp from './LensApp';
 import WeatherApp from './WeatherApp';
-import { Camera, CloudSun } from 'lucide-react'; 
 import ActivityMonitor from './ActivityMonitor';
 import BrowserApp from './BrowserApp';
-import { Activity, Compass } from 'lucide-react'; // Add these to the lucide-react import
+import CustomFolder from './CustomFolder';
 
 // --- ZERO-DEPENDENCY SYNTHETIC AUDIO ENGINE ---
 const playSystemSound = (type: 'pop' | 'click') => {
@@ -82,14 +80,14 @@ const SYSTEM_APPS = [
   { id: 'snake', label: 'Data Worm', icon: Gamepad2, color: 'text-emerald-400', title: 'Data Worm' },
   { id: 'minesweeper', label: 'Cyber Sweeper', icon: Crosshair, color: 'text-red-400', title: 'Cyber Sweeper' },
   { id: 'paint', label: 'Studio', icon: Palette, color: 'text-pink-400', title: 'Studio' },
-  { id: 'player', label: 'VibeTunes', icon: Music, color: 'text-rose-500', title: 'Media Player' }, // <-- NEW
   { id: 'notes', label: 'Notes', icon: SquarePen, color: 'text-amber-400', title: 'Notes' },
   { id: 'network', label: 'Network', icon: Users, color: 'text-indigo-400', title: 'Network' },
+  { id: 'guide', label: 'commands.txt', icon: FileCode, color: 'text-os-text', title: 'Text Editor' },
+  { id: 'player', label: 'VibeTunes', icon: Music, color: 'text-rose-500', title: 'Media Player' },
   { id: 'lens', label: 'Lens', icon: Camera, color: 'text-zinc-100', title: 'Camera' },
   { id: 'weather', label: 'Forecast', icon: CloudSun, color: 'text-blue-400', title: 'Weather' },
   { id: 'activity', label: 'Activity Monitor', icon: Activity, color: 'text-emerald-400', title: 'Task Manager' },
-  { id: 'browser', label: 'WebSphere', icon: Compass, color: 'text-blue-400', title: 'Browser' },
-  { id: 'guide', label: 'commands.txt', icon: FileCode, color: 'text-os-text', title: 'Text Editor' }
+  { id: 'browser', label: 'WebSphere', icon: Compass, color: 'text-blue-400', title: 'Browser' }
 ];
 
 // --- 1. THE REUSABLE OS WINDOW COMPONENT ---
@@ -298,7 +296,7 @@ function DockItem({ item, isOpen, isActive, mouseX, onClick, onContextMenu }: an
       <button
         ref={ref}
         onClick={onClick}
-        onContextMenu={(e) => onContextMenu(e, item.id)} // 👇 Added Context Menu Trigger
+        onContextMenu={(e) => onContextMenu(e, item.id)}
         style={{ 
           width: `${size}px`, height: `${size}px`, willChange: 'width, height',
           transition: `width ${isHovering ? '50ms' : '250ms'} ease-out, height ${isHovering ? '50ms' : '250ms'} ease-out`
@@ -332,9 +330,11 @@ export default function HUD() {
   const [showDock, setShowDock] = useState(true);
   const [showMobileNotice, setShowMobileNotice] = useState(false);
 
-  // 👇 NEW: Dock Pinning State & Memory
   const [pinnedApps, setPinnedApps] = useState<string[]>(['finder', 'profile', 'contact', 'github']);
   const [dockContextMenu, setDockContextMenu] = useState<{show: boolean, x: number, appId: string | null}>({ show: false, x: 0, appId: null });
+
+  // 👇 STATE FOR DYNAMIC CUSTOM FOLDERS
+  const [customFolders, setCustomFolders] = useState<any[]>([]);
 
   useEffect(() => {
     const savedPinned = localStorage.getItem('pritam_os_dock_pinned');
@@ -351,22 +351,11 @@ export default function HUD() {
     });
   };
 
-  // Close context menu on global click
   useEffect(() => {
     const closeMenu = () => setDockContextMenu(prev => ({ ...prev, show: false }));
     window.addEventListener('click', closeMenu);
     return () => window.removeEventListener('click', closeMenu);
   }, []);
-
-  // 👇 DERIVED: Calculate which items should be visible in the dock right now
-  const visibleDockItemIds = Array.from(new Set([...pinnedApps, ...openApps]));
-  // Sort them so pinned items appear first in their defined order, then unpinned open items
-  const sortedDockItemIds = [
-    ...pinnedApps.filter(id => visibleDockItemIds.includes(id)),
-    ...openApps.filter(id => !pinnedApps.includes(id))
-  ];
-  const currentDockItems = sortedDockItemIds.map(id => SYSTEM_APPS.find(app => app.id === id)).filter(Boolean) as any[];
-
 
   useEffect(() => {
     if (isUnlocked && isMobile) {
@@ -401,6 +390,12 @@ export default function HUD() {
     window.addEventListener('resize', checkMobile);
 
     const handleLaunch = (e: Event) => {
+      // Refresh custom folders immediately on launch to capture renamed titles
+      const savedCustom = localStorage.getItem('pritam_os_custom_folders');
+      if (savedCustom) {
+        setCustomFolders(JSON.parse(savedCustom));
+      }
+
       const customEvent = e as CustomEvent<string>;
       const id = customEvent.detail;
       
@@ -435,6 +430,31 @@ export default function HUD() {
     setActiveApp(null);
   };
 
+  // 👇 DYNAMIC APP LOOKUP: Intercepts custom folders and meshes them with core apps
+  const getAppInfo = (id: string) => {
+    const staticApp = SYSTEM_APPS.find(app => app.id === id);
+    if (staticApp) return staticApp;
+
+    if (id.startsWith('folder-')) {
+      const folderData = customFolders.find(f => f.id === id);
+      return {
+        id,
+        label: folderData?.label || 'Folder',
+        icon: Folder,
+        color: 'text-blue-400',
+        title: folderData?.label || 'Folder'
+      };
+    }
+    return null;
+  };
+
+  const visibleDockItemIds = Array.from(new Set([...pinnedApps, ...openApps]));
+  const sortedDockItemIds = [
+    ...pinnedApps.filter(id => visibleDockItemIds.includes(id)),
+    ...openApps.filter(id => !pinnedApps.includes(id))
+  ];
+  const currentDockItems = sortedDockItemIds.map(id => getAppInfo(id)).filter(Boolean) as any[];
+
   if (!isUnlocked) return null;
   
   return (
@@ -454,7 +474,6 @@ export default function HUD() {
         </div>
       </div>
 
-      {/* Dock Context Menu */}
       {dockContextMenu.show && dockContextMenu.appId && (
         <div 
           className="fixed z-[9999] w-48 bg-os-window/90 backdrop-blur-3xl border border-os-border rounded-xl shadow-2xl py-1.5 text-[12px] font-sans text-os-text"
@@ -484,7 +503,7 @@ export default function HUD() {
       {isMobile && openApps.length > 0 && (
         <div className="fixed top-8 left-2 right-2 h-8 z-[110] flex gap-1 overflow-x-auto bg-[#111111]/80 backdrop-blur-md rounded-lg p-1 border border-os-border [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {openApps.map(appId => {
-            const appInfo = SYSTEM_APPS.find(item => item.id === appId);
+            const appInfo = getAppInfo(appId);
             const isActive = activeApp === appId;
             return (
               <div 
@@ -507,6 +526,7 @@ export default function HUD() {
       )}
 
       <>
+        {/* CORE APPS */}
         {openApps.includes('finder') && (
           <DesktopWindow id="finder" title="Finder" icon={LayoutGrid} isActive={activeApp === 'finder'} isMinimized={minimizedApps.includes('finder')} isMobile={isMobile} onFocus={() => setActiveApp('finder')} onMinimize={() => handleMinimizeApp('finder')} onClose={() => handleCloseApp('finder')}>
             <Finder />
@@ -582,7 +602,6 @@ export default function HUD() {
             <NetworkApp />
           </DesktopWindow>
         )}
-        {/* 👇 NEW APP BLOCK */}
         {openApps.includes('player') && (
           <DesktopWindow id="player" title="VibeTunes" icon={Music} isActive={activeApp === 'player'} isMinimized={minimizedApps.includes('player')} isMobile={isMobile} onFocus={() => setActiveApp('player')} onMinimize={() => handleMinimizeApp('player')} onClose={() => handleCloseApp('player')}>
             <VibePlayer />
@@ -600,7 +619,7 @@ export default function HUD() {
         )}
         {openApps.includes('activity') && (
           <DesktopWindow id="activity" title="Activity Monitor" icon={Activity} isActive={activeApp === 'activity'} isMinimized={minimizedApps.includes('activity')} isMobile={isMobile} onFocus={() => setActiveApp('activity')} onMinimize={() => handleMinimizeApp('activity')} onClose={() => handleCloseApp('activity')}>
-            <ActivityMonitor openApps={openApps} /> 
+            <ActivityMonitor openApps={openApps} />
           </DesktopWindow>
         )}
         {openApps.includes('browser') && (
@@ -608,9 +627,29 @@ export default function HUD() {
             <BrowserApp />
           </DesktopWindow>
         )}
+
+        {/* 👇 DYNAMIC WINDOW MAPPER FOR CUSTOM FOLDERS */}
+        {openApps.filter(id => id.startsWith('folder-')).map(folderId => {
+          const folderInfo = getAppInfo(folderId);
+          return (
+            <DesktopWindow
+              key={folderId}
+              id={folderId}
+              title={folderInfo?.title || 'Folder'}
+              icon={Folder}
+              isActive={activeApp === folderId}
+              isMinimized={minimizedApps.includes(folderId)}
+              isMobile={isMobile}
+              onFocus={() => setActiveApp(folderId)}
+              onMinimize={() => handleMinimizeApp(folderId)}
+              onClose={() => handleCloseApp(folderId)}
+            >
+              <CustomFolder folderName={folderInfo?.title || 'Folder'} />
+            </DesktopWindow>
+          );
+        })}
       </>
 
-      {/* APPLIED CSS TRANSITION TO SLIDE THE DOCK ON AND OFF */}
       <div className={`fixed left-1/2 -translate-x-1/2 z-[100] max-w-[95vw] md:max-w-none transition-all duration-500 ease-in-out ${showDock ? 'bottom-4 opacity-100' : '-bottom-32 opacity-0 pointer-events-none'}`}>
         <div 
           onMouseMove={(e) => setMouseX(e.clientX)}

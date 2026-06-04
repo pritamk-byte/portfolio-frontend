@@ -1,9 +1,9 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { 
-  Command, ArrowRight, Folder, FileText, Globe, TerminalSquare, 
-  Gamepad2, Crosshair, FileCode, Palette, SquarePen, Users, 
-  EyeOff, Eye, Code2, Calculator as CalcIcon, Mail, Music2 
+  Command, ArrowRight, Folder, Mail, Music2, Code2, Calculator as CalcIcon, TerminalSquare, 
+  SquarePen, Palette, Globe, Users, FileText, FileCode, Gamepad2, Camera, CloudSun, 
+  Activity, Compass, Crosshair, EyeOff, Eye 
 } from 'lucide-react';
 
 const wallpapers = [
@@ -24,35 +24,40 @@ const wallpapers = [
   { id: 'vibrant-mesh', type: 'image', name: 'Vibrant Mesh', url: 'https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=2564&auto=format&fit=crop' }
 ];
 
-// 👇 Changed from constant to INITIAL_ICONS so we can use it in React State
-const INITIAL_ICONS = [
-  { id: 'profile', label: 'Pritam_OS', icon: Folder, color: 'text-blue-400', fill: 'fill-blue-400/20' },
-  { id: 'contact', label: 'Mail.app', icon: Mail, color: 'text-purple-400', fill: '' },
-  { id: 'player', label: 'VibeTunes.app', icon: Music2, color: 'text-rose-500', fill: '' },
-  { id: 'vscode', label: 'VS Code', icon: Code2, color: 'text-blue-500', fill: '' },
-  { id: 'calc', label: 'Calculator', icon: CalcIcon, color: 'text-orange-400', fill: '' },
-  { id: 'terminal', label: 'Terminal', icon: TerminalSquare, color: 'text-emerald-400', fill: '' },
-  { id: 'notes', label: 'Notes.app', icon: SquarePen, color: 'text-amber-400', fill: '' },
-  { id: 'paint', label: 'Studio.app', icon: Palette, color: 'text-pink-400', fill: '' },
-  { id: 'esp', label: 'ESP Core', icon: Globe, color: 'text-blue-400', fill: '' },
-  { id: 'alumni', label: 'ConnectAlumni', icon: Users, color: 'text-orange-400', fill: '' },
-  { id: 'resume', label: 'Resume.pdf', icon: FileText, color: 'text-white', fill: '' },
-  { id: 'guide', label: 'commands.txt', icon: FileCode, color: 'text-os-text', fill: '' },
-  { id: 'network', label: 'Network.app', icon: Users, color: 'text-indigo-400', fill: '' },
-  { id: 'snake', label: 'Data Worm', icon: Gamepad2, color: 'text-emerald-400', fill: '' },
-  { id: 'minesweeper', label: 'Cyber Sweeper', icon: Crosshair, color: 'text-red-400', fill: '' },
+const initialDesktopIcons = [
+  { id: 'profile', label: 'Pritam_OS', icon: Folder, color: 'text-blue-400', fill: 'fill-blue-400/20', isCustomFolder: false },
+  { id: 'contact', label: 'Mail.app', icon: Mail, color: 'text-purple-400', fill: '', isCustomFolder: false },
+  { id: 'player', label: 'VibeTunes.app', icon: Music2, color: 'text-rose-500', fill: '', isCustomFolder: false },
+  { id: 'vscode', label: 'VS Code', icon: Code2, color: 'text-blue-500', fill: '', isCustomFolder: false },
+  { id: 'calc', label: 'Calculator', icon: CalcIcon, color: 'text-orange-400', fill: '', isCustomFolder: false },
+  { id: 'terminal', label: 'Terminal', icon: TerminalSquare, color: 'text-emerald-400', fill: '', isCustomFolder: false },
+  { id: 'notes', label: 'Notes.app', icon: SquarePen, color: 'text-amber-400', fill: '', isCustomFolder: false },
+  { id: 'paint', label: 'Studio.app', icon: Palette, color: 'text-pink-400', fill: '', isCustomFolder: false },
+  { id: 'esp', label: 'ESP Core', icon: Globe, color: 'text-blue-400', fill: '', isCustomFolder: false },
+  { id: 'alumni', label: 'ConnectAlumni', icon: Users, color: 'text-orange-400', fill: '', isCustomFolder: false },
+  { id: 'resume', label: 'Resume.pdf', icon: FileText, color: 'text-white', fill: '', isCustomFolder: false },
+  { id: 'guide', label: 'commands.txt', icon: FileCode, color: 'text-os-text', fill: '', isCustomFolder: false },
+  { id: 'network', label: 'Network.app', icon: Users, color: 'text-indigo-400', fill: '', isCustomFolder: false },
+  { id: 'snake', label: 'Data Worm', icon: Gamepad2, color: 'text-emerald-400', fill: '', isCustomFolder: false },
+  { id: 'lens', label: 'Lens.app', icon: Camera, color: 'text-zinc-100', fill: '', isCustomFolder: false },
+  { id: 'weather', label: 'Forecast.app', icon: CloudSun, color: 'text-blue-400', fill: '', isCustomFolder: false },
+  { id: 'activity', label: 'Activity Monitor', icon: Activity, color: 'text-emerald-400', fill: '', isCustomFolder: false },
+  { id: 'browser', label: 'Web Browser', icon: Compass, color: 'text-blue-400', fill: '', isCustomFolder: false },
+  { id: 'minesweeper', label: 'Cyber Sweeper', icon: Crosshair, color: 'text-red-400', fill: '', isCustomFolder: false },
 ];
 
 const EXPIRATION_TIME_MS = 60 * 60 * 1000;
 
 function DraggableIcon({ 
-  item, index, isSelected, onClick, onDoubleClick 
+  item, index, isSelected, onClick, onDoubleClick, onRename 
 }: { 
-  item: any, index: number, isSelected: boolean, onClick: (e: React.MouseEvent, id: string) => void, onDoubleClick: (id: string) => void 
+  item: any, index: number, isSelected: boolean, onClick: (e: React.MouseEvent, id: string) => void, onDoubleClick: (id: string) => void, onRename: (id: string, newLabel: string) => void 
 }) {
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const [isReady, setIsReady] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [renamingValue, setRenamingValue] = useState(item.label);
   
   const dragStart = useRef({ x: 0, y: 0 });
   const originalPos = useRef({ x: 0, y: 0 });
@@ -78,7 +83,12 @@ function DraggableIcon({
     setIsReady(true);
   }, [index]);
 
+  useEffect(() => {
+    setRenamingValue(item.label);
+  }, [item.label]);
+
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isEditing) return;
     e.stopPropagation();
     onClick(e as unknown as React.MouseEvent, item.id);
     setIsDragging(true);
@@ -135,6 +145,16 @@ function DraggableIcon({
     }
   };
 
+  const submitRename = () => {
+    setIsEditing(false);
+    const trimmed = renamingValue.trim();
+    if (trimmed && trimmed !== item.label) {
+      onRename(item.id, trimmed);
+    } else {
+      setRenamingValue(item.label);
+    }
+  };
+
   if (!isReady) return null;
 
   const Icon = item.icon;
@@ -145,7 +165,11 @@ function DraggableIcon({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
-      onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick(item.id); }}
+      onDoubleClick={(e) => { 
+        e.stopPropagation(); 
+        if (isEditing) return;
+        onDoubleClick(item.id); 
+      }}
       className={`absolute flex flex-col items-center gap-1 w-20 group touch-none desktop-icon
         ${isDragging ? 'cursor-grabbing z-50 transition-none' : 'cursor-default z-10 transition-all duration-300 ease-out'}
       `}
@@ -156,11 +180,39 @@ function DraggableIcon({
       `}>
         <Icon size={32} className={`${item.color} ${item.fill} drop-shadow-lg`} strokeWidth={1.5} />
       </div>
-      <div className={`text-[11px] font-medium px-1.5 py-0.5 rounded text-center leading-tight tracking-wide drop-shadow-md select-none
-        ${isSelected ? 'bg-blue-600 text-white' : 'text-zinc-100 bg-transparent'}
-      `}>
-        {item.label}
-      </div>
+
+      {isEditing ? (
+        <input
+          type="text"
+          value={renamingValue}
+          autoFocus
+          onPointerDown={(e) => e.stopPropagation()}
+          onChange={(e) => setRenamingValue(e.target.value)}
+          onBlur={submitRename}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') submitRename();
+            if (e.key === 'Escape') {
+              setIsEditing(false);
+              setRenamingValue(item.label);
+            }
+          }}
+          className="w-full text-[11px] font-medium px-1 bg-blue-600 border border-blue-400 text-white rounded text-center outline-none focus:ring-0"
+        />
+      ) : (
+        <div 
+          onDoubleClick={(e) => {
+            if (item.isCustomFolder || item.id.startsWith('folder-')) {
+              e.stopPropagation();
+              setIsEditing(true);
+            }
+          }}
+          className={`text-[11px] font-medium px-1.5 py-0.5 rounded text-center leading-tight tracking-wide drop-shadow-md select-none max-w-full break-all
+            ${isSelected ? 'bg-blue-600 text-white' : 'text-zinc-100 bg-transparent'}
+          `}
+        >
+          {item.label}
+        </div>
+      )}
     </div>
   );
 }
@@ -176,9 +228,9 @@ export default function Hero() {
 
   const [showIcons, setShowIcons] = useState(true);
   const [showDock, setShowDock] = useState(true);
-  
-  // 👇 State to track all desktop icons dynamically
-  const [desktopIcons, setDesktopIcons] = useState(INITIAL_ICONS);
+
+  // Dynamic system shortcuts registry
+  const [icons, setIcons] = useState(initialDesktopIcons);
 
   useEffect(() => {
     const savedWallpaper = localStorage.getItem('pritam_os_wallpaper_idx');
@@ -191,6 +243,20 @@ export default function Hero() {
     if (savedDock !== null) {
       setShowDock(savedDock === 'true');
       setTimeout(() => window.dispatchEvent(new CustomEvent('toggle-dock', { detail: savedDock === 'true' })), 500);
+    }
+
+    const savedCustomIcons = localStorage.getItem('pritam_os_custom_folders');
+    if (savedCustomIcons) {
+      try {
+        const parsed = JSON.parse(savedCustomIcons);
+        const remapped = parsed.map((folder: any) => ({
+          ...folder,
+          icon: Folder
+        }));
+        setIcons([...initialDesktopIcons, ...remapped]);
+      } catch (e) {
+        console.error("Error formatting folder persistent payload:", e);
+      }
     }
 
     const lastActive = localStorage.getItem('pritam_os_last_active');
@@ -261,12 +327,7 @@ export default function Hero() {
   };
 
   const launchApp = (appId: string) => {
-    // If it's a dynamically created folder, open Finder instead for now
-    if (appId.startsWith('folder_')) {
-      window.dispatchEvent(new CustomEvent('launch-app', { detail: 'finder' }));
-    } else {
-      window.dispatchEvent(new CustomEvent('launch-app', { detail: appId }));
-    }
+    window.dispatchEvent(new CustomEvent('launch-app', { detail: appId }));
     setSelectedIcon(null);
   };
 
@@ -289,22 +350,47 @@ export default function Hero() {
     window.dispatchEvent(new CustomEvent('toggle-dock', { detail: newVal }));
   };
 
-  // 👇 The function that adds a new folder to the state
-  const handleNewFolder = () => {
-    // Count existing "untitled folder"s to generate names like "untitled folder 2"
-    const untitledCount = desktopIcons.filter(icon => icon.label.startsWith('untitled folder')).length;
-    const folderName = untitledCount === 0 ? 'untitled folder' : `untitled folder ${untitledCount + 1}`;
-    
+  const createNewFolder = () => {
+    const folderId = `folder-${Date.now()}`;
     const newFolder = {
-      id: `folder_${Date.now()}`,
-      label: folderName,
+      id: folderId,
+      label: 'Untitled Folder',
       icon: Folder,
       color: 'text-blue-400',
-      fill: 'fill-blue-400/20'
+      fill: 'fill-blue-400/20',
+      isCustomFolder: true
     };
 
-    setDesktopIcons(prev => [...prev, newFolder]);
-    setContextMenu({ show: false, x: 0, y: 0 }); // Close context menu
+    const updatedIcons = [...icons, newFolder];
+    setIcons(updatedIcons);
+
+    const customOnly = updatedIcons.filter(icon => icon.isCustomFolder).map(f => ({
+      id: f.id,
+      label: f.label,
+      color: f.color,
+      fill: f.fill,
+      isCustomFolder: true
+    }));
+    localStorage.setItem('pritam_os_custom_folders', JSON.stringify(customOnly));
+  };
+
+  const handleRenameFolder = (id: string, newLabel: string) => {
+    const updatedIcons = icons.map(icon => {
+      if (icon.id === id) {
+        return { ...icon, label: newLabel };
+      }
+      return icon;
+    });
+    setIcons(updatedIcons);
+
+    const customOnly = updatedIcons.filter(icon => icon.isCustomFolder).map(f => ({
+      id: f.id,
+      label: f.label,
+      color: f.color,
+      fill: f.fill,
+      isCustomFolder: true
+    }));
+    localStorage.setItem('pritam_os_custom_folders', JSON.stringify(customOnly));
   };
 
   return (
@@ -334,11 +420,11 @@ export default function Hero() {
         )}
       </div>
 
-      {/* RENDER DRAGGABLE ICONS (Now from state!) */}
+      {/* RENDER DRAGGABLE ICONS */}
       {bootStage === 'desktop' && showIcons && (
         <div className="absolute inset-0 z-10 overflow-hidden pointer-events-none">
           <div className="relative w-full h-full pointer-events-auto">
-            {desktopIcons.map((item, index) => (
+            {icons.map((item, index) => (
               <DraggableIcon 
                 key={item.id}
                 item={item}
@@ -346,6 +432,7 @@ export default function Hero() {
                 isSelected={selectedIcon === item.id}
                 onClick={handleIconClick}
                 onDoubleClick={() => { if (window.innerWidth >= 768) launchApp(item.id); }}
+                onRename={handleRenameFolder}
               />
             ))}
           </div>
@@ -358,13 +445,7 @@ export default function Hero() {
           className="fixed z-[9999] w-56 bg-os-window/80 backdrop-blur-3xl border border-os-border rounded-xl shadow-2xl py-1.5 text-[12px] font-sans text-os-text"
           style={{ top: contextMenu.y, left: contextMenu.x }}
         >
-          {/* 👇 Triggers the handleNewFolder function */}
-          <button 
-            onClick={handleNewFolder} 
-            className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white"
-          >
-            New Folder
-          </button>
+          <button onClick={createNewFolder} className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white">New Folder</button>
           
           <button 
             className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"
@@ -389,6 +470,7 @@ export default function Hero() {
 
           <div className="h-px bg-white/10 my-1"></div>
           
+          {/* WALLPAPER OPTION */}
           <div className="px-4 py-1 text-zinc-500 font-semibold text-[10px] tracking-wider uppercase">Wallpaper</div>
           <button 
             className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center" 
