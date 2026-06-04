@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { 
   Command, ArrowRight, Folder, Mail, Music2, Code2, Calculator as CalcIcon, TerminalSquare, 
   SquarePen, Palette, Globe, Users, FileText, FileCode, Gamepad2, Camera, CloudSun, 
-  Activity, Compass, Crosshair, EyeOff, Eye 
+  Activity, Compass, Crosshair, EyeOff, Eye, Trash2 
 } from 'lucide-react';
 
 const wallpapers = [
@@ -44,14 +44,16 @@ const initialDesktopIcons = [
   { id: 'activity', label: 'Activity Monitor', icon: Activity, color: 'text-emerald-400', fill: '', isCustomFolder: false },
   { id: 'browser', label: 'Web Browser', icon: Compass, color: 'text-blue-400', fill: '', isCustomFolder: false },
   { id: 'minesweeper', label: 'Cyber Sweeper', icon: Crosshair, color: 'text-red-400', fill: '', isCustomFolder: false },
+  // 👇 THE RECYCLE BIN
+  { id: 'trash', label: 'Recycle Bin', icon: Trash2, color: 'text-zinc-400', fill: 'fill-zinc-400/20', isCustomFolder: false },
 ];
 
 const EXPIRATION_TIME_MS = 60 * 60 * 1000;
 
 function DraggableIcon({ 
-  item, index, isSelected, onClick, onDoubleClick, onRename 
+  item, index, isSelected, onClick, onDoubleClick, onRename, onContextMenu
 }: { 
-  item: any, index: number, isSelected: boolean, onClick: (e: React.MouseEvent, id: string) => void, onDoubleClick: (id: string) => void, onRename: (id: string, newLabel: string) => void 
+  item: any, index: number, isSelected: boolean, onClick: (e: React.MouseEvent, id: string) => void, onDoubleClick: (id: string) => void, onRename: (id: string, newLabel: string) => void, onContextMenu: (e: React.MouseEvent, id: string) => void
 }) {
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const [isReady, setIsReady] = useState(false);
@@ -165,17 +167,18 @@ function DraggableIcon({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
-      onDoubleClick={(e) => { 
-        e.stopPropagation(); 
-        if (isEditing) return;
-        onDoubleClick(item.id); 
-      }}
-      className={`absolute flex flex-col items-center gap-1 w-20 group touch-none desktop-icon
+      onContextMenu={(e) => onContextMenu(e, item.id)}
+      className={`absolute flex flex-col items-center gap-1 w-[72px] group touch-none desktop-icon
         ${isDragging ? 'cursor-grabbing z-50 transition-none' : 'cursor-default z-10 transition-all duration-300 ease-out'}
       `}
       style={{ left: `${pos.x}px`, top: `${pos.y}px` }}
     >
-      <div className={`w-14 h-14 flex items-center justify-center rounded-lg transition-all duration-200
+      <div 
+        onDoubleClick={(e) => { 
+          e.stopPropagation(); 
+          if (!isEditing) onDoubleClick(item.id); 
+        }}
+        className={`w-14 h-14 flex items-center justify-center rounded-lg transition-all duration-200
         ${isSelected ? 'bg-white/20 border border-white/30 shadow-lg' : 'bg-transparent border border-transparent'}
       `}>
         <Icon size={32} className={`${item.color} ${item.fill} drop-shadow-lg`} strokeWidth={1.5} />
@@ -206,7 +209,8 @@ function DraggableIcon({
               setIsEditing(true);
             }
           }}
-          className={`text-[11px] font-medium px-1.5 py-0.5 rounded text-center leading-tight tracking-wide drop-shadow-md select-none max-w-full break-all
+          // 👇 FIXED: Long names now truncate cleanly to 2 lines
+          className={`text-[11px] font-medium px-1 py-0.5 rounded text-center leading-tight tracking-wide drop-shadow-md select-none w-full overflow-hidden text-ellipsis line-clamp-2 break-words
             ${isSelected ? 'bg-blue-600 text-white' : 'text-zinc-100 bg-transparent'}
           `}
         >
@@ -222,15 +226,33 @@ export default function Hero() {
   const [bootStage, setBootStage] = useState<'loading' | 'login' | 'desktop'>('loading');
   const [themeIdx, setThemeIdx] = useState(1);
   const [imageError, setImageError] = useState(false);
-  const [contextMenu, setContextMenu] = useState({ show: false, x: 0, y: 0 });
+  const [contextMenu, setContextMenu] = useState<{show: boolean, x: number, y: number, targetId: string | null}>({ show: false, x: 0, y: 0, targetId: null });
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   const [isSubmittingLogin, setIsSubmittingLogin] = useState(false);
 
   const [showIcons, setShowIcons] = useState(true);
   const [showDock, setShowDock] = useState(true);
 
-  // Dynamic system shortcuts registry
   const [icons, setIcons] = useState(initialDesktopIcons);
+
+  // Extracts dynamic sync logic so we can call it when files are restored from the trash
+  const loadDesktopIcons = () => {
+    const savedCustomIcons = localStorage.getItem('pritam_os_custom_folders');
+    if (savedCustomIcons) {
+      try {
+        const parsed = JSON.parse(savedCustomIcons);
+        const remapped = parsed.map((folder: any) => ({
+          ...folder,
+          icon: Folder
+        }));
+        setIcons([...initialDesktopIcons, ...remapped]);
+      } catch (e) {
+        console.error("Error formatting folder persistent payload:", e);
+      }
+    } else {
+      setIcons(initialDesktopIcons);
+    }
+  };
 
   useEffect(() => {
     const savedWallpaper = localStorage.getItem('pritam_os_wallpaper_idx');
@@ -245,19 +267,10 @@ export default function Hero() {
       setTimeout(() => window.dispatchEvent(new CustomEvent('toggle-dock', { detail: savedDock === 'true' })), 500);
     }
 
-    const savedCustomIcons = localStorage.getItem('pritam_os_custom_folders');
-    if (savedCustomIcons) {
-      try {
-        const parsed = JSON.parse(savedCustomIcons);
-        const remapped = parsed.map((folder: any) => ({
-          ...folder,
-          icon: Folder
-        }));
-        setIcons([...initialDesktopIcons, ...remapped]);
-      } catch (e) {
-        console.error("Error formatting folder persistent payload:", e);
-      }
-    }
+    loadDesktopIcons();
+
+    // Listen for folders being restored from the Recycle Bin App
+    window.addEventListener('sync-folders', loadDesktopIcons);
 
     const lastActive = localStorage.getItem('pritam_os_last_active');
     const now = Date.now();
@@ -270,6 +283,8 @@ export default function Hero() {
     } else {
       localStorage.removeItem('pritam_os_last_active');
     }
+
+    return () => window.removeEventListener('sync-folders', loadDesktopIcons);
   }, []);
 
   const currentWallpaper = wallpapers[themeIdx];
@@ -297,6 +312,18 @@ export default function Hero() {
     return () => clearInterval(interval);
   }, [bootStage]);
 
+  // 👇 Keyboard Shortcut: Pressing 'Delete' or 'Backspace' sends a custom folder to the Recycle Bin
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIcon && selectedIcon.startsWith('folder-')) {
+        if (document.activeElement?.tagName === 'INPUT') return;
+        handleDeleteFolder(selectedIcon);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedIcon, icons]);
+
   useEffect(() => {
     const handleNextWallpaper = () => setThemeIdx(prev => (prev + 1) % wallpapers.length);
     window.addEventListener('next-wallpaper', handleNextWallpaper);
@@ -309,12 +336,22 @@ export default function Hero() {
     return () => window.removeEventListener('click', closeMenu);
   }, []);
 
-  const handleContextMenu = (e: React.MouseEvent) => {
+  const handleDesktopContextMenu = (e: React.MouseEvent) => {
     e.preventDefault(); 
     if (bootStage !== 'desktop') return; 
     const x = Math.min(e.clientX, window.innerWidth - 240);
     const y = Math.min(e.clientY, window.innerHeight - 200);
-    setContextMenu({ show: true, x, y });
+    setContextMenu({ show: true, x, y, targetId: null });
+  };
+
+  const handleIconContextMenu = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (bootStage !== 'desktop') return;
+    const x = Math.min(e.clientX, window.innerWidth - 240);
+    const y = Math.min(e.clientY, window.innerHeight - 200);
+    setContextMenu({ show: true, x, y, targetId: id });
+    setSelectedIcon(id);
   };
 
   const handleLogin = () => {
@@ -364,43 +401,70 @@ export default function Hero() {
     const updatedIcons = [...icons, newFolder];
     setIcons(updatedIcons);
 
-    const customOnly = updatedIcons.filter(icon => icon.isCustomFolder).map(f => ({
-      id: f.id,
-      label: f.label,
-      color: f.color,
-      fill: f.fill,
-      isCustomFolder: true
+    const customOnly = updatedIcons.filter(icon => icon.isCustomFolder || icon.id.startsWith('folder-')).map(f => ({
+      id: f.id, label: f.label, color: f.color, fill: f.fill, isCustomFolder: true
     }));
     localStorage.setItem('pritam_os_custom_folders', JSON.stringify(customOnly));
   };
 
   const handleRenameFolder = (id: string, newLabel: string) => {
-    const updatedIcons = icons.map(icon => {
-      if (icon.id === id) {
-        return { ...icon, label: newLabel };
-      }
-      return icon;
-    });
+    const updatedIcons = icons.map(icon => icon.id === id ? { ...icon, label: newLabel } : icon);
     setIcons(updatedIcons);
 
-    const customOnly = updatedIcons.filter(icon => icon.isCustomFolder).map(f => ({
-      id: f.id,
-      label: f.label,
-      color: f.color,
-      fill: f.fill,
-      isCustomFolder: true
+    const customOnly = updatedIcons.filter(icon => icon.isCustomFolder || icon.id.startsWith('folder-')).map(f => ({
+      id: f.id, label: f.label, color: f.color, fill: f.fill, isCustomFolder: true
     }));
     localStorage.setItem('pritam_os_custom_folders', JSON.stringify(customOnly));
+  };
+
+  // 👇 SAFETY & RECYCLE LOGIC
+  const handleDeleteFolder = (id: string) => {
+    // SECURITY: Reject deletion if it's a pre-built app
+    if (!id.startsWith('folder-')) return;
+    
+    const folderToDelete = icons.find(icon => icon.id === id);
+    if (!folderToDelete) return;
+
+    // 1. Move to Recycle Bin storage
+    const recycled = JSON.parse(localStorage.getItem('pritam_os_recycled_items') || '[]');
+    recycled.push({
+      id: folderToDelete.id,
+      label: folderToDelete.label,
+      color: folderToDelete.color,
+      fill: folderToDelete.fill,
+      isCustomFolder: true,
+      deletedAt: Date.now()
+    });
+    localStorage.setItem('pritam_os_recycled_items', JSON.stringify(recycled));
+
+    // 2. Remove from active Desktop & custom folder memory
+    const updatedIcons = icons.filter(icon => icon.id !== id);
+    setIcons(updatedIcons);
+
+    const customOnly = updatedIcons.filter(icon => icon.isCustomFolder || icon.id.startsWith('folder-')).map(f => ({
+      id: f.id, label: f.label, color: f.color, fill: f.fill, isCustomFolder: true
+    }));
+    localStorage.setItem('pritam_os_custom_folders', JSON.stringify(customOnly));
+    
+    if (selectedIcon === id) setSelectedIcon(null);
+    setContextMenu({ show: false, x: 0, y: 0, targetId: null });
+  };
+
+  const handleEmptyTrash = () => {
+    localStorage.setItem('pritam_os_recycled_items', '[]');
+    setContextMenu({ show: false, x: 0, y: 0, targetId: null });
+    // Tell the open Recycle Bin app to refresh if it's open
+    window.dispatchEvent(new Event('trash-emptied'));
   };
 
   return (
     <div 
       className="fixed inset-0 z-0 bg-black overflow-hidden select-none"
-      onContextMenu={handleContextMenu}
+      onContextMenu={handleDesktopContextMenu}
       onClick={() => setSelectedIcon(null)}
     >
       
-      {/* THE WALLPAPER LAYER WITH FALLBACK */}
+      {/* THE WALLPAPER LAYER */}
       <div className="absolute inset-0 bg-[#000000] transition-all duration-1000">
         {currentWallpaper.type === 'css' || imageError ? (
           <div className="absolute inset-0 w-full h-full overflow-hidden">
@@ -433,56 +497,89 @@ export default function Hero() {
                 onClick={handleIconClick}
                 onDoubleClick={() => { if (window.innerWidth >= 768) launchApp(item.id); }}
                 onRename={handleRenameFolder}
+                onContextMenu={handleIconContextMenu}
               />
             ))}
           </div>
         </div>
       )}
 
-      {/* CONTEXT MENU */}
+      {/* DYNAMIC CONTEXT MENU */}
       {contextMenu.show && (
         <div 
           className="fixed z-[9999] w-56 bg-os-window/80 backdrop-blur-3xl border border-os-border rounded-xl shadow-2xl py-1.5 text-[12px] font-sans text-os-text"
           style={{ top: contextMenu.y, left: contextMenu.x }}
         >
-          <button onClick={createNewFolder} className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white">New Folder</button>
-          
-          <button 
-            className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"
-            onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
-          >
-            <span>Spotlight Search</span>
-            <span className="text-[10px] opacity-60 font-mono tracking-widest">⌘K</span>
-          </button>
+          {contextMenu.targetId === 'trash' ? (
+            // 👇 MENU WHEN RIGHT-CLICKING RECYCLE BIN
+            <>
+              <button onClick={() => launchApp('trash')} className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white">Open</button>
+              <div className="h-px bg-white/10 my-1"></div>
+              <button 
+                onClick={handleEmptyTrash} 
+                className="w-full text-left px-4 py-1.5 text-zinc-400 hover:bg-red-500 hover:text-white flex items-center justify-between"
+              >
+                Empty Recycle Bin <Trash2 size={14} />
+              </button>
+            </>
+          ) : contextMenu.targetId ? (
+            // 👇 MENU WHEN RIGHT-CLICKING AN APP OR FOLDER
+            <>
+              <button onClick={() => launchApp(contextMenu.targetId!)} className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white">Open</button>
+              
+              {contextMenu.targetId.startsWith('folder-') && (
+                <>
+                  <div className="h-px bg-white/10 my-1"></div>
+                  <button 
+                    onClick={() => handleDeleteFolder(contextMenu.targetId!)} 
+                    className="w-full text-left px-4 py-1.5 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-between"
+                  >
+                    Move to Trash <Trash2 size={14} />
+                  </button>
+                </>
+              )}
+            </>
+          ) : (
+            // 👇 MENU WHEN RIGHT-CLICKING THE EMPTY DESKTOP
+            <>
+              <button onClick={createNewFolder} className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white">New Folder</button>
+              
+              <button 
+                className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"
+                onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
+              >
+                <span>Spotlight Search</span>
+                <span className="text-[10px] opacity-60 font-mono tracking-widest">⌘K</span>
+              </button>
 
-          <div className="h-px bg-white/10 my-1"></div>
-          
-          {/* VIEW TOGGLES */}
-          <div className="px-4 py-1 text-zinc-500 font-semibold text-[10px] tracking-wider uppercase">View</div>
-          <button className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center group" onClick={toggleIcons}>
-            <span>{showIcons ? 'Hide Desktop Icons' : 'Show Desktop Icons'}</span>
-            {showIcons ? <EyeOff size={12} className="opacity-0 group-hover:opacity-100" /> : <Eye size={12} className="opacity-0 group-hover:opacity-100" />}
-          </button>
-          <button className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center group" onClick={toggleDock}>
-            <span>{showDock ? 'Hide Dock' : 'Show Dock'}</span>
-            {showDock ? <EyeOff size={12} className="opacity-0 group-hover:opacity-100" /> : <Eye size={12} className="opacity-0 group-hover:opacity-100" />}
-          </button>
+              <div className="h-px bg-white/10 my-1"></div>
+              
+              <div className="px-4 py-1 text-zinc-500 font-semibold text-[10px] tracking-wider uppercase">View</div>
+              <button className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center group" onClick={toggleIcons}>
+                <span>{showIcons ? 'Hide Desktop Icons' : 'Show Desktop Icons'}</span>
+                {showIcons ? <EyeOff size={12} className="opacity-0 group-hover:opacity-100" /> : <Eye size={12} className="opacity-0 group-hover:opacity-100" />}
+              </button>
+              <button className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center group" onClick={toggleDock}>
+                <span>{showDock ? 'Hide Dock' : 'Show Dock'}</span>
+                {showDock ? <EyeOff size={12} className="opacity-0 group-hover:opacity-100" /> : <Eye size={12} className="opacity-0 group-hover:opacity-100" />}
+              </button>
 
-          <div className="h-px bg-white/10 my-1"></div>
-          
-          {/* WALLPAPER OPTION */}
-          <div className="px-4 py-1 text-zinc-500 font-semibold text-[10px] tracking-wider uppercase">Wallpaper</div>
-          <button 
-            className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center" 
-            onClick={() => setThemeIdx(p => (p + 1) % wallpapers.length)}
-          >
-            <span>Next Background</span>
-            <span className="text-zinc-500 text-[10px] truncate max-w-[80px] text-right">{currentWallpaper.name}</span>
-          </button>
-          
-          <div className="h-px bg-white/10 my-1"></div>
-          <button className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white" onClick={() => launchApp('terminal')}>Open Terminal</button>
-          <button className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white" onClick={() => window.location.reload()}>Refresh Workspace</button>
+              <div className="h-px bg-white/10 my-1"></div>
+              
+              <div className="px-4 py-1 text-zinc-500 font-semibold text-[10px] tracking-wider uppercase">Wallpaper</div>
+              <button 
+                className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center" 
+                onClick={() => setThemeIdx(p => (p + 1) % wallpapers.length)}
+              >
+                <span>Next Background</span>
+                <span className="text-zinc-500 text-[10px] truncate max-w-[80px] text-right">{currentWallpaper.name}</span>
+              </button>
+              
+              <div className="h-px bg-white/10 my-1"></div>
+              <button className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white" onClick={() => launchApp('terminal')}>Open Terminal</button>
+              <button className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white" onClick={() => window.location.reload()}>Refresh Workspace</button>
+            </>
+          )}
         </div>
       )}
 

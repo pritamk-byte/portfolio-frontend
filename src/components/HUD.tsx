@@ -3,7 +3,8 @@ import { useState, useRef, useEffect } from 'react';
 import { 
   Terminal as TerminalIcon, FileText, Mail, GitBranch, X, Minus, Maximize2, 
   Globe, Users, User, LayoutGrid, Gamepad2, Crosshair, FileCode, Palette, 
-  SquarePen, Monitor, Code2, Calculator as CalcIcon, Check, Music, Camera, CloudSun, Activity, Compass, Folder
+  SquarePen, Monitor, Code2, Calculator as CalcIcon, Check, Music, Camera, 
+  CloudSun, Activity, Compass, Folder, Trash2 
 } from 'lucide-react';
 
 import NetworkApp from './NetworkApp';
@@ -24,6 +25,7 @@ import WeatherApp from './WeatherApp';
 import ActivityMonitor from './ActivityMonitor';
 import BrowserApp from './BrowserApp';
 import CustomFolder from './CustomFolder';
+import RecycleBinApp from './RecycleBinApp';
 
 // --- ZERO-DEPENDENCY SYNTHETIC AUDIO ENGINE ---
 const playSystemSound = (type: 'pop' | 'click') => {
@@ -87,7 +89,8 @@ const SYSTEM_APPS = [
   { id: 'lens', label: 'Lens', icon: Camera, color: 'text-zinc-100', title: 'Camera' },
   { id: 'weather', label: 'Forecast', icon: CloudSun, color: 'text-blue-400', title: 'Weather' },
   { id: 'activity', label: 'Activity Monitor', icon: Activity, color: 'text-emerald-400', title: 'Task Manager' },
-  { id: 'browser', label: 'WebSphere', icon: Compass, color: 'text-blue-400', title: 'Browser' }
+  { id: 'browser', label: 'WebSphere', icon: Compass, color: 'text-blue-400', title: 'Browser' },
+  { id: 'trash', label: 'Recycle Bin', icon: Trash2, color: 'text-zinc-400', title: 'Recycle Bin' }
 ];
 
 // --- 1. THE REUSABLE OS WINDOW COMPONENT ---
@@ -625,6 +628,12 @@ export default function HUD() {
         {openApps.includes('browser') && (
           <DesktopWindow id="browser" title="WebSphere Browser" icon={Compass} isActive={activeApp === 'browser'} isMinimized={minimizedApps.includes('browser')} isMobile={isMobile} onFocus={() => setActiveApp('browser')} onMinimize={() => handleMinimizeApp('browser')} onClose={() => handleCloseApp('browser')}>
             <BrowserApp />
+          </DesktopWindow>
+        )}
+
+        {openApps.includes('trash') && (
+          <DesktopWindow id="trash" title="Recycle Bin" icon={Trash2} isActive={activeApp === 'trash'} isMinimized={minimizedApps.includes('trash')} isMobile={isMobile} onFocus={() => setActiveApp('trash')} onMinimize={() => handleMinimizeApp('trash')} onClose={() => handleCloseApp('trash')}>
+            <RecycleBinApp />
           </DesktopWindow>
         )}
 
