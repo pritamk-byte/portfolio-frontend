@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
+import { Music } from 'lucide-react';
 import { Command, ArrowRight, Folder, FileText, Globe, TerminalSquare, Gamepad2, Crosshair, FileCode, Palette, SquarePen, Users, EyeOff, Eye, Code2, Calculator as CalcIcon } from 'lucide-react';
 
 const wallpapers = [
@@ -27,6 +28,7 @@ const desktopIcons = [
   { id: 'resume', label: 'Resume.pdf', icon: FileText, color: 'text-white', fill: '' },
   { id: 'paint', label: 'Studio.app', icon: Palette, color: 'text-pink-400', fill: '' },
   { id: 'notes', label: 'Notes.app', icon: SquarePen, color: 'text-amber-400', fill: '' },
+  { id: 'player', label: 'VibeTunes.app', icon: Music, color: 'text-rose-500', fill: '' }, // <-- NEW
   { id: 'network', label: 'Network.app', icon: Users, color: 'text-indigo-400', fill: '' },
   { id: 'terminal', label: 'Terminal', icon: TerminalSquare, color: 'text-emerald-400', fill: '' },
   { id: 'snake', label: 'Data Worm', icon: Gamepad2, color: 'text-emerald-400', fill: '' },

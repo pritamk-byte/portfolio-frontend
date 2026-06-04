@@ -18,6 +18,8 @@ import Contact from './Contact';
 import SystemProfile from './SystemProfile'; 
 import CodeViewer from './CodeViewer';
 import Calculator from './Calculator';
+import VibePlayer from './VibePlayer';
+import { Music } from 'lucide-react'; // <-- Add Music to your lucide-react import
 
 // --- ZERO-DEPENDENCY SYNTHETIC AUDIO ENGINE ---
 const playSystemSound = (type: 'pop' | 'click') => {
@@ -74,6 +76,7 @@ const SYSTEM_APPS = [
   { id: 'snake', label: 'Data Worm', icon: Gamepad2, color: 'text-emerald-400', title: 'Data Worm' },
   { id: 'minesweeper', label: 'Cyber Sweeper', icon: Crosshair, color: 'text-red-400', title: 'Cyber Sweeper' },
   { id: 'paint', label: 'Studio', icon: Palette, color: 'text-pink-400', title: 'Studio' },
+  { id: 'player', label: 'VibeTunes', icon: Music, color: 'text-rose-500', title: 'Media Player' }, // <-- NEW
   { id: 'notes', label: 'Notes', icon: SquarePen, color: 'text-amber-400', title: 'Notes' },
   { id: 'network', label: 'Network', icon: Users, color: 'text-indigo-400', title: 'Network' },
   { id: 'guide', label: 'commands.txt', icon: FileCode, color: 'text-os-text', title: 'Text Editor' }
@@ -567,6 +570,12 @@ export default function HUD() {
         {openApps.includes('network') && (
           <DesktopWindow id="network" title="Network & Contacts" icon={Users} isActive={activeApp === 'network'} isMinimized={minimizedApps.includes('network')} isMobile={isMobile} onFocus={() => setActiveApp('network')} onMinimize={() => handleMinimizeApp('network')} onClose={() => handleCloseApp('network')}>
             <NetworkApp />
+          </DesktopWindow>
+        )}
+        {/* 👇 NEW APP BLOCK */}
+        {openApps.includes('player') && (
+          <DesktopWindow id="player" title="VibeTunes" icon={Music} isActive={activeApp === 'player'} isMinimized={minimizedApps.includes('player')} isMobile={isMobile} onFocus={() => setActiveApp('player')} onMinimize={() => handleMinimizeApp('player')} onClose={() => handleCloseApp('player')}>
+            <VibePlayer />
           </DesktopWindow>
         )}
       </>
