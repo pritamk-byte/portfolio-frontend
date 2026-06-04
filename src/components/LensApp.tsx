@@ -10,24 +10,40 @@ export default function LensApp() {
   const [snapshots, setSnapshots] = useState<string[]>([]);
 
   useEffect(() => {
-    let stream: MediaStream | null = null;
+    let isActive = true; // 👇 Protects against React Strict Mode double-mounting
+    let currentStream: MediaStream | null = null;
 
     const startCamera = async () => {
       // Check if the API is even supported (fails on HTTP non-localhost)
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setErrorMessage("Camera API is blocked. HTTPS is required.");
-        setHasPermission(false);
+        if (isActive) {
+          setErrorMessage("Camera API is blocked. HTTPS is required.");
+          setHasPermission(false);
+        }
         return;
       }
 
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        
+        // 👇 If the component unmounted while waiting for permission, kill the stream
+        if (!isActive) {
+          stream.getTracks().forEach(track => track.stop());
+          return;
+        }
+
+        currentStream = stream;
+        
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          // 👇 Explicitly force play (fixes the black screen bug)
+          await videoRef.current.play().catch(e => console.error("Video play error:", e));
         }
         setHasPermission(true);
       } catch (err: any) {
         console.error("Camera access denied:", err);
+        if (!isActive) return;
+
         if (err.name === 'NotAllowedError') setErrorMessage("Permission denied. Please allow camera access in browser settings.");
         else if (err.name === 'NotFoundError') setErrorMessage("No camera device found on this system.");
         else if (err.name === 'NotReadableError') setErrorMessage("Camera is already in use by another application.");
@@ -38,7 +54,11 @@ export default function LensApp() {
     startCamera();
 
     return () => {
-      if (stream) stream.getTracks().forEach(track => track.stop());
+      isActive = false;
+      // 👇 Cleanup the specific stream tied to this effect mount
+      if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+      }
     };
   }, []);
 
