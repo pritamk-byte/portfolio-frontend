@@ -1,6 +1,10 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { Wifi, BatteryMedium, Command, Zap, Search, Settings, RotateCcw, CloudSun, SlidersHorizontal, Bluetooth, Monitor, Volume2, Sun, Moon, Image as ImageIcon, Languages } from 'lucide-react';
+import { 
+  Wifi, BatteryMedium, Command, Zap, Search, Settings, RotateCcw, 
+  CloudSun, SlidersHorizontal, Bluetooth, Monitor, Volume2, Sun, Moon, 
+  Image as ImageIcon, Languages, CloudRain, Cloud, CloudLightning, Snowflake 
+} from 'lucide-react';
 
 const systemMenus: Record<string, string[]> = {
   File: ['New Window', 'New Tab', 'Open...', 'Save', 'Close Window'],
@@ -11,6 +15,29 @@ const systemMenus: Record<string, string[]> = {
   Help: ['Pritam_OS Help', 'Search...']
 };
 
+// Maps weather codes to Icons and Calendar Themes
+const getWeatherTheme = (iconCode: string) => {
+  const code = iconCode.slice(0, 2);
+  switch (code) {
+    case '01': // Clear
+      return { Icon: Sun, color: "text-amber-400", calBg: "bg-amber-900/10", calBorder: "border-amber-500/20", todayBg: "bg-amber-500 text-white shadow-amber-500/20" }; 
+    case '02': // Few Clouds
+      return { Icon: CloudSun, color: "text-yellow-400", calBg: "bg-blue-900/10", calBorder: "border-blue-500/20", todayBg: "bg-blue-500 text-white shadow-blue-500/20" }; 
+    case '03': 
+    case '04': // Clouds
+      return { Icon: Cloud, color: "text-zinc-300", calBg: "bg-zinc-800/30", calBorder: "border-zinc-600/30", todayBg: "bg-zinc-500 text-white shadow-zinc-500/20" }; 
+    case '09': 
+    case '10': // Rain
+      return { Icon: CloudRain, color: "text-blue-400", calBg: "bg-indigo-900/10", calBorder: "border-indigo-500/20", todayBg: "bg-indigo-500 text-white shadow-indigo-500/20" }; 
+    case '11': // Thunderstorm
+      return { Icon: CloudLightning, color: "text-purple-400", calBg: "bg-purple-900/10", calBorder: "border-purple-500/20", todayBg: "bg-purple-500 text-white shadow-purple-500/20" }; 
+    case '13': // Snow
+      return { Icon: Snowflake, color: "text-cyan-200", calBg: "bg-cyan-900/10", calBorder: "border-cyan-500/20", todayBg: "bg-cyan-500 text-white shadow-cyan-500/20" }; 
+    default: 
+      return { Icon: CloudSun, color: "text-zinc-300", calBg: "bg-transparent", calBorder: "border-transparent", todayBg: "bg-[#0058d0] text-white shadow-md" };
+  }
+};
+
 export default function Header() {
   const [currentDateObj, setCurrentDateObj] = useState(new Date());
   const [time, setTime] = useState<string>('');
@@ -19,6 +46,9 @@ export default function Header() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   
+  // Weather State (Fallback included)
+  const [weather, setWeather] = useState({ temp: 28, condition: 'Partly Cloudy', icon: '02d' });
+
   // Control Center States
   const [brightness, setBrightness] = useState(100);
   const [wifiOn, setWifiOn] = useState(true);
@@ -49,14 +79,40 @@ export default function Header() {
     return () => clearInterval(interval);
   }, []);
 
+  // Fetch Header Weather
   useEffect(() => {
-    // 1. Check memory, but default to Dark if things get weird
+    const fetchHeaderWeather = async (lat: number, lon: number) => {
+      try {
+        const API_KEY = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
+        if (!API_KEY) return;
+        // Using metric for Celsius display. Change to imperial for Fahrenheit if preferred.
+        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`);
+        const data = await res.json();
+        
+        setWeather({
+          temp: Math.round(data.main.temp),
+          condition: data.weather[0].main,
+          icon: data.weather[0].icon
+        });
+      } catch (err) {
+        console.warn("Header weather fetch failed, using fallback.");
+      }
+    };
+
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => fetchHeaderWeather(pos.coords.latitude, pos.coords.longitude),
+        () => console.warn("Location denied for header, using fallback."),
+        { timeout: 5000 }
+      );
+    }
+  }, []);
+
+  useEffect(() => {
     const savedTheme = localStorage.getItem('pritam_os_theme');
-    
     if (savedTheme === 'Midnight') {
       setThemeMode('Midnight');
     } else {
-      // Safely lock everything else (including broken Light mode memory) back to Dark
       setThemeMode('Dark');
       localStorage.setItem('pritam_os_theme', 'Dark');
       document.documentElement.setAttribute('data-theme', 'dark');
@@ -70,7 +126,6 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    // 2. Whenever theme changes via the button, update the HTML tag
     document.documentElement.setAttribute('data-theme', themeMode.toLowerCase());
     localStorage.setItem('pritam_os_theme', themeMode);
   }, [themeMode]);
@@ -117,7 +172,6 @@ export default function Header() {
       if (navigator.share) {
         await navigator.share(shareData);
       } else {
-        // Fallback for older browsers: Copy to clipboard
         await navigator.clipboard.writeText(window.location.href);
         setAirDropText('Copied!');
         setTimeout(() => setAirDropText('AirDrop'), 2000);
@@ -140,9 +194,7 @@ export default function Header() {
   };
 
   const cycleTheme = () => {
-    // 👇 Removed 'Light' so it NEVER breaks your UI again!
     const modes: ('Dark' | 'Midnight')[] = ['Dark', 'Midnight'];
-    // Fallback to 'Dark' if it gets confused
     const currentIndex = modes.indexOf(themeMode as 'Dark' | 'Midnight');
     setThemeMode(modes[(currentIndex === -1 ? 0 : currentIndex + 1) % modes.length]);
   };
@@ -163,10 +215,13 @@ export default function Header() {
   const blanks = Array.from({ length: firstDayOfMonth }, (_, i) => i);
   const weekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
+  // Calculate dynamic theme styles based on current weather
+  const currentTheme = getWeatherTheme(weather.icon);
+  const WeatherIcon = currentTheme.Icon;
+
   return (
     <header ref={menuRef} className="fixed top-0 left-0 w-full h-7 px-4 flex justify-between items-center z-[120] bg-os-panel/60 backdrop-blur-xl border-b border-os-border text-[11px] font-sans tracking-wide text-os-text select-none shadow-md transition-colors duration-300">
       
-      {/* 👇 REMOVED THE DUPLICATE ref={menuRef} FROM THIS DIV */}
       <div className="flex items-center gap-1 md:gap-4">
         <div className="relative" onMouseEnter={() => handleMenuHover('apple')}>
           <button 
@@ -261,7 +316,6 @@ export default function Header() {
               <div className="grid grid-cols-2 gap-3 mb-3">
                 <div className="bg-zinc-800/40 border border-zinc-700/50 rounded-xl p-3 flex flex-col gap-3">
                   <div className="flex items-center gap-3 cursor-pointer" onClick={() => setWifiOn(!wifiOn)}>
-                    {/* 👇 Added shrink-0 right here */}
                     <div className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors ${wifiOn ? 'bg-blue-500 text-white' : 'bg-zinc-700 text-zinc-400'}`}>
                       <Wifi size={14} />
                     </div>
@@ -271,7 +325,6 @@ export default function Header() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 cursor-pointer" onClick={() => setBtOn(!btOn)}>
-                    {/* 👇 Added shrink-0 right here too */}
                     <div className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors ${btOn ? 'bg-blue-500 text-white' : 'bg-zinc-700 text-zinc-400'}`}>
                       <Bluetooth size={14} />
                     </div>
@@ -283,7 +336,6 @@ export default function Header() {
                 </div>
 
                <div className="flex flex-col gap-3">
-                  {/* 👇 Now triggers the Native Share API */}
                   <div 
                     onClick={handleAirDrop}
                     className="flex-1 bg-zinc-800/40 border border-zinc-700/50 rounded-xl flex flex-col justify-center items-center text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all cursor-pointer interactive active:scale-95"
@@ -313,7 +365,6 @@ export default function Header() {
                   <div className="absolute left-2 text-zinc-400 z-10 pointer-events-none">
                     <Volume2 size={12} className={volume === 0 ? "opacity-30" : ""} />
                   </div>
-                  {/* 👇 Now uses real state */}
                   <div className="absolute top-0 left-0 h-full bg-white transition-all duration-75" style={{ width: `${volume}%` }}></div>
                   <input 
                     type="range" min="0" max="100" 
@@ -324,11 +375,9 @@ export default function Header() {
                 </div>
               </div>
 
-
               <div className="bg-zinc-800/40 border border-zinc-700/50 rounded-xl p-3 flex flex-col">
                 <span className="text-xs font-semibold text-white mb-2 ml-1">Personalization</span>
                 <div className="grid grid-cols-3 gap-2">
-                  
                   <button 
                     onClick={() => window.dispatchEvent(new Event('next-wallpaper'))}
                     className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg transition-colors group"
@@ -352,7 +401,6 @@ export default function Header() {
                     <Languages size={14} className="text-emerald-400 group-hover:scale-110 transition-transform" />
                     <span className="text-[9px] text-os-text">{lang}</span>
                   </button>
-
                 </div>
               </div>
 
@@ -372,45 +420,51 @@ export default function Header() {
           </button>
           
           {openMenu === 'clock' && (
-            <div className="absolute top-7 right-0 w-72 bg-[#181818]/95 backdrop-blur-3xl border border-os-border rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[130] p-4 font-normal text-os-text cursor-default">
+            <div className="absolute top-7 right-0 w-72 bg-[#181818]/95 backdrop-blur-3xl border border-os-border rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[130] p-4 font-normal text-os-text cursor-default overflow-hidden">
               
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <div className="text-3xl font-light text-white mb-1">{mounted ? time : '--:--'}</div>
-                  <div className="text-xs text-zinc-400">{mounted ? currentDateObj.toLocaleDateString(lang === 'EN' ? 'en-US' : lang === 'ES' ? 'es-ES' : 'fr-FR', { weekday: 'long', month: 'long', day: 'numeric' }) : ''}</div>
-                </div>
-                <div className="flex flex-col items-end">
-                  <div className="flex items-center gap-2 text-xl font-medium text-white">
-                    28°C <CloudSun size={24} className="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]" />
+              {/* Dynamic Theme Background Layer */}
+              <div className={`absolute inset-0 ${currentTheme.calBg} pointer-events-none transition-colors duration-700 ease-in-out`} />
+
+              <div className="relative z-10">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <div className="text-3xl font-light text-white mb-1">{mounted ? time : '--:--'}</div>
+                    <div className="text-xs text-zinc-400">{mounted ? currentDateObj.toLocaleDateString(lang === 'EN' ? 'en-US' : lang === 'ES' ? 'es-ES' : 'fr-FR', { weekday: 'long', month: 'long', day: 'numeric' }) : ''}</div>
                   </div>
-                  <div className="text-[10px] text-zinc-400 mt-1">Partly Cloudy</div>
+                  <div className="flex flex-col items-end">
+                    <div className="flex items-center gap-2 text-xl font-medium text-white">
+                      {weather.temp}°C 
+                      <WeatherIcon size={24} className={`${currentTheme.color} drop-shadow-md`} />
+                    </div>
+                    <div className="text-[10px] text-zinc-400 mt-1">{weather.condition}</div>
+                  </div>
                 </div>
-              </div>
 
-              <div className="h-px bg-zinc-800/80 mb-4"></div>
+                <div className="h-px bg-zinc-800/80 mb-4"></div>
 
-              <div className="px-1">
-                <div className="text-sm font-medium text-zinc-100 mb-3 ml-1">
-                  {currentDateObj.toLocaleDateString(lang === 'EN' ? 'en-US' : lang === 'ES' ? 'es-ES' : 'fr-FR', { month: 'long', year: 'numeric' })}
-                </div>
-                <div className="grid grid-cols-7 gap-1 mb-2 text-center text-[10px] font-medium text-zinc-500">
-                  {weekDays.map(day => <div key={day}>{day}</div>)}
-                </div>
-                <div className="grid grid-cols-7 gap-y-1 gap-x-1 text-center text-xs">
-                  {blanks.map(blank => <div key={`blank-${blank}`} className="h-7"></div>)}
-                  {days.map(day => {
-                    const isToday = day === currentDay;
-                    return (
-                      <div 
-                        key={day} 
-                        className={`flex items-center justify-center h-7 rounded-full transition-colors cursor-default
-                          ${isToday ? 'bg-[#0058d0] text-white font-medium shadow-md' : 'text-os-text hover:bg-zinc-800/80'}
-                        `}
-                      >
-                        {day}
-                      </div>
-                    );
-                  })}
+                <div className={`px-2 py-3 rounded-xl border ${currentTheme.calBorder} transition-colors duration-700 bg-black/20`}>
+                  <div className="text-sm font-medium text-zinc-100 mb-3 ml-1">
+                    {currentDateObj.toLocaleDateString(lang === 'EN' ? 'en-US' : lang === 'ES' ? 'es-ES' : 'fr-FR', { month: 'long', year: 'numeric' })}
+                  </div>
+                  <div className="grid grid-cols-7 gap-1 mb-2 text-center text-[10px] font-medium text-zinc-500">
+                    {weekDays.map(day => <div key={day}>{day}</div>)}
+                  </div>
+                  <div className="grid grid-cols-7 gap-y-1 gap-x-1 text-center text-xs">
+                    {blanks.map(blank => <div key={`blank-${blank}`} className="h-7"></div>)}
+                    {days.map(day => {
+                      const isToday = day === currentDay;
+                      return (
+                        <div 
+                          key={day} 
+                          className={`flex items-center justify-center h-7 rounded-full transition-colors cursor-default
+                            ${isToday ? currentTheme.todayBg + ' font-medium' : 'text-os-text hover:bg-white/10'}
+                          `}
+                        >
+                          {day}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 

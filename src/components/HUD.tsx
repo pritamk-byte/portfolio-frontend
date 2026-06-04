@@ -19,7 +19,13 @@ import SystemProfile from './SystemProfile';
 import CodeViewer from './CodeViewer';
 import Calculator from './Calculator';
 import VibePlayer from './VibePlayer';
-import { Music } from 'lucide-react'; // <-- Add Music to your lucide-react import
+import { Music } from 'lucide-react'; 
+import LensApp from './LensApp';
+import WeatherApp from './WeatherApp';
+import { Camera, CloudSun } from 'lucide-react'; 
+import ActivityMonitor from './ActivityMonitor';
+import BrowserApp from './BrowserApp';
+import { Activity, Compass } from 'lucide-react'; // Add these to the lucide-react import
 
 // --- ZERO-DEPENDENCY SYNTHETIC AUDIO ENGINE ---
 const playSystemSound = (type: 'pop' | 'click') => {
@@ -79,6 +85,10 @@ const SYSTEM_APPS = [
   { id: 'player', label: 'VibeTunes', icon: Music, color: 'text-rose-500', title: 'Media Player' }, // <-- NEW
   { id: 'notes', label: 'Notes', icon: SquarePen, color: 'text-amber-400', title: 'Notes' },
   { id: 'network', label: 'Network', icon: Users, color: 'text-indigo-400', title: 'Network' },
+  { id: 'lens', label: 'Lens', icon: Camera, color: 'text-zinc-100', title: 'Camera' },
+  { id: 'weather', label: 'Forecast', icon: CloudSun, color: 'text-blue-400', title: 'Weather' },
+  { id: 'activity', label: 'Activity Monitor', icon: Activity, color: 'text-emerald-400', title: 'Task Manager' },
+  { id: 'browser', label: 'WebSphere', icon: Compass, color: 'text-blue-400', title: 'Browser' },
   { id: 'guide', label: 'commands.txt', icon: FileCode, color: 'text-os-text', title: 'Text Editor' }
 ];
 
@@ -576,6 +586,26 @@ export default function HUD() {
         {openApps.includes('player') && (
           <DesktopWindow id="player" title="VibeTunes" icon={Music} isActive={activeApp === 'player'} isMinimized={minimizedApps.includes('player')} isMobile={isMobile} onFocus={() => setActiveApp('player')} onMinimize={() => handleMinimizeApp('player')} onClose={() => handleCloseApp('player')}>
             <VibePlayer />
+          </DesktopWindow>
+        )}
+        {openApps.includes('lens') && (
+          <DesktopWindow id="lens" title="Lens" icon={Camera} isActive={activeApp === 'lens'} isMinimized={minimizedApps.includes('lens')} isMobile={isMobile} onFocus={() => setActiveApp('lens')} onMinimize={() => handleMinimizeApp('lens')} onClose={() => handleCloseApp('lens')}>
+            <LensApp />
+          </DesktopWindow>
+        )}
+        {openApps.includes('weather') && (
+          <DesktopWindow id="weather" title="Forecast" icon={CloudSun} isActive={activeApp === 'weather'} isMinimized={minimizedApps.includes('weather')} isMobile={isMobile} onFocus={() => setActiveApp('weather')} onMinimize={() => handleMinimizeApp('weather')} onClose={() => handleCloseApp('weather')}>
+            <WeatherApp />
+          </DesktopWindow>
+        )}
+        {openApps.includes('activity') && (
+          <DesktopWindow id="activity" title="Activity Monitor" icon={Activity} isActive={activeApp === 'activity'} isMinimized={minimizedApps.includes('activity')} isMobile={isMobile} onFocus={() => setActiveApp('activity')} onMinimize={() => handleMinimizeApp('activity')} onClose={() => handleCloseApp('activity')}>
+            <ActivityMonitor />
+          </DesktopWindow>
+        )}
+        {openApps.includes('browser') && (
+          <DesktopWindow id="browser" title="WebSphere Browser" icon={Compass} isActive={activeApp === 'browser'} isMinimized={minimizedApps.includes('browser')} isMobile={isMobile} onFocus={() => setActiveApp('browser')} onMinimize={() => handleMinimizeApp('browser')} onClose={() => handleCloseApp('browser')}>
+            <BrowserApp />
           </DesktopWindow>
         )}
       </>

@@ -1,7 +1,10 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { Music } from 'lucide-react';
-import { Command, ArrowRight, Folder, FileText, Globe, TerminalSquare, Gamepad2, Crosshair, FileCode, Palette, SquarePen, Users, EyeOff, Eye, Code2, Calculator as CalcIcon } from 'lucide-react';
+import { 
+  Command, ArrowRight, Folder, FileText, Globe, TerminalSquare, 
+  Gamepad2, Crosshair, FileCode, Palette, SquarePen, Users, 
+  EyeOff, Eye, Code2, Calculator as CalcIcon, Mail, Camera, CloudSun, Activity, Compass, Music2 
+} from 'lucide-react';
 
 const wallpapers = [
   { id: 'default-blur', type: 'css', name: 'Dynamic Aura' },
@@ -21,20 +24,27 @@ const wallpapers = [
   { id: 'vibrant-mesh', type: 'image', name: 'Vibrant Mesh', url: 'https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=2564&auto=format&fit=crop' }
 ];
 
+// 👇 NOW INCLUDES EVERY APP IN THE SYSTEM
 const desktopIcons = [
   { id: 'profile', label: 'Pritam_OS', icon: Folder, color: 'text-blue-400', fill: 'fill-blue-400/20' },
-  { id: 'guide', label: 'commands.txt', icon: FileCode, color: 'text-os-text', fill: '' },
-  { id: 'alumni', label: 'ConnectAlumni', icon: Globe, color: 'text-orange-400', fill: '' },
-  { id: 'resume', label: 'Resume.pdf', icon: FileText, color: 'text-white', fill: '' },
-  { id: 'paint', label: 'Studio.app', icon: Palette, color: 'text-pink-400', fill: '' },
-  { id: 'notes', label: 'Notes.app', icon: SquarePen, color: 'text-amber-400', fill: '' },
-  { id: 'player', label: 'VibeTunes.app', icon: Music, color: 'text-rose-500', fill: '' }, // <-- NEW
-  { id: 'network', label: 'Network.app', icon: Users, color: 'text-indigo-400', fill: '' },
-  { id: 'terminal', label: 'Terminal', icon: TerminalSquare, color: 'text-emerald-400', fill: '' },
-  { id: 'snake', label: 'Data Worm', icon: Gamepad2, color: 'text-emerald-400', fill: '' },
-  { id: 'minesweeper', label: 'Cyber Sweeper', icon: Crosshair, color: 'text-red-400', fill: '' },
-  { id: 'vscode', label: 'Source Code', icon: Code2, color: 'text-blue-500', fill: '' },
+  { id: 'contact', label: 'Mail.app', icon: Mail, color: 'text-purple-400', fill: '' },
+  { id: 'player', label: 'VibeTunes.app', icon: Music2, color: 'text-rose-500', fill: '' },
+  { id: 'vscode', label: 'VS Code', icon: Code2, color: 'text-blue-500', fill: '' },
   { id: 'calc', label: 'Calculator', icon: CalcIcon, color: 'text-orange-400', fill: '' },
+  { id: 'terminal', label: 'Terminal', icon: TerminalSquare, color: 'text-emerald-400', fill: '' },
+  { id: 'notes', label: 'Notes.app', icon: SquarePen, color: 'text-amber-400', fill: '' },
+  { id: 'paint', label: 'Studio.app', icon: Palette, color: 'text-pink-400', fill: '' },
+  { id: 'esp', label: 'ESP Core', icon: Globe, color: 'text-blue-400', fill: '' },
+  { id: 'alumni', label: 'ConnectAlumni', icon: Users, color: 'text-orange-400', fill: '' },
+  { id: 'resume', label: 'Resume.pdf', icon: FileText, color: 'text-white', fill: '' },
+  { id: 'guide', label: 'commands.txt', icon: FileCode, color: 'text-os-text', fill: '' },
+  { id: 'network', label: 'Network.app', icon: Users, color: 'text-indigo-400', fill: '' },
+  { id: 'snake', label: 'Data Worm', icon: Gamepad2, color: 'text-emerald-400', fill: '' },
+  { id: 'lens', label: 'Lens.app', icon: Camera, color: 'text-zinc-100', fill: '' },
+  { id: 'weather', label: 'Forecast.app', icon: CloudSun, color: 'text-blue-400', fill: '' },
+  { id: 'activity', label: 'Activity Monitor', icon: Activity, color: 'text-emerald-400', fill: '' },
+  { id: 'browser', label: 'Web Browser', icon: Compass, color: 'text-blue-400', fill: '' },
+  { id: 'minesweeper', label: 'Cyber Sweeper', icon: Crosshair, color: 'text-red-400', fill: '' },
 ];
 
 const EXPIRATION_TIME_MS = 60 * 60 * 1000;
@@ -281,6 +291,8 @@ export default function Hero() {
       onContextMenu={handleContextMenu}
       onClick={() => setSelectedIcon(null)}
     >
+      
+      {/* THE WALLPAPER LAYER WITH FALLBACK */}
       <div className="absolute inset-0 bg-[#000000] transition-all duration-1000">
         {currentWallpaper.type === 'css' || imageError ? (
           <div className="absolute inset-0 w-full h-full overflow-hidden">
@@ -300,6 +312,7 @@ export default function Hero() {
         )}
       </div>
 
+      {/* RENDER DRAGGABLE ICONS */}
       {bootStage === 'desktop' && showIcons && (
         <div className="absolute inset-0 z-10 overflow-hidden pointer-events-none">
           <div className="relative w-full h-full pointer-events-auto">
@@ -317,6 +330,7 @@ export default function Hero() {
         </div>
       )}
 
+      {/* CONTEXT MENU */}
       {contextMenu.show && (
         <div 
           className="fixed z-[9999] w-56 bg-os-window/80 backdrop-blur-3xl border border-os-border rounded-xl shadow-2xl py-1.5 text-[12px] font-sans text-os-text"
@@ -334,6 +348,7 @@ export default function Hero() {
 
           <div className="h-px bg-white/10 my-1"></div>
           
+          {/* VIEW TOGGLES */}
           <div className="px-4 py-1 text-zinc-500 font-semibold text-[10px] tracking-wider uppercase">View</div>
           <button className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center group" onClick={toggleIcons}>
             <span>{showIcons ? 'Hide Desktop Icons' : 'Show Desktop Icons'}</span>
@@ -361,6 +376,7 @@ export default function Hero() {
         </div>
       )}
 
+      {/* BOOT SCREEN & LOCKSCREEN */}
       {bootStage === 'loading' && (
         <div className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center">
           <Command size={56} className="text-os-text mb-12 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" strokeWidth={1.5} />
