@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { 
   Command, ArrowRight, Folder, FileText, Globe, TerminalSquare, 
   Gamepad2, Crosshair, FileCode, Palette, SquarePen, Users, 
-  EyeOff, Eye, Code2, Calculator as CalcIcon, Mail, Camera, CloudSun, Activity, Compass, Music2 
+  EyeOff, Eye, Code2, Calculator as CalcIcon, Mail, Music2 
 } from 'lucide-react';
 
 const wallpapers = [
@@ -24,8 +24,8 @@ const wallpapers = [
   { id: 'vibrant-mesh', type: 'image', name: 'Vibrant Mesh', url: 'https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=2564&auto=format&fit=crop' }
 ];
 
-// 👇 NOW INCLUDES EVERY APP IN THE SYSTEM
-const desktopIcons = [
+// 👇 Changed from constant to INITIAL_ICONS so we can use it in React State
+const INITIAL_ICONS = [
   { id: 'profile', label: 'Pritam_OS', icon: Folder, color: 'text-blue-400', fill: 'fill-blue-400/20' },
   { id: 'contact', label: 'Mail.app', icon: Mail, color: 'text-purple-400', fill: '' },
   { id: 'player', label: 'VibeTunes.app', icon: Music2, color: 'text-rose-500', fill: '' },
@@ -40,10 +40,6 @@ const desktopIcons = [
   { id: 'guide', label: 'commands.txt', icon: FileCode, color: 'text-os-text', fill: '' },
   { id: 'network', label: 'Network.app', icon: Users, color: 'text-indigo-400', fill: '' },
   { id: 'snake', label: 'Data Worm', icon: Gamepad2, color: 'text-emerald-400', fill: '' },
-  { id: 'lens', label: 'Lens.app', icon: Camera, color: 'text-zinc-100', fill: '' },
-  { id: 'weather', label: 'Forecast.app', icon: CloudSun, color: 'text-blue-400', fill: '' },
-  { id: 'activity', label: 'Activity Monitor', icon: Activity, color: 'text-emerald-400', fill: '' },
-  { id: 'browser', label: 'Web Browser', icon: Compass, color: 'text-blue-400', fill: '' },
   { id: 'minesweeper', label: 'Cyber Sweeper', icon: Crosshair, color: 'text-red-400', fill: '' },
 ];
 
@@ -180,6 +176,9 @@ export default function Hero() {
 
   const [showIcons, setShowIcons] = useState(true);
   const [showDock, setShowDock] = useState(true);
+  
+  // 👇 State to track all desktop icons dynamically
+  const [desktopIcons, setDesktopIcons] = useState(INITIAL_ICONS);
 
   useEffect(() => {
     const savedWallpaper = localStorage.getItem('pritam_os_wallpaper_idx');
@@ -262,7 +261,12 @@ export default function Hero() {
   };
 
   const launchApp = (appId: string) => {
-    window.dispatchEvent(new CustomEvent('launch-app', { detail: appId }));
+    // If it's a dynamically created folder, open Finder instead for now
+    if (appId.startsWith('folder_')) {
+      window.dispatchEvent(new CustomEvent('launch-app', { detail: 'finder' }));
+    } else {
+      window.dispatchEvent(new CustomEvent('launch-app', { detail: appId }));
+    }
     setSelectedIcon(null);
   };
 
@@ -283,6 +287,24 @@ export default function Hero() {
     setShowDock(newVal);
     localStorage.setItem('pritam_os_show_dock', String(newVal));
     window.dispatchEvent(new CustomEvent('toggle-dock', { detail: newVal }));
+  };
+
+  // 👇 The function that adds a new folder to the state
+  const handleNewFolder = () => {
+    // Count existing "untitled folder"s to generate names like "untitled folder 2"
+    const untitledCount = desktopIcons.filter(icon => icon.label.startsWith('untitled folder')).length;
+    const folderName = untitledCount === 0 ? 'untitled folder' : `untitled folder ${untitledCount + 1}`;
+    
+    const newFolder = {
+      id: `folder_${Date.now()}`,
+      label: folderName,
+      icon: Folder,
+      color: 'text-blue-400',
+      fill: 'fill-blue-400/20'
+    };
+
+    setDesktopIcons(prev => [...prev, newFolder]);
+    setContextMenu({ show: false, x: 0, y: 0 }); // Close context menu
   };
 
   return (
@@ -312,7 +334,7 @@ export default function Hero() {
         )}
       </div>
 
-      {/* RENDER DRAGGABLE ICONS */}
+      {/* RENDER DRAGGABLE ICONS (Now from state!) */}
       {bootStage === 'desktop' && showIcons && (
         <div className="absolute inset-0 z-10 overflow-hidden pointer-events-none">
           <div className="relative w-full h-full pointer-events-auto">
@@ -336,7 +358,13 @@ export default function Hero() {
           className="fixed z-[9999] w-56 bg-os-window/80 backdrop-blur-3xl border border-os-border rounded-xl shadow-2xl py-1.5 text-[12px] font-sans text-os-text"
           style={{ top: contextMenu.y, left: contextMenu.x }}
         >
-          <button className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white">New Folder</button>
+          {/* 👇 Triggers the handleNewFolder function */}
+          <button 
+            onClick={handleNewFolder} 
+            className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white"
+          >
+            New Folder
+          </button>
           
           <button 
             className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"

@@ -600,7 +600,7 @@ export default function HUD() {
         )}
         {openApps.includes('activity') && (
           <DesktopWindow id="activity" title="Activity Monitor" icon={Activity} isActive={activeApp === 'activity'} isMinimized={minimizedApps.includes('activity')} isMobile={isMobile} onFocus={() => setActiveApp('activity')} onMinimize={() => handleMinimizeApp('activity')} onClose={() => handleCloseApp('activity')}>
-            <ActivityMonitor />
+            <ActivityMonitor openApps={openApps} /> 
           </DesktopWindow>
         )}
         {openApps.includes('browser') && (

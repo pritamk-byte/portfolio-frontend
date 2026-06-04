@@ -6,31 +6,39 @@ export default function LensApp() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string>("Camera access denied or unavailable.");
   const [snapshots, setSnapshots] = useState<string[]>([]);
 
   useEffect(() => {
     let stream: MediaStream | null = null;
 
     const startCamera = async () => {
+      // Check if the API is even supported (fails on HTTP non-localhost)
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setErrorMessage("Camera API is blocked. HTTPS is required.");
+        setHasPermission(false);
+        return;
+      }
+
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
         setHasPermission(true);
-      } catch (err) {
+      } catch (err: any) {
         console.error("Camera access denied:", err);
+        if (err.name === 'NotAllowedError') setErrorMessage("Permission denied. Please allow camera access in browser settings.");
+        else if (err.name === 'NotFoundError') setErrorMessage("No camera device found on this system.");
+        else if (err.name === 'NotReadableError') setErrorMessage("Camera is already in use by another application.");
         setHasPermission(false);
       }
     };
 
     startCamera();
 
-    // Cleanup: Turn off the camera when the app is closed
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
+      if (stream) stream.getTracks().forEach(track => track.stop());
     };
   }, []);
 
@@ -42,7 +50,6 @@ export default function LensApp() {
       canvas.height = video.videoHeight;
       const ctx = canvas.getContext('2d');
       if (ctx) {
-        // Draw the current video frame onto the canvas
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         const dataUrl = canvas.toDataURL('image/jpeg');
         setSnapshots(prev => [dataUrl, ...prev]);
@@ -52,7 +59,6 @@ export default function LensApp() {
 
   return (
     <div className="w-full h-full flex flex-col bg-black text-white overflow-hidden relative select-none">
-      {/* Hidden Canvas for capturing images */}
       <canvas ref={canvasRef} className="hidden" />
 
       {/* Camera Viewfinder */}
@@ -62,22 +68,21 @@ export default function LensApp() {
         ) : hasPermission === false ? (
           <div className="flex flex-col items-center text-zinc-500 text-center px-6">
             <XCircle size={40} className="mb-4 text-red-500/50 sm:w-12 sm:h-12" />
-            <p className="text-xs sm:text-sm">Camera access denied or unavailable.</p>
+            <p className="text-xs sm:text-sm font-medium">{errorMessage}</p>
           </div>
         ) : (
           <video 
             ref={videoRef} 
             autoPlay 
             playsInline 
-            className="w-full h-full object-cover transform -scale-x-100" // Mirrors the video
+            muted // <-- CRITICAL for iOS Safari AutoPlay
+            className="w-full h-full object-cover transform -scale-x-100" 
           />
         )}
       </div>
 
-      {/* Controls Area (Responsive Heights & Padding) */}
+      {/* Controls Area */}
       <div className="h-20 sm:h-24 bg-zinc-900/90 backdrop-blur-xl border-t border-white/10 flex items-center justify-between px-4 sm:px-8 shrink-0">
-        
-        {/* Recent Snapshots Preview */}
         <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl border border-white/20 bg-zinc-800 overflow-hidden flex items-center justify-center relative group shrink-0">
           {snapshots.length > 0 ? (
             <>
@@ -91,7 +96,6 @@ export default function LensApp() {
           )}
         </div>
 
-        {/* Shutter Button */}
         <button 
           onClick={takeSnapshot}
           disabled={!hasPermission}

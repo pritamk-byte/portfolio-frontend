@@ -3,9 +3,11 @@ import { useState } from 'react';
 import { Globe, ArrowLeft, ArrowRight, RotateCw, Home, Lock } from 'lucide-react';
 
 export default function BrowserApp() {
-  // Defaulting to an iframe-friendly site
-  const [urlInput, setUrlInput] = useState('https://en.wikipedia.org/wiki/Software_engineering');
-  const [currentUrl, setCurrentUrl] = useState('https://en.wikipedia.org/wiki/Software_engineering');
+  // 👇 Uses the specific Google URL that bypasses the iframe block
+  const GOOGLE_HOME = 'https://www.google.com/webhp?igu=1';
+  
+  const [urlInput, setUrlInput] = useState(GOOGLE_HOME);
+  const [currentUrl, setCurrentUrl] = useState(GOOGLE_HOME);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleNavigate = (e: React.FormEvent) => {
@@ -14,15 +16,20 @@ export default function BrowserApp() {
     if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
       finalUrl = 'https://' + finalUrl;
     }
+    
+    // Auto-correct if they just type "google.com" so it doesn't crash the iframe
+    if (finalUrl === 'https://google.com' || finalUrl === 'https://www.google.com') {
+      finalUrl = GOOGLE_HOME;
+    }
+
     setCurrentUrl(finalUrl);
     setUrlInput(finalUrl);
     setIsLoading(true);
   };
 
   const handleHome = () => {
-    const homeUrl = 'https://en.wikipedia.org/wiki/Main_Page';
-    setCurrentUrl(homeUrl);
-    setUrlInput(homeUrl);
+    setCurrentUrl(GOOGLE_HOME);
+    setUrlInput(GOOGLE_HOME);
     setIsLoading(true);
   };
 
@@ -53,7 +60,7 @@ export default function BrowserApp() {
           />
         </form>
 
-        <div className="w-[88px] hidden md:block shrink-0"></div> {/* Spacer to center URL bar on large screens */}
+        <div className="w-[88px] hidden md:block shrink-0"></div> {/* Spacer */}
       </div>
 
       {/* Progress Bar (Fake loading) */}
@@ -80,7 +87,6 @@ export default function BrowserApp() {
         )}
       </div>
 
-      {/* Loading animation styles */}
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes loading {
           0% { width: 0%; }
