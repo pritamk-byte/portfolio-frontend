@@ -10,11 +10,10 @@ export default function LensApp() {
   const [snapshots, setSnapshots] = useState<string[]>([]);
 
   useEffect(() => {
-    let isActive = true; // 👇 Protects against React Strict Mode double-mounting
+    let isActive = true; 
     let currentStream: MediaStream | null = null;
 
     const startCamera = async () => {
-      // Check if the API is even supported (fails on HTTP non-localhost)
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         if (isActive) {
           setErrorMessage("Camera API is blocked. HTTPS is required.");
@@ -26,7 +25,6 @@ export default function LensApp() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         
-        // 👇 If the component unmounted while waiting for permission, kill the stream
         if (!isActive) {
           stream.getTracks().forEach(track => track.stop());
           return;
@@ -34,9 +32,9 @@ export default function LensApp() {
 
         currentStream = stream;
         
+        // 👇 Because the video is now unconditionally rendered, videoRef.current is NEVER null here!
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          // 👇 Explicitly force play (fixes the black screen bug)
           await videoRef.current.play().catch(e => console.error("Video play error:", e));
         }
         setHasPermission(true);
@@ -55,7 +53,6 @@ export default function LensApp() {
 
     return () => {
       isActive = false;
-      // 👇 Cleanup the specific stream tied to this effect mount
       if (currentStream) {
         currentStream.getTracks().forEach(track => track.stop());
       }
@@ -82,27 +79,35 @@ export default function LensApp() {
       <canvas ref={canvasRef} className="hidden" />
 
       {/* Camera Viewfinder */}
-      <div className="flex-1 relative flex items-center justify-center bg-[#111]">
-        {hasPermission === null ? (
-          <div className="animate-pulse text-zinc-500 font-mono text-[11px] sm:text-sm">Requesting Camera Access...</div>
-        ) : hasPermission === false ? (
-          <div className="flex flex-col items-center text-zinc-500 text-center px-6">
+      <div className="flex-1 relative flex items-center justify-center bg-[#111] overflow-hidden">
+        
+        {/* 👇 UNCONDITIONAL RENDER: The video tag is always here, just hidden if not ready */}
+        <video 
+          ref={videoRef} 
+          autoPlay 
+          playsInline 
+          muted 
+          className={`w-full h-full object-cover transform -scale-x-100 transition-opacity duration-300 ${hasPermission ? 'opacity-100' : 'opacity-0 absolute'}`} 
+        />
+
+        {/* Loading Overlay */}
+        {hasPermission === null && (
+          <div className="absolute inset-0 flex items-center justify-center bg-[#111] z-10">
+            <div className="animate-pulse text-zinc-500 font-mono text-[11px] sm:text-sm">Requesting Camera Access...</div>
+          </div>
+        )}
+
+        {/* Error Overlay */}
+        {hasPermission === false && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#111] z-10 text-zinc-500 text-center px-6">
             <XCircle size={40} className="mb-4 text-red-500/50 sm:w-12 sm:h-12" />
             <p className="text-xs sm:text-sm font-medium">{errorMessage}</p>
           </div>
-        ) : (
-          <video 
-            ref={videoRef} 
-            autoPlay 
-            playsInline 
-            muted // <-- CRITICAL for iOS Safari AutoPlay
-            className="w-full h-full object-cover transform -scale-x-100" 
-          />
         )}
       </div>
 
       {/* Controls Area */}
-      <div className="h-20 sm:h-24 bg-zinc-900/90 backdrop-blur-xl border-t border-white/10 flex items-center justify-between px-4 sm:px-8 shrink-0">
+      <div className="h-20 sm:h-24 bg-zinc-900/90 backdrop-blur-xl border-t border-white/10 flex items-center justify-between px-4 sm:px-8 shrink-0 relative z-20">
         <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl border border-white/20 bg-zinc-800 overflow-hidden flex items-center justify-center relative group shrink-0">
           {snapshots.length > 0 ? (
             <>
