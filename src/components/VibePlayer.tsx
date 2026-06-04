@@ -35,7 +35,7 @@ const formatTime = (seconds: number) => {
 };
 
 export default function VibePlayer() {
-  // 👇 Real Audio Reference
+  // Real Audio Reference
   const audioRef = useRef<HTMLAudioElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
   
@@ -82,7 +82,7 @@ export default function VibePlayer() {
     setCurrentTrackIdx((prev) => (prev - 1 + PLAYLIST.length) % PLAYLIST.length);
   };
 
-  // 👇 Allow clicking on the progress bar to seek
+  // Allow clicking on the progress bar to seek
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!audioRef.current || !progressBarRef.current) return;
     
@@ -98,7 +98,7 @@ export default function VibePlayer() {
   return (
     <div className="w-full h-full flex flex-col md:flex-row bg-[#121212] text-white font-sans select-none overflow-hidden">
       
-      {/* 👇 THE HIDDEN HTML5 AUDIO ENGINE */}
+      {/* THE HIDDEN HTML5 AUDIO ENGINE */}
       <audio 
         ref={audioRef}
         src={currentTrack.src}
@@ -137,27 +137,28 @@ export default function VibePlayer() {
       </div>
 
       {/* Main Player Area */}
-      <div className="flex-1 flex flex-col relative bg-gradient-to-b from-[#2a2a2a] to-[#121212]">
+      <div className="flex-1 flex flex-col relative bg-gradient-to-b from-[#2a2a2a] to-[#121212] overflow-hidden">
         
         {/* Top Bar (Mobile) */}
-        <div className="md:hidden flex items-center p-4 border-b border-white/5 bg-black/20">
+        <div className="md:hidden flex items-center p-4 border-b border-white/5 bg-black/20 shrink-0">
           <Music2 size={20} className="text-rose-500 mr-2" />
           <span className="font-semibold">VibeTunes</span>
         </div>
 
-        {/* Artwork & Info */}
-        <div className="flex-1 flex flex-col items-center justify-center p-8 min-h-0">
-          <div className="relative group w-48 h-48 sm:w-64 sm:h-64 md:w-72 md:h-72 mb-8 shrink-0">
+        {/* Artwork & Info (Responsive Fluid Setup) */}
+        <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-8 min-h-0">
+          {/* 👇 Fluid image sizing instead of hardcoded pixels */}
+          <div className="relative group w-full max-w-[220px] sm:max-w-[280px] md:max-w-[320px] aspect-square mb-6 sm:mb-8 shrink-0">
             <div className={`absolute inset-0 bg-rose-500/20 blur-3xl rounded-full transition-opacity duration-1000 ${isPlaying ? 'opacity-100' : 'opacity-30'}`}></div>
             <img 
               src={currentTrack.cover} 
               alt="Album Cover" 
-              className={`relative z-10 w-full h-full object-cover rounded-2xl shadow-2xl border border-white/10 transition-transform duration-500 ${isPlaying ? 'scale-100' : 'scale-95'}`}
+              className={`relative z-10 w-full h-full object-cover object-center bg-black rounded-2xl shadow-2xl border border-white/10 transition-transform duration-500 ${isPlaying ? 'scale-100' : 'scale-95'}`}
             />
           </div>
           
-          <div className="text-center px-4 w-full">
-            <h1 className="text-2xl sm:text-3xl font-bold mb-2 truncate">{currentTrack.title}</h1>
+          <div className="text-center px-4 w-full shrink-0">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2 truncate">{currentTrack.title}</h1>
             <p className="text-zinc-400 text-sm sm:text-base truncate">{currentTrack.artist}</p>
           </div>
         </div>
@@ -189,7 +190,7 @@ export default function VibePlayer() {
             <button onClick={handlePrev} className="text-zinc-300 hover:text-white transition-colors active:scale-95"><SkipBack size={28} fill="currentColor" /></button>
             <button 
               onClick={togglePlay}
-              className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center bg-white text-black rounded-full hover:scale-105 active:scale-95 transition-all shadow-lg"
+              className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center bg-white text-black rounded-full hover:scale-105 active:scale-95 transition-all shadow-lg shrink-0"
             >
               {isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} fill="currentColor" className="ml-1" />}
             </button>
