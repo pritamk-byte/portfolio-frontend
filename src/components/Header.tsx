@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { 
-  Wifi, BatteryMedium, Command, Zap, Search, Settings, RotateCcw, 
+  Wifi, BatteryMedium, Command, Zap, Search, RotateCcw, 
   CloudSun, SlidersHorizontal, Bluetooth, Monitor, Volume2, Sun, Moon, 
   Image as ImageIcon, Languages, CloudRain, Cloud, CloudLightning, Snowflake, Lock, Power 
 } from 'lucide-react';
@@ -15,7 +15,6 @@ const systemMenus: Record<string, string[]> = {
   Help: ['Pritam_OS Help', 'Search...']
 };
 
-// Maps weather codes to Icons and Calendar Themes
 const getWeatherTheme = (iconCode: string) => {
   const code = iconCode.slice(0, 2);
   switch (code) {
@@ -39,10 +38,8 @@ export default function Header() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   
-  // Weather State (Fallback included)
   const [weather, setWeather] = useState({ temp: 28, condition: 'Partly Cloudy', icon: '02d' });
 
-  // Control Center States
   const [brightness, setBrightness] = useState(100);
   const [wifiOn, setWifiOn] = useState(true);
   const [btOn, setBtOn] = useState(true);
@@ -53,10 +50,18 @@ export default function Header() {
 
   const [isUnlocked, setIsUnlocked] = useState(false);
 
+  // 👇 IMPORTANT FIX: Listen to both Unlock AND Lock states!
   useEffect(() => {
     const handleUnlock = () => setIsUnlocked(true);
+    const handleLock = () => setIsUnlocked(false);
+    
     window.addEventListener('system-unlock', handleUnlock);
-    return () => window.removeEventListener('system-unlock', handleUnlock);
+    window.addEventListener('system-lock-triggered', handleLock); // Added Lock listener
+    
+    return () => {
+      window.removeEventListener('system-unlock', handleUnlock);
+      window.removeEventListener('system-lock-triggered', handleLock);
+    };
   }, []);
 
   useEffect(() => {
@@ -72,7 +77,6 @@ export default function Header() {
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch Header Weather
   useEffect(() => {
     const fetchHeaderWeather = async (lat: number, lon: number) => {
       try {
@@ -231,7 +235,6 @@ export default function Header() {
               </button>
               <div className="h-px bg-zinc-800 my-1"></div>
               
-              {/* SYSTEM POWER CONTROLS */}
               <button onClick={() => { window.dispatchEvent(new Event('system-lock')); setOpenMenu(null); }} className="flex items-center gap-2 w-full px-4 py-1.5 hover:bg-[#0058d0] hover:text-white rounded transition-colors text-left interactive">
                 <Lock size={14} className="opacity-70" />
                 <span>Lock Screen</span>
@@ -421,7 +424,6 @@ export default function Header() {
           {openMenu === 'clock' && (
             <div className="absolute top-7 right-0 w-[280px] sm:w-72 bg-[#181818]/95 backdrop-blur-3xl border border-os-border rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[130] p-4 font-normal text-os-text cursor-default overflow-hidden">
               
-              {/* Dynamic Theme Background Layer */}
               <div className={`absolute inset-0 ${currentTheme.calBg} pointer-events-none transition-colors duration-700 ease-in-out`} />
 
               <div className="relative z-10">

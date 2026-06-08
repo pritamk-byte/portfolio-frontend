@@ -54,7 +54,6 @@ const initialDesktopIcons = [
 
 const EXPIRATION_TIME_MS = 60 * 60 * 1000;
 
-// 👇 ZERO-FLICKER WALLPAPER ENGINE
 const WallpaperLayer = ({ activeIdx }: { activeIdx: number }) => (
   <div className="absolute inset-0 z-0 bg-black overflow-hidden pointer-events-none">
     {wallpapers.map((wp, idx) => (
@@ -156,9 +155,7 @@ function DraggableIcon({
       }
     });
 
-    if (hasOverlap) {
-      setPos({ x: originalPos.current.x, y: originalPos.current.y });
-    }
+    if (hasOverlap) setPos({ x: originalPos.current.x, y: originalPos.current.y });
   };
 
   const submitRename = () => {
@@ -169,7 +166,6 @@ function DraggableIcon({
   };
 
   if (!isReady) return null;
-
   const Icon = item.icon;
 
   return (
@@ -215,10 +211,7 @@ function DraggableIcon({
       ) : (
         <div 
           onDoubleClick={(e) => {
-            if (item.isCustomFolder || item.id.startsWith('folder-')) {
-              e.stopPropagation();
-              setIsEditing(true);
-            }
+            if (item.isCustomFolder || item.id.startsWith('folder-')) { e.stopPropagation(); setIsEditing(true); }
           }}
           className={`text-[11px] font-medium px-1 py-0.5 rounded text-center leading-tight tracking-wide drop-shadow-md select-none w-full overflow-hidden text-ellipsis line-clamp-2 break-words
             ${isSelected ? 'bg-blue-600 text-white' : 'text-zinc-100 bg-transparent'}
@@ -235,7 +228,6 @@ export default function Hero() {
   const [progress, setProgress] = useState(0);
   const [bootStage, setBootStage] = useState<'loading' | 'login' | 'desktop'>('loading');
   
-  // DECOUPLED WALLPAPER STATES
   const [desktopWpIdx, setDesktopWpIdx] = useState(0);
   const [lockWpIdx, setLockWpIdx] = useState(8);
   
@@ -243,16 +235,13 @@ export default function Hero() {
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   const [isSubmittingLogin, setIsSubmittingLogin] = useState(false);
 
-  // MAC OS LOCK SCREEN STATES
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const passwordInputRef = useRef<HTMLInputElement>(null);
 
-  // SYSTEM STATUS STATES
   const [batteryLevel, setBatteryLevel] = useState(100);
   const [isOnline, setIsOnline] = useState(true);
   
-  // POWER STATES
   const [isAsleep, setIsAsleep] = useState(false);
   const [isShuttingDown, setIsShuttingDown] = useState(false);
   const [isPoweredOff, setIsPoweredOff] = useState(false);
@@ -261,7 +250,6 @@ export default function Hero() {
   const [showDock, setShowDock] = useState(true);
   const [icons, setIcons] = useState(initialDesktopIcons);
 
-  // Hardware Status Effects (Battery & Network)
   useEffect(() => {
     setIsOnline(navigator.onLine);
     const handleOnline = () => setIsOnline(true);
@@ -281,7 +269,6 @@ export default function Hero() {
     };
   }, []);
 
-  // Live Clock Update
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
@@ -290,21 +277,25 @@ export default function Hero() {
   const timeString = currentTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   const dateString = currentTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
-  // Sleep Wake-Up Effect
+  // 👇 FIXED: Added a 50ms delay to sleep state so the current click doesn't instantly wake it up!
   useEffect(() => {
     if (!isAsleep) return;
     const wakeUp = () => setIsAsleep(false);
-    window.addEventListener('keydown', wakeUp);
-    window.addEventListener('mousemove', wakeUp);
-    window.addEventListener('click', wakeUp);
+    
+    const timeoutId = setTimeout(() => {
+      window.addEventListener('keydown', wakeUp);
+      window.addEventListener('mousemove', wakeUp);
+      window.addEventListener('click', wakeUp);
+    }, 50);
+
     return () => {
+      clearTimeout(timeoutId);
       window.removeEventListener('keydown', wakeUp);
       window.removeEventListener('mousemove', wakeUp);
       window.removeEventListener('click', wakeUp);
     };
   }, [isAsleep]);
 
-  // Lockscreen Key Press Effect
   useEffect(() => {
     const handleAnyKey = (e: KeyboardEvent) => {
       if (bootStage === 'login' && !showPasswordPrompt && !isAsleep && !isPoweredOff && !isShuttingDown) {
@@ -315,7 +306,6 @@ export default function Hero() {
     return () => window.removeEventListener('keydown', handleAnyKey);
   }, [bootStage, showPasswordPrompt, isAsleep, isPoweredOff, isShuttingDown]);
 
-  // Auto-focus password when unlocked
   useEffect(() => {
     if (showPasswordPrompt && passwordInputRef.current) {
       setTimeout(() => passwordInputRef.current?.focus(), 400);
@@ -337,7 +327,6 @@ export default function Hero() {
     }
   };
 
-  // HYDRATE ALL PERSISTENT STATES & ATTACH GLOBAL HEADER LISTENERS
   useEffect(() => {
     const savedDWP = localStorage.getItem('pritam_os_desktop_wp');
     if (savedDWP !== null) setDesktopWpIdx(parseInt(savedDWP));
@@ -368,14 +357,22 @@ export default function Hero() {
       localStorage.removeItem('pritam_os_last_active');
     }
 
-    // 👇 EXPOSED GLOBAL EVENTS FOR YOUR HEADER TO CALL
     const handleNextDesktopWp = () => setDesktopWpIdx(prev => (prev + 1) % wallpapers.length);
-    const handleSystemLock = () => { setBootStage('login'); setShowPasswordPrompt(false); };
+    const handleSystemLock = () => { 
+      localStorage.removeItem('pritam_os_last_active'); // Ensure refresh asks for pass
+      window.dispatchEvent(new Event('system-lock-triggered')); // Tells HUD & Header to hide
+      setBootStage('login'); 
+      setShowPasswordPrompt(false); 
+    };
     const handleSystemSleep = () => setIsAsleep(true);
     const handleSystemShutdown = () => handleShutDown();
     const handleSystemRestart = () => {
-      handleShutDown();
-      setTimeout(() => handlePowerOn(), 3000);
+      localStorage.removeItem('pritam_os_last_active');
+      window.dispatchEvent(new Event('system-lock-triggered'));
+      setIsShuttingDown(true);
+      setTimeout(() => {
+        window.location.reload(); // TRULY reloads the window
+      }, 2000);
     };
 
     window.addEventListener('sync-folders', loadDesktopIcons);
@@ -395,7 +392,6 @@ export default function Hero() {
     };
   }, []);
 
-  // Sync wallpaper states to local storage whenever changed
   useEffect(() => {
     localStorage.setItem('pritam_os_desktop_wp', desktopWpIdx.toString());
   }, [desktopWpIdx]);
@@ -404,7 +400,6 @@ export default function Hero() {
     localStorage.setItem('pritam_os_lockscreen_wp', lockWpIdx.toString());
   }, [lockWpIdx]);
 
-  // Loading Screen Timer
   useEffect(() => {
     if (bootStage !== 'loading') return;
     const lastActive = localStorage.getItem('pritam_os_last_active');
@@ -423,7 +418,6 @@ export default function Hero() {
     return () => clearInterval(interval);
   }, [bootStage]);
 
-  // Keyboard Folder Deletion
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIcon && selectedIcon.startsWith('folder-')) {
@@ -545,6 +539,8 @@ export default function Hero() {
   };
 
   const handleShutDown = () => {
+    localStorage.removeItem('pritam_os_last_active');
+    window.dispatchEvent(new Event('system-lock-triggered'));
     setIsShuttingDown(true);
     setTimeout(() => {
       setIsShuttingDown(false);
@@ -566,7 +562,7 @@ export default function Hero() {
       onClick={() => setSelectedIcon(null)}
     >
       
-      {/* 1. DESKTOP WALLPAPER LAYER (Zero-Flicker) */}
+      {/* 1. DESKTOP WALLPAPER LAYER */}
       <WallpaperLayer activeIdx={desktopWpIdx} />
 
       {/* 2. RENDER DRAGGABLE DESKTOP ICONS */}
@@ -633,7 +629,7 @@ export default function Hero() {
               </button>
               <div className="h-px bg-white/10 my-1"></div>
               <div className="px-4 py-1 text-zinc-500 font-semibold text-[10px] tracking-wider uppercase">Wallpaper</div>
-              <button onClick={() => setDesktopWpIdx(p => (p + 1) % wallpapers.length)} className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center">
+              <button onClick={() => window.dispatchEvent(new Event('next-wallpaper'))} className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center">
                 <span>Next Background</span><span className="text-zinc-500 text-[10px] truncate max-w-[80px] text-right">{wallpapers[(desktopWpIdx + 1) % wallpapers.length].name}</span>
               </button>
               <div className="h-px bg-white/10 my-1"></div>
@@ -680,7 +676,7 @@ export default function Hero() {
         </div>
       )}
 
-      {/* 8. PURE MAC OS SONOMA LOCK SCREEN (Zero-Flicker) */}
+      {/* 8. PURE MAC OS SONOMA LOCK SCREEN */}
       <div 
         className={`absolute inset-0 z-40 flex flex-col items-center transition-all duration-1000 ease-in-out
           ${bootStage === 'login' ? 'opacity-100 pointer-events-auto scale-100' : 'opacity-0 pointer-events-none scale-105'}
@@ -698,7 +694,7 @@ export default function Hero() {
           <div className="text-[70px] sm:text-[100px] leading-none font-bold text-white tracking-tighter drop-shadow-xl select-none mt-2">{timeString}</div>
         </div>
 
-        {/* Center: Hidden User Auth (Appears on click/key) */}
+        {/* Center: Hidden User Auth */}
         <div 
           className={`z-20 absolute top-1/2 -translate-y-1/2 flex flex-col items-center justify-center transition-all duration-500 ease-in-out transform 
             ${showPasswordPrompt ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}`}
@@ -723,7 +719,6 @@ export default function Hero() {
 
         {/* Bottom Status / Power Bar */}
         <div className={`absolute bottom-8 right-8 sm:bottom-12 sm:right-12 z-30 flex flex-col sm:flex-row items-end sm:items-center gap-4 transition-all duration-500 ${showPasswordPrompt ? 'opacity-0 translate-y-4 pointer-events-none' : 'opacity-100 translate-y-0'}`}>
-           
            <div className="flex items-center gap-3 text-white/90 bg-black/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
              {isOnline ? <Wifi size={16} /> : <WifiOff size={16} className="opacity-50" />}
              <div className="flex items-center gap-1.5">
@@ -747,13 +742,6 @@ export default function Hero() {
              </button>
            </div>
         </div>
-
-        {/* Hint text */}
-        {!showPasswordPrompt && (
-          <div className="absolute bottom-12 z-20 text-[10px] sm:text-xs font-medium text-white/70 tracking-wide animate-pulse cursor-default select-none">
-            Click or press any key to unlock
-          </div>
-        )}
 
         {/* Cancel Login Button */}
         {showPasswordPrompt && (
