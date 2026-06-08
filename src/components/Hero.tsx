@@ -3,10 +3,21 @@ import { useState, useEffect, useRef } from 'react';
 import { 
   Command, ArrowRight, Folder, Mail, Music2, Code2, Calculator as CalcIcon, TerminalSquare, 
   SquarePen, Palette, Globe, Users, FileText, FileCode, Gamepad2, Camera, CloudSun, 
-  Activity, Compass, Crosshair, EyeOff, Eye, Trash2, X, Moon, RotateCcw, Power, Image as ImageIcon, Wifi, WifiOff, BatteryMedium 
+  Activity, Compass, Crosshair, EyeOff, Eye, Trash2, X, Moon, RotateCcw, Power, Image as ImageIcon, Wifi, WifiOff, BatteryMedium, Loader2 
 } from 'lucide-react';
 
 const wallpapers = [
+  // ABSTRACT & MAC OS WALLPAPERS
+  { id: 'default-blur', type: 'css', name: 'Dynamic Aura' },
+  { id: 'monterey', type: 'image', name: 'Monterey Abstract', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'ventura', type: 'image', name: 'Ventura Waves', url: 'https://images.unsplash.com/photo-1620121692029-d088224ddc74?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'big-sur', type: 'image', name: 'Big Sur Coast', url: 'https://images.unsplash.com/photo-1604871000636-074fa5117945?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'catalina', type: 'image', name: 'Catalina Island', url: 'https://images.unsplash.com/photo-1559825481-12a05cc00344?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'neon-fluid', type: 'image', name: 'Neon Fluid', url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'abstract-ink', type: 'image', name: 'Macro Fluid', url: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'vibrant-mesh', type: 'image', name: 'Vibrant Mesh', url: 'https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=2564&auto=format&fit=crop' },
+  
+  // NATURE & LANDSCAPE WALLPAPERS
   { id: 'yosemite', type: 'image', name: 'Yosemite Valley', url: 'https://images.unsplash.com/photo-1426604966848-d7adac402bff?q=80&w=2564&auto=format&fit=crop' },
   { id: 'snow-peaks', type: 'image', name: 'Snow Peaks', url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2564&auto=format&fit=crop' },
   { id: 'forest-road', type: 'image', name: 'Forest Road', url: 'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=2564&auto=format&fit=crop' },
@@ -16,7 +27,9 @@ const wallpapers = [
   { id: 'desert-dunes', type: 'image', name: 'Desert Dunes', url: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=2564&auto=format&fit=crop' },
   { id: 'nyc-skyline', type: 'image', name: 'City Skyline', url: 'https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=2564&auto=format&fit=crop' },
   { id: 'ocean-cliffs', type: 'image', name: 'Ocean Cliffs', url: 'https://images.unsplash.com/photo-1558470598-a5dda9640f68?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'autumn-woods', type: 'image', name: 'Autumn Woods', url: 'https://images.unsplash.com/photo-1507608616759-54f48f0af0ee?q=80&w=2564&auto=format&fit=crop' }
+  { id: 'autumn-woods', type: 'image', name: 'Autumn Woods', url: 'https://images.unsplash.com/photo-1507608616759-54f48f0af0ee?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'dark-matter', type: 'image', name: 'Dark Matter', url: 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'deep-space', type: 'image', name: 'Deep Space', url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2564&auto=format&fit=crop' },
 ];
 
 const initialDesktopIcons = [
@@ -88,8 +101,10 @@ function DraggableIcon({
     e.stopPropagation();
     onClick(e as unknown as React.MouseEvent, item.id);
     setIsDragging(true);
+    
     originalPos.current = { x: pos.x, y: pos.y }; 
     dragStart.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
+    
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   };
 
@@ -97,8 +112,15 @@ function DraggableIcon({
     if (isDragging) {
       let newX = e.clientX - dragStart.current.x;
       let newY = e.clientY - dragStart.current.y;
-      newX = Math.max(0, Math.min(window.innerWidth - 80, newX));
-      newY = Math.max(28, Math.min(window.innerHeight - 200, newY));
+
+      const iconWidth = 80;  
+      const iconHeight = 100; 
+      const topBarHeight = 28;
+      const dockHeight = 100;
+
+      newX = Math.max(0, Math.min(window.innerWidth - iconWidth, newX));
+      newY = Math.max(topBarHeight, Math.min(window.innerHeight - dockHeight - iconHeight, newY));
+
       setPos({ x: newX, y: newY });
     }
   };
@@ -124,17 +146,23 @@ function DraggableIcon({
       }
     });
 
-    if (hasOverlap) setPos({ x: originalPos.current.x, y: originalPos.current.y });
+    if (hasOverlap) {
+      setPos({ x: originalPos.current.x, y: originalPos.current.y });
+    }
   };
 
   const submitRename = () => {
     setIsEditing(false);
     const trimmed = renamingValue.trim();
-    if (trimmed && trimmed !== item.label) onRename(item.id, trimmed);
-    else setRenamingValue(item.label);
+    if (trimmed && trimmed !== item.label) {
+      onRename(item.id, trimmed);
+    } else {
+      setRenamingValue(item.label);
+    }
   };
 
   if (!isReady) return null;
+
   const Icon = item.icon;
 
   return (
@@ -150,7 +178,10 @@ function DraggableIcon({
       style={{ left: `${pos.x}px`, top: `${pos.y}px` }}
     >
       <div 
-        onDoubleClick={(e) => { e.stopPropagation(); if (!isEditing) onDoubleClick(item.id); }}
+        onDoubleClick={(e) => { 
+          e.stopPropagation(); 
+          if (!isEditing) onDoubleClick(item.id); 
+        }}
         className={`w-14 h-14 flex items-center justify-center rounded-lg transition-all duration-200
         ${isSelected ? 'bg-white/20 border border-white/30 shadow-lg' : 'bg-transparent border border-transparent'}
       `}>
@@ -167,14 +198,20 @@ function DraggableIcon({
           onBlur={submitRename}
           onKeyDown={(e) => {
             if (e.key === 'Enter') submitRename();
-            if (e.key === 'Escape') { setIsEditing(false); setRenamingValue(item.label); }
+            if (e.key === 'Escape') {
+              setIsEditing(false);
+              setRenamingValue(item.label);
+            }
           }}
           className="w-full text-[11px] font-medium px-1 bg-blue-600 border border-blue-400 text-white rounded text-center outline-none focus:ring-0"
         />
       ) : (
         <div 
           onDoubleClick={(e) => {
-            if (item.isCustomFolder || item.id.startsWith('folder-')) { e.stopPropagation(); setIsEditing(true); }
+            if (item.isCustomFolder || item.id.startsWith('folder-')) {
+              e.stopPropagation();
+              setIsEditing(true);
+            }
           }}
           className={`text-[11px] font-medium px-1 py-0.5 rounded text-center leading-tight tracking-wide drop-shadow-md select-none w-full overflow-hidden text-ellipsis line-clamp-2 break-words
             ${isSelected ? 'bg-blue-600 text-white' : 'text-zinc-100 bg-transparent'}
@@ -190,8 +227,12 @@ function DraggableIcon({
 export default function Hero() {
   const [progress, setProgress] = useState(0);
   const [bootStage, setBootStage] = useState<'loading' | 'login' | 'desktop'>('loading');
-  const [themeIdx, setThemeIdx] = useState(0); 
+  
+  // DECOUPLED WALLPAPER STATES
+  const [desktopWpIdx, setDesktopWpIdx] = useState(0);
+  const [lockWpIdx, setLockWpIdx] = useState(8); // Default to a different wallpaper initially so users notice it
   const [imageError, setImageError] = useState(false);
+  
   const [contextMenu, setContextMenu] = useState<{show: boolean, x: number, y: number, targetId: string | null}>({ show: false, x: 0, y: 0, targetId: null });
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   const [isSubmittingLogin, setIsSubmittingLogin] = useState(false);
@@ -241,7 +282,7 @@ export default function Hero() {
   }, []);
 
   const timeString = currentTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  const dateString = currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const dateString = currentTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
   // Sleep Wake-Up Effect
   useEffect(() => {
@@ -290,9 +331,13 @@ export default function Hero() {
     }
   };
 
+  // HYDRATE ALL PERSISTENT STATES
   useEffect(() => {
-    const savedWallpaper = localStorage.getItem('pritam_os_wallpaper_idx');
-    if (savedWallpaper !== null) setThemeIdx(parseInt(savedWallpaper));
+    const savedDWP = localStorage.getItem('pritam_os_desktop_wp');
+    if (savedDWP !== null) setDesktopWpIdx(parseInt(savedDWP));
+
+    const savedLWP = localStorage.getItem('pritam_os_lockscreen_wp');
+    if (savedLWP !== null) setLockWpIdx(parseInt(savedLWP));
 
     const savedIcons = localStorage.getItem('pritam_os_show_icons');
     if (savedIcons !== null) setShowIcons(savedIcons === 'true');
@@ -321,13 +366,21 @@ export default function Hero() {
     return () => window.removeEventListener('sync-folders', loadDesktopIcons);
   }, []);
 
-  const currentWallpaper = wallpapers[themeIdx];
+  const desktopWallpaper = wallpapers[desktopWpIdx];
+  const lockWallpaper = wallpapers[lockWpIdx];
+
+  // Sync wallpaper states to local storage whenever changed
+  useEffect(() => {
+    setImageError(false);
+    localStorage.setItem('pritam_os_desktop_wp', desktopWpIdx.toString());
+  }, [desktopWpIdx]);
 
   useEffect(() => {
     setImageError(false);
-    localStorage.setItem('pritam_os_wallpaper_idx', themeIdx.toString());
-  }, [themeIdx]);
+    localStorage.setItem('pritam_os_lockscreen_wp', lockWpIdx.toString());
+  }, [lockWpIdx]);
 
+  // Loading Screen Timer
   useEffect(() => {
     if (bootStage !== 'loading') return;
     const lastActive = localStorage.getItem('pritam_os_last_active');
@@ -346,6 +399,7 @@ export default function Hero() {
     return () => clearInterval(interval);
   }, [bootStage]);
 
+  // Keyboard Folder Deletion
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIcon && selectedIcon.startsWith('folder-')) {
@@ -466,15 +520,17 @@ export default function Hero() {
     window.dispatchEvent(new Event('trash-emptied'));
   };
 
-  // Power Actions
   const handleShutDown = () => {
     setIsShuttingDown(true);
-    setTimeout(() => setIsPoweredOff(true), 1500);
+    setTimeout(() => {
+      setIsShuttingDown(false);
+      setIsPoweredOff(true);
+    }, 2000);
   };
 
   const handlePowerOn = () => {
     setIsPoweredOff(false);
-    setIsShuttingDown(false);
+    setIsSubmittingLogin(false);
     setBootStage('loading');
     setProgress(0);
   };
@@ -486,24 +542,27 @@ export default function Hero() {
       onClick={() => setSelectedIcon(null)}
     >
       
-      {/* THE WALLPAPER LAYER */}
+      {/* 1. DESKTOP WALLPAPER LAYER */}
       <div className="absolute inset-0 bg-[#000000] transition-all duration-1000">
-        {currentWallpaper.type === 'css' || imageError ? (
+        {desktopWallpaper.type === 'css' || imageError ? (
           <div className="absolute inset-0 w-full h-full overflow-hidden bg-[#1e1e1e]">
             {imageError && <div className="absolute inset-0 backdrop-blur-3xl bg-white/5"></div>}
+            <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full bg-purple-900/30 blur-[120px] transition-colors duration-1000"></div>
+            <div className="absolute top-[10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-blue-900/20 blur-[130px] transition-colors duration-1000"></div>
+            <div className="absolute bottom-[-20%] left-[15%] w-[70vw] h-[70vw] rounded-full bg-emerald-900/15 blur-[140px] transition-colors duration-1000"></div>
           </div>
         ) : (
           <>
-            <img src={currentWallpaper.url} alt="preload" className="hidden" onError={() => setImageError(true)} />
+            <img src={desktopWallpaper.url} alt="preload" className="hidden" onError={() => setImageError(true)} />
             <div 
               className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 opacity-90"
-              style={{ backgroundImage: `url('${currentWallpaper.url}')` }}
+              style={{ backgroundImage: `url('${desktopWallpaper.url}')` }}
             />
           </>
         )}
       </div>
 
-      {/* RENDER DRAGGABLE ICONS */}
+      {/* 2. RENDER DRAGGABLE DESKTOP ICONS */}
       {bootStage === 'desktop' && showIcons && (
         <div className="absolute inset-0 z-10 overflow-hidden pointer-events-none">
           <div className="relative w-full h-full pointer-events-auto">
@@ -523,7 +582,7 @@ export default function Hero() {
         </div>
       )}
 
-      {/* DYNAMIC CONTEXT MENU */}
+      {/* 3. DYNAMIC CONTEXT MENU */}
       {contextMenu.show && (
         <div 
           className="fixed z-[9999] w-56 bg-os-window/80 backdrop-blur-3xl border border-os-border rounded-xl shadow-2xl py-1.5 text-[12px] font-sans text-os-text"
@@ -567,8 +626,8 @@ export default function Hero() {
               </button>
               <div className="h-px bg-white/10 my-1"></div>
               <div className="px-4 py-1 text-zinc-500 font-semibold text-[10px] tracking-wider uppercase">Wallpaper</div>
-              <button onClick={() => setThemeIdx(p => (p + 1) % wallpapers.length)} className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center">
-                <span>Next Background</span><span className="text-zinc-500 text-[10px] truncate max-w-[80px] text-right">{currentWallpaper.name}</span>
+              <button onClick={() => setDesktopWpIdx(p => (p + 1) % wallpapers.length)} className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center">
+                <span>Next Background</span><span className="text-zinc-500 text-[10px] truncate max-w-[80px] text-right">{desktopWallpaper.name}</span>
               </button>
               <div className="h-px bg-white/10 my-1"></div>
               <button className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white" onClick={() => launchApp('terminal')}>Open Terminal</button>
@@ -578,7 +637,7 @@ export default function Hero() {
         </div>
       )}
 
-      {/* SLEEP SCREEN OVERLAY */}
+      {/* 4. SLEEP SCREEN OVERLAY */}
       {isAsleep && (
         <div 
           className="fixed inset-0 z-[99999] bg-black cursor-default"
@@ -586,19 +645,25 @@ export default function Hero() {
         />
       )}
 
-      {/* SHUTDOWN / POWER OFF OVERLAY */}
-      {(isShuttingDown || isPoweredOff) && (
-        <div className={`fixed inset-0 z-[100000] bg-black flex items-center justify-center transition-opacity duration-1500 ease-in-out ${isPoweredOff ? 'opacity-100' : isShuttingDown ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-           {isPoweredOff && (
-             <button onClick={handlePowerOn} className="text-white/20 hover:text-white/80 flex flex-col items-center gap-4 transition-colors">
-               <Power size={48} />
-               <span className="text-xs font-medium tracking-widest uppercase animate-pulse">Power On</span>
-             </button>
-           )}
+      {/* 5. SHUTTING DOWN ANIMATION */}
+      {isShuttingDown && (
+        <div className="absolute inset-0 z-[100001] bg-black flex flex-col items-center justify-center transition-opacity duration-1000">
+           <Loader2 className="animate-spin text-zinc-500 mb-6" size={40} />
+           <p className="text-zinc-400 font-medium tracking-widest uppercase text-xs">Shutting Down...</p>
         </div>
       )}
 
-      {/* BOOT SCREEN */}
+      {/* 6. POWER OFF SCREEN */}
+      {isPoweredOff && (
+        <div className="absolute inset-0 z-[100000] bg-black flex items-center justify-center transition-opacity duration-1000">
+           <button onClick={handlePowerOn} className="text-white/20 hover:text-white/80 transition-all flex flex-col items-center gap-4">
+             <Power size={48} />
+             <span className="text-xs font-medium tracking-widest uppercase animate-pulse">Power On</span>
+           </button>
+        </div>
+      )}
+
+      {/* 7. INITIAL BOOT SCREEN */}
       {bootStage === 'loading' && (
         <div className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center">
           <Command size={56} className="text-os-text mb-12 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" strokeWidth={1.5} />
@@ -608,15 +673,23 @@ export default function Hero() {
         </div>
       )}
 
-      {/* PURE MAC OS SONOMA LOCK SCREEN */}
+      {/* 8. MAC OS SONOMA LOCK SCREEN */}
       <div 
         className={`absolute inset-0 z-40 flex flex-col items-center transition-all duration-1000 ease-in-out bg-cover bg-center
           ${bootStage === 'login' ? 'opacity-100 pointer-events-auto scale-100' : 'opacity-0 pointer-events-none scale-105'}
           ${bootStage === 'loading' && 'hidden'}
         `}
-        style={{ backgroundImage: `url('${currentWallpaper.url}')` }}
+        style={lockWallpaper.type === 'image' ? { backgroundImage: `url('${lockWallpaper.url}')` } : { backgroundColor: '#000' }}
         onClick={() => { if (bootStage === 'login' && !showPasswordPrompt) setShowPasswordPrompt(true); }}
       >
+        {lockWallpaper.type === 'css' && (
+          <div className="absolute inset-0 w-full h-full overflow-hidden bg-[#1e1e1e]">
+            <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full bg-purple-900/30 blur-[120px] transition-colors duration-1000"></div>
+            <div className="absolute top-[10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-blue-900/20 blur-[130px] transition-colors duration-1000"></div>
+            <div className="absolute bottom-[-20%] left-[15%] w-[70vw] h-[70vw] rounded-full bg-emerald-900/15 blur-[140px] transition-colors duration-1000"></div>
+          </div>
+        )}
+
         <div className={`absolute inset-0 transition-all duration-700 ease-in-out ${showPasswordPrompt ? 'backdrop-blur-3xl bg-black/40' : 'backdrop-blur-none bg-black/10'}`}></div>
         
         {/* Top: Clock & Date */}
@@ -625,7 +698,7 @@ export default function Hero() {
           <div className="text-[70px] sm:text-[100px] leading-none font-bold text-white tracking-tighter drop-shadow-xl select-none mt-2">{timeString}</div>
         </div>
 
-        {/* Center: Hidden User Auth (Appears on click/key) */}
+        {/* Center: User Auth */}
         <div 
           className={`z-10 absolute top-1/2 -translate-y-1/2 flex flex-col items-center justify-center transition-all duration-500 ease-in-out transform 
             ${showPasswordPrompt ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}`}
@@ -650,8 +723,6 @@ export default function Hero() {
 
         {/* Bottom Status / Power Bar */}
         <div className={`absolute bottom-8 right-8 sm:bottom-12 sm:right-12 z-20 flex flex-col sm:flex-row items-end sm:items-center gap-4 transition-all duration-500 ${showPasswordPrompt ? 'opacity-0 translate-y-4 pointer-events-none' : 'opacity-100 translate-y-0'}`}>
-           
-           {/* Status Icons */}
            <div className="flex items-center gap-3 text-white/90 bg-black/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
              {isOnline ? <Wifi size={16} /> : <WifiOff size={16} className="opacity-50" />}
              <div className="flex items-center gap-1.5">
@@ -660,9 +731,8 @@ export default function Hero() {
              </div>
            </div>
 
-           {/* Functional Icons */}
            <div className="flex items-center gap-2 bg-black/20 backdrop-blur-md p-1.5 rounded-full border border-white/10 shadow-lg">
-             <button onClick={(e) => { e.stopPropagation(); setThemeIdx(p => (p+1)%wallpapers.length); }} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/20 text-white transition-colors" title="Change Wallpaper">
+             <button onClick={(e) => { e.stopPropagation(); setLockWpIdx(p => (p+1)%wallpapers.length); }} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/20 text-white transition-colors" title="Change Wallpaper">
                <ImageIcon size={14} />
              </button>
              <button onClick={(e) => { e.stopPropagation(); setIsAsleep(true); }} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/20 text-white transition-colors" title="Sleep">
@@ -677,14 +747,14 @@ export default function Hero() {
            </div>
         </div>
 
-        {/* Hint text at bottom center */}
+        {/* Hint text */}
         {!showPasswordPrompt && (
           <div className="absolute bottom-12 z-10 text-[10px] sm:text-xs font-medium text-white/70 tracking-wide animate-pulse cursor-default select-none">
             Click or press any key to unlock
           </div>
         )}
 
-        {/* Cancel Button */}
+        {/* Cancel Login Button */}
         {showPasswordPrompt && (
           <div className="absolute bottom-12 z-10">
             <button 
