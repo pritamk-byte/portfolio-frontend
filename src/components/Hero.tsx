@@ -179,7 +179,7 @@ function DraggableIcon({
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
       onContextMenu={(e) => onContextMenu(e, item.id)}
-      className={`absolute flex flex-col items-center gap-1 w-[72px] group touch-none desktop-icon
+      className={`absolute flex flex-col items-center gap-1 w-18 group touch-none desktop-icon
         ${isDragging ? 'cursor-grabbing z-50 transition-none' : 'cursor-default z-10 transition-all duration-300 ease-out'}
       `}
       style={{ left: `${pos.x}px`, top: `${pos.y}px` }}
@@ -220,7 +220,7 @@ function DraggableIcon({
               setIsEditing(true);
             }
           }}
-          className={`text-[11px] font-medium px-1 py-0.5 rounded text-center leading-tight tracking-wide drop-shadow-md select-none w-full overflow-hidden text-ellipsis line-clamp-2 break-words
+          className={`text-[11px] font-medium px-1 py-0.5 rounded text-center leading-tight tracking-wide drop-shadow-md select-none w-full overflow-hidden text-ellipsis line-clamp-2 wrap-break-word
             ${isSelected ? 'bg-blue-600 text-white' : 'text-zinc-100 bg-transparent'}
           `}
         >
@@ -232,8 +232,10 @@ function DraggableIcon({
 }
 
 export default function Hero() {
-  // CORE STATE
+  // CORE STATE (Progress explicitly added)
+  const [progress, setProgress] = useState<number>(0);
   const [bootStage, setBootStage] = useState<'loading' | 'login' | 'desktop'>('loading');
+  
   const [desktopWpIdx, setDesktopWpIdx] = useState(0);
   const [lockWpIdx, setLockWpIdx] = useState(8);
   
@@ -287,7 +289,7 @@ export default function Hero() {
   const timeString = currentTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   const dateString = currentTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
-  // 👇 LOOPHOLE FIX: Sleep Wake-Up (Added strict 300ms delay to prevent instant wake bugs)
+  // Sleep Wake-Up (Strict 300ms delay to prevent instant wake bugs)
   useEffect(() => {
     if (!isAsleep) return;
     const wakeUp = () => setIsAsleep(false);
@@ -371,7 +373,7 @@ export default function Hero() {
       localStorage.removeItem('pritam_os_last_active');
     }
 
-    // 👇 GLOBAL COMMAND CENTER LISTENERS
+    // GLOBAL COMMAND CENTER LISTENERS
     const handleNextDesktopWp = () => setDesktopWpIdx(prev => (prev + 1) % wallpapers.length);
     
     const handleSystemLock = () => {
@@ -383,7 +385,7 @@ export default function Hero() {
 
     const handleSystemSleep = () => setIsAsleep(true);
     
-    // 👇 LOOPHOLE FIX: Power Actions fully clean the memory and trigger true reloads
+    // Power Actions fully clean the memory and trigger true reloads
     const handleSystemShutdown = () => {
       localStorage.removeItem('pritam_os_last_active');
       window.dispatchEvent(new Event('system-lock-triggered'));
@@ -436,7 +438,7 @@ export default function Hero() {
     if (lastActive && (Date.now() - parseInt(lastActive) < EXPIRATION_TIME_MS)) return;
 
     const interval = setInterval(() => {
-      setProgress(prev => {
+      setProgress((prev: number) => {
         if (prev >= 100) {
           clearInterval(interval);
           setTimeout(() => setBootStage('login'), 400); 
@@ -484,7 +486,7 @@ export default function Hero() {
     setSelectedIcon(id);
   };
 
-  // 👇 LOOPHOLE FIX: Login Stuck fix. Resets submission state securely.
+  // Login Fix
   const handleLogin = () => {
     if (isSubmittingLogin || bootStage !== 'login') return; 
     setIsSubmittingLogin(true); 
@@ -591,7 +593,7 @@ export default function Hero() {
       {/* 1. DESKTOP WALLPAPER LAYER */}
       <WallpaperLayer activeIdx={desktopWpIdx} />
 
-      {/* 2. RENDER DRAGGABLE DESKTOP ICONS (👇 Loophole fix: strictly hidden when not on desktop) */}
+      {/* 2. RENDER DRAGGABLE DESKTOP ICONS (Loophole fix: strictly hidden when not on desktop) */}
       <div className={`absolute inset-0 z-10 transition-opacity duration-300 ${bootStage === 'desktop' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {showIcons && (
           <div className="relative w-full h-full pointer-events-auto">
@@ -614,7 +616,7 @@ export default function Hero() {
       {/* 3. DYNAMIC CONTEXT MENU */}
       {contextMenu.show && bootStage === 'desktop' && (
         <div 
-          className="fixed z-[9999] w-56 bg-os-window/80 backdrop-blur-3xl border border-os-border rounded-xl shadow-2xl py-1.5 text-[12px] font-sans text-os-text"
+          className="fixed z-9999 w-56 bg-os-window/80 backdrop-blur-3xl border border-os-border rounded-xl shadow-2xl py-1.5 text-[12px] font-sans text-os-text"
           style={{ top: contextMenu.y, left: contextMenu.x }}
         >
           {contextMenu.targetId === 'trash' ? (
@@ -656,7 +658,7 @@ export default function Hero() {
               <div className="h-px bg-white/10 my-1"></div>
               <div className="px-4 py-1 text-zinc-500 font-semibold text-[10px] tracking-wider uppercase">Wallpaper</div>
               <button onClick={() => window.dispatchEvent(new Event('next-wallpaper'))} className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center">
-                <span>Next Background</span><span className="text-zinc-500 text-[10px] truncate max-w-[80px] text-right">{wallpapers[(desktopWpIdx + 1) % wallpapers.length].name}</span>
+                <span>Next Background</span><span className="text-zinc-500 text-[10px] truncate max-w-20 text-right">{wallpapers[(desktopWpIdx + 1) % wallpapers.length].name}</span>
               </button>
               <div className="h-px bg-white/10 my-1"></div>
               <button className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white" onClick={() => launchApp('terminal')}>Open Terminal</button>
@@ -666,25 +668,25 @@ export default function Hero() {
         </div>
       )}
 
-      {/* 4. SLEEP SCREEN OVERLAY (z-[400]) */}
+      {/* 4. SLEEP SCREEN OVERLAY */}
       {isAsleep && (
         <div 
-          className="absolute inset-0 z-[400] bg-black cursor-default"
+          className="absolute inset-0 z-400 bg-black cursor-default"
           onMouseMove={() => setIsAsleep(false)}
         />
       )}
 
-      {/* 5. SHUTTING DOWN ANIMATION (z-[500]) */}
+      {/* 5. SHUTTING DOWN ANIMATION */}
       {isShuttingDown && (
-        <div className="absolute inset-0 z-[500] bg-black flex flex-col items-center justify-center transition-opacity duration-500">
+        <div className="absolute inset-0 z-500 bg-black flex flex-col items-center justify-center transition-opacity duration-500">
            <Loader2 className="animate-spin text-zinc-500 mb-6" size={40} />
            <p className="text-zinc-400 font-medium tracking-widest uppercase text-xs animate-pulse">Shutting Down...</p>
         </div>
       )}
 
-      {/* 6. POWER OFF SCREEN (z-[600]) */}
+      {/* 6. POWER OFF SCREEN */}
       {isPoweredOff && (
-        <div className="absolute inset-0 z-[600] bg-black flex items-center justify-center transition-opacity duration-1000">
+        <div className="absolute inset-0 z-600 bg-black flex items-center justify-center transition-opacity duration-1000">
            <button onClick={handlePowerOn} className="text-white/20 hover:text-white/80 transition-all flex flex-col items-center gap-4">
              <Power size={48} />
              <span className="text-xs font-medium tracking-widest uppercase animate-pulse">Power On</span>
@@ -692,9 +694,9 @@ export default function Hero() {
         </div>
       )}
 
-      {/* 7. INITIAL BOOT SCREEN (z-[300]) */}
+      {/* 7. INITIAL BOOT SCREEN */}
       {bootStage === 'loading' && (
-        <div className="absolute inset-0 z-[300] bg-black flex flex-col items-center justify-center">
+        <div className="absolute inset-0 z-300 bg-black flex flex-col items-center justify-center">
           <Command size={56} className="text-os-text mb-12 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" strokeWidth={1.5} />
           <div className="w-48 h-1 bg-zinc-800 rounded-full overflow-hidden">
             <div className="h-full bg-zinc-200 transition-all duration-150 ease-out" style={{ width: `${progress}%` }}></div>
@@ -702,9 +704,9 @@ export default function Hero() {
         </div>
       )}
 
-      {/* 8. PURE MAC OS SONOMA LOCK SCREEN (z-[200]) */}
+      {/* 8. PURE MAC OS SONOMA LOCK SCREEN */}
       <div 
-        className={`absolute inset-0 z-[200] flex flex-col items-center transition-all duration-1000 ease-in-out
+        className={`absolute inset-0 z-200 flex flex-col items-center transition-all duration-1000 ease-in-out
           ${bootStage === 'login' ? 'opacity-100 pointer-events-auto scale-100' : 'opacity-0 pointer-events-none scale-105'}
         `}
         onClick={() => { if (bootStage === 'login' && !showPasswordPrompt && !isAsleep && !isShuttingDown && !isPoweredOff) setShowPasswordPrompt(true); }}
