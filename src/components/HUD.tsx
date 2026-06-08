@@ -343,7 +343,6 @@ export default function HUD() {
       window.removeEventListener('system-lock-triggered', handleLock);
     };
   }, []);
-  if (!isUnlocked) return null;
   const [openApps, setOpenApps] = useState<string[]>([]);
   const [activeApp, setActiveApp] = useState<string | null>(null);
   const [minimizedApps, setMinimizedApps] = useState<string[]>([]);
