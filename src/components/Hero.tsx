@@ -3,25 +3,21 @@ import { useState, useEffect, useRef } from 'react';
 import { 
   Command, ArrowRight, Folder, Mail, Music2, Code2, Calculator as CalcIcon, TerminalSquare, 
   SquarePen, Palette, Globe, Users, FileText, FileCode, Gamepad2, Camera, CloudSun, 
-  Activity, Compass, Crosshair, EyeOff, Eye, Trash2, Moon, RotateCcw, Power, X 
+  Activity, Compass, Crosshair, EyeOff, Eye, Trash2, X 
 } from 'lucide-react';
 
+// Purely natural, high-resolution landscape wallpapers from Unsplash
 const wallpapers = [
-  { id: 'default-blur', type: 'css', name: 'Dynamic Aura' },
-  { id: 'monterey', type: 'image', name: 'Monterey Abstract', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'ventura', type: 'image', name: 'Ventura Waves', url: 'https://images.unsplash.com/photo-1620121692029-d088224ddc74?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'big-sur', type: 'image', name: 'Big Sur Coast', url: 'https://images.unsplash.com/photo-1604871000636-074fa5117945?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'catalina', type: 'image', name: 'Catalina Island', url: 'https://images.unsplash.com/photo-1559825481-12a05cc00344?q=80&w=2564&auto=format&fit=crop' },
   { id: 'yosemite', type: 'image', name: 'Yosemite Valley', url: 'https://images.unsplash.com/photo-1426604966848-d7adac402bff?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'aurora', type: 'image', name: 'Aurora Borealis', url: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'dark-matter', type: 'image', name: 'Dark Matter', url: 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'deep-space', type: 'image', name: 'Deep Space', url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'neon-fluid', type: 'image', name: 'Neon Fluid', url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'obsidian-peaks', type: 'image', name: 'Obsidian Peaks', url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'abyss', type: 'image', name: 'Ocean Abyss', url: 'https://images.unsplash.com/photo-1558470598-a5dda9640f68?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'sahara-dunes', type: 'image', name: 'Sahara Dunes', url: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'abstract-ink', type: 'image', name: 'Macro Fluid', url: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?q=80&w=2564&auto=format&fit=crop' },
-  { id: 'vibrant-mesh', type: 'image', name: 'Vibrant Mesh', url: 'https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=2564&auto=format&fit=crop' }
+  { id: 'snow-peaks', type: 'image', name: 'Snow Peaks', url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'forest-road', type: 'image', name: 'Forest Road', url: 'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'lake-reflection', type: 'image', name: 'Alpine Lake', url: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'tropical-beach', type: 'image', name: 'Tropical Beach', url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'aurora-sky', type: 'image', name: 'Northern Lights', url: 'https://images.unsplash.com/photo-1513628253939-010e64ac66cd?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'desert-dunes', type: 'image', name: 'Desert Dunes', url: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'nyc-skyline', type: 'image', name: 'City Skyline', url: 'https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'ocean-cliffs', type: 'image', name: 'Ocean Cliffs', url: 'https://images.unsplash.com/photo-1558470598-a5dda9640f68?q=80&w=2564&auto=format&fit=crop' },
+  { id: 'autumn-woods', type: 'image', name: 'Autumn Woods', url: 'https://images.unsplash.com/photo-1507608616759-54f48f0af0ee?q=80&w=2564&auto=format&fit=crop' }
 ];
 
 const initialDesktopIcons = [
@@ -222,7 +218,7 @@ function DraggableIcon({
 export default function Hero() {
   const [progress, setProgress] = useState(0);
   const [bootStage, setBootStage] = useState<'loading' | 'login' | 'desktop'>('loading');
-  const [themeIdx, setThemeIdx] = useState(1);
+  const [themeIdx, setThemeIdx] = useState(0); // Set Yosemite as default
   const [imageError, setImageError] = useState(false);
   const [contextMenu, setContextMenu] = useState<{show: boolean, x: number, y: number, targetId: string | null}>({ show: false, x: 0, y: 0, targetId: null });
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
@@ -245,7 +241,7 @@ export default function Hero() {
   }, []);
 
   const timeString = currentTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  const dateString = currentTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const dateString = currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
   // Any key wakes up the Mac
   useEffect(() => {
@@ -484,10 +480,7 @@ export default function Hero() {
       {/* THE WALLPAPER LAYER */}
       <div className="absolute inset-0 bg-[#000000] transition-all duration-1000">
         {currentWallpaper.type === 'css' || imageError ? (
-          <div className="absolute inset-0 w-full h-full overflow-hidden">
-            <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full bg-purple-900/30 blur-[120px] transition-colors duration-1000"></div>
-            <div className="absolute top-[10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-blue-900/20 blur-[130px] transition-colors duration-1000"></div>
-            <div className="absolute bottom-[-20%] left-[15%] w-[70vw] h-[70vw] rounded-full bg-emerald-900/15 blur-[140px] transition-colors duration-1000"></div>
+          <div className="absolute inset-0 w-full h-full overflow-hidden bg-[#1e1e1e]">
             {imageError && <div className="absolute inset-0 backdrop-blur-3xl bg-white/5"></div>}
           </div>
         ) : (
@@ -597,7 +590,7 @@ export default function Hero() {
         </div>
       )}
 
-      {/* BOOT SCREEN */}
+      {/* BOOT SCREEN & LOCKSCREEN */}
       {bootStage === 'loading' && (
         <div className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center">
           <Command size={56} className="text-os-text mb-12 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" strokeWidth={1.5} />
@@ -607,9 +600,9 @@ export default function Hero() {
         </div>
       )}
 
-      {/* MAC OS SONOMA LOCK SCREEN */}
+      {/* PURE MAC OS SONOMA LOCK SCREEN */}
       <div 
-        className={`absolute inset-0 z-40 flex flex-col items-center justify-between transition-all duration-1000 ease-in-out bg-cover bg-center
+        className={`absolute inset-0 z-40 flex flex-col items-center transition-all duration-1000 ease-in-out bg-cover bg-center
           ${bootStage === 'login' ? 'opacity-100 pointer-events-auto scale-100' : 'opacity-0 pointer-events-none scale-105'}
           ${bootStage === 'loading' && 'hidden'}
         `}
@@ -626,7 +619,7 @@ export default function Hero() {
 
         {/* Center: User Auth */}
         <div 
-          className={`z-10 flex flex-col items-center justify-center transition-all duration-500 ease-in-out transform ${showPasswordPrompt ? '-translate-y-24 sm:-translate-y-32' : 'translate-y-16 sm:translate-y-0 hover:scale-105 cursor-pointer'}`}
+          className={`z-10 absolute top-1/2 -translate-y-1/2 flex flex-col items-center justify-center transition-all duration-500 ease-in-out transform hover:scale-105 cursor-pointer`}
           onClick={(e) => { e.stopPropagation(); setShowPasswordPrompt(true); }}
         >
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-zinc-700 to-zinc-500 flex items-center justify-center border-2 border-white/20 shadow-2xl mb-4 overflow-hidden">
@@ -649,38 +642,22 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* Bottom: Power Controls */}
-        <div className="z-10 mb-8 sm:mb-12 flex gap-6 sm:gap-12 transition-all duration-500">
-          {showPasswordPrompt ? (
-             <div className="flex flex-col items-center cursor-pointer group" onClick={(e) => { e.stopPropagation(); setShowPasswordPrompt(false); }}>
-               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md group-hover:bg-white/20 transition-colors">
-                 <X size={16} className="text-white" />
-               </div>
-               <span className="text-[10px] sm:text-xs text-white mt-2 select-none">Cancel</span>
-             </div>
-          ) : (
-             <>
-               <div className="flex flex-col items-center cursor-pointer group">
-                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md group-hover:bg-white/20 transition-colors">
-                   <Moon size={16} className="text-white" />
-                 </div>
-                 <span className="text-[10px] sm:text-xs text-white mt-2 select-none">Sleep</span>
-               </div>
-               <div className="flex flex-col items-center cursor-pointer group">
-                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md group-hover:bg-white/20 transition-colors">
-                   <RotateCcw size={16} className="text-white" />
-                 </div>
-                 <span className="text-[10px] sm:text-xs text-white mt-2 select-none">Restart</span>
-               </div>
-               <div className="flex flex-col items-center cursor-pointer group">
-                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md group-hover:bg-white/20 transition-colors">
-                   <Power size={16} className="text-white" />
-                 </div>
-                 <span className="text-[10px] sm:text-xs text-white mt-2 select-none">Shut Down</span>
-               </div>
-             </>
-          )}
+        {/* Bottom Text or Cancel Button */}
+        <div className="absolute bottom-16 sm:bottom-24 z-10">
+           {showPasswordPrompt ? (
+             <button 
+               onClick={(e) => { e.stopPropagation(); setShowPasswordPrompt(false); }}
+               className="flex items-center justify-center w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-colors"
+             >
+               <X size={16} className="text-white" />
+             </button>
+           ) : (
+             <p className="text-[10px] sm:text-xs font-medium text-white/80 tracking-wide animate-pulse cursor-default select-none">
+               Click or press any key to unlock
+             </p>
+           )}
         </div>
+
       </div>
     </div>
   );
