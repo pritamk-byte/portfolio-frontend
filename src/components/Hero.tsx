@@ -44,7 +44,6 @@ const initialDesktopIcons = [
   { id: 'activity', label: 'Activity Monitor', icon: Activity, color: 'text-emerald-400', fill: '', isCustomFolder: false },
   { id: 'browser', label: 'Web Browser', icon: Compass, color: 'text-blue-400', fill: '', isCustomFolder: false },
   { id: 'minesweeper', label: 'Cyber Sweeper', icon: Crosshair, color: 'text-red-400', fill: '', isCustomFolder: false },
-  // 👇 THE RECYCLE BIN
   { id: 'trash', label: 'Recycle Bin', icon: Trash2, color: 'text-zinc-400', fill: 'fill-zinc-400/20', isCustomFolder: false },
 ];
 
@@ -209,7 +208,6 @@ function DraggableIcon({
               setIsEditing(true);
             }
           }}
-          // 👇 FIXED: Long names now truncate cleanly to 2 lines
           className={`text-[11px] font-medium px-1 py-0.5 rounded text-center leading-tight tracking-wide drop-shadow-md select-none w-full overflow-hidden text-ellipsis line-clamp-2 break-words
             ${isSelected ? 'bg-blue-600 text-white' : 'text-zinc-100 bg-transparent'}
           `}
@@ -230,12 +228,45 @@ export default function Hero() {
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   const [isSubmittingLogin, setIsSubmittingLogin] = useState(false);
 
+  // 👇 STATE FOR THE NEW MAC OS LOCK SCREEN
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+
   const [showIcons, setShowIcons] = useState(true);
   const [showDock, setShowDock] = useState(true);
 
   const [icons, setIcons] = useState(initialDesktopIcons);
 
-  // Extracts dynamic sync logic so we can call it when files are restored from the trash
+  // Live Clock Effect
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const timeString = currentTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  const dateString = currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  // Global keydown listener to wake up the screen (macOS style)
+  useEffect(() => {
+    const handleAnyKey = (e: KeyboardEvent) => {
+      if (bootStage === 'login' && !showPasswordPrompt) {
+        setShowPasswordPrompt(true);
+      }
+    };
+    window.addEventListener('keydown', handleAnyKey);
+    return () => window.removeEventListener('keydown', handleAnyKey);
+  }, [bootStage, showPasswordPrompt]);
+
+  // Auto-focus password input when it slides up
+  useEffect(() => {
+    if (showPasswordPrompt && passwordInputRef.current) {
+      setTimeout(() => {
+        passwordInputRef.current?.focus();
+      }, 400); // Slight delay to wait for the sliding animation
+    }
+  }, [showPasswordPrompt]);
+
   const loadDesktopIcons = () => {
     const savedCustomIcons = localStorage.getItem('pritam_os_custom_folders');
     if (savedCustomIcons) {
@@ -268,8 +299,6 @@ export default function Hero() {
     }
 
     loadDesktopIcons();
-
-    // Listen for folders being restored from the Recycle Bin App
     window.addEventListener('sync-folders', loadDesktopIcons);
 
     const lastActive = localStorage.getItem('pritam_os_last_active');
@@ -312,7 +341,6 @@ export default function Hero() {
     return () => clearInterval(interval);
   }, [bootStage]);
 
-  // 👇 Keyboard Shortcut: Pressing 'Delete' or 'Backspace' sends a custom folder to the Recycle Bin
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIcon && selectedIcon.startsWith('folder-')) {
@@ -359,6 +387,8 @@ export default function Hero() {
     setIsSubmittingLogin(true); 
     localStorage.setItem('pritam_os_last_active', Date.now().toString());
     setBootStage('desktop');
+    // Ensure lockscreen prompt is reset in case we lock the OS later
+    setTimeout(() => setShowPasswordPrompt(false), 1000); 
     window.dispatchEvent(new Event('system-unlock')); 
     setTimeout(() => window.dispatchEvent(new CustomEvent('launch-app', { detail: 'profile' })), 800);
   };
@@ -417,15 +447,12 @@ export default function Hero() {
     localStorage.setItem('pritam_os_custom_folders', JSON.stringify(customOnly));
   };
 
-  // 👇 SAFETY & RECYCLE LOGIC
   const handleDeleteFolder = (id: string) => {
-    // SECURITY: Reject deletion if it's a pre-built app
     if (!id.startsWith('folder-')) return;
     
     const folderToDelete = icons.find(icon => icon.id === id);
     if (!folderToDelete) return;
 
-    // 1. Move to Recycle Bin storage
     const recycled = JSON.parse(localStorage.getItem('pritam_os_recycled_items') || '[]');
     recycled.push({
       id: folderToDelete.id,
@@ -437,7 +464,6 @@ export default function Hero() {
     });
     localStorage.setItem('pritam_os_recycled_items', JSON.stringify(recycled));
 
-    // 2. Remove from active Desktop & custom folder memory
     const updatedIcons = icons.filter(icon => icon.id !== id);
     setIcons(updatedIcons);
 
@@ -453,7 +479,6 @@ export default function Hero() {
   const handleEmptyTrash = () => {
     localStorage.setItem('pritam_os_recycled_items', '[]');
     setContextMenu({ show: false, x: 0, y: 0, targetId: null });
-    // Tell the open Recycle Bin app to refresh if it's open
     window.dispatchEvent(new Event('trash-emptied'));
   };
 
@@ -511,7 +536,6 @@ export default function Hero() {
           style={{ top: contextMenu.y, left: contextMenu.x }}
         >
           {contextMenu.targetId === 'trash' ? (
-            // 👇 MENU WHEN RIGHT-CLICKING RECYCLE BIN
             <>
               <button onClick={() => launchApp('trash')} className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white">Open</button>
               <div className="h-px bg-white/10 my-1"></div>
@@ -523,7 +547,6 @@ export default function Hero() {
               </button>
             </>
           ) : contextMenu.targetId ? (
-            // 👇 MENU WHEN RIGHT-CLICKING AN APP OR FOLDER
             <>
               <button onClick={() => launchApp(contextMenu.targetId!)} className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white">Open</button>
               
@@ -540,7 +563,6 @@ export default function Hero() {
               )}
             </>
           ) : (
-            // 👇 MENU WHEN RIGHT-CLICKING THE EMPTY DESKTOP
             <>
               <button onClick={createNewFolder} className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white">New Folder</button>
               
@@ -598,17 +620,29 @@ export default function Hero() {
           ${bootStage === 'login' ? 'opacity-100 pointer-events-auto scale-100' : 'opacity-0 pointer-events-none scale-105'}
           ${bootStage === 'loading' && 'hidden'}
         `}
-        style={{ backgroundImage: `url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop')` }}
+        style={{ backgroundImage: `url('${currentWallpaper.url}')` }}
+        onClick={() => {
+          if (bootStage === 'login' && !showPasswordPrompt) setShowPasswordPrompt(true);
+        }}
       >
-        <div className="absolute inset-0 backdrop-blur-2xl bg-black/30"></div>
-        <div className="z-10 flex flex-col items-center">
-          <div className="w-24 h-24 rounded-full bg-linear-to-tr from-zinc-700 to-zinc-500 flex items-center justify-center border border-zinc-500 shadow-2xl mb-4 overflow-hidden">
+        <div className={`absolute inset-0 transition-all duration-700 ease-in-out ${showPasswordPrompt ? 'backdrop-blur-2xl bg-black/40' : 'backdrop-blur-md bg-black/10'}`}></div>
+        
+        {/* MAC OS SONOMA LOCK SCREEN CLOCK */}
+        <div className={`absolute top-24 sm:top-32 flex flex-col items-center transition-all duration-700 ease-in-out ${showPasswordPrompt ? '-translate-y-16 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}>
+          <h1 className="text-[100px] sm:text-[140px] leading-none font-bold text-white tracking-tighter drop-shadow-xl select-none cursor-default">{timeString}</h1>
+          <p className="text-xl sm:text-2xl text-white font-medium mt-2 drop-shadow-md select-none cursor-default">{dateString}</p>
+        </div>
+
+        {/* LOGIN PROMPT */}
+        <div className={`z-10 flex flex-col items-center transition-all duration-700 ease-in-out ${showPasswordPrompt ? 'translate-y-0 opacity-100' : 'translate-y-16 opacity-0 pointer-events-none'}`}>
+          <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-zinc-700 to-zinc-500 flex items-center justify-center border border-zinc-500 shadow-2xl mb-4 overflow-hidden">
              <span className="text-4xl text-white font-medium drop-shadow-md">P</span>
           </div>
           <h1 className="text-xl font-semibold text-white mb-6 tracking-wide drop-shadow-lg">Pritam Poddar</h1>
           <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} className="relative flex items-center group">
             <input 
-              type="password" placeholder="Enter Password" autoFocus
+              ref={passwordInputRef}
+              type="password" placeholder="Enter Password" 
               className="w-48 h-8 rounded-full bg-white/10 border border-white/20 px-4 text-xs text-white placeholder:text-white/50 backdrop-blur-md outline-none focus:bg-white/20 focus:border-white/40 transition-all pr-8 tracking-widest text-center"
             />
             <button type="submit" className="absolute right-1 w-6 h-6 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/40 transition-colors opacity-0 group-hover:opacity-100 focus-within:opacity-100">
@@ -616,9 +650,24 @@ export default function Hero() {
             </button>
           </form>
           <div className="text-[10px] text-white/40 mt-3 font-medium">Press Enter to log in</div>
-          <p className="mt-8 text-[10px] text-zinc-400 font-mono tracking-widest uppercase flex items-center gap-2">
-            <span className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse"></span>Software Engineer
-          </p>
+        </div>
+
+        {/* SMALL AVATAR AT BOTTOM WHEN LOCKED */}
+        <div className={`absolute bottom-16 sm:bottom-24 flex flex-col items-center transition-all duration-700 ease-in-out ${showPasswordPrompt ? 'translate-y-16 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}>
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-tr from-zinc-700 to-zinc-500 flex items-center justify-center border border-zinc-500 shadow-lg mb-3 overflow-hidden cursor-pointer hover:scale-105 transition-transform">
+             <span className="text-sm sm:text-lg text-white font-medium drop-shadow-md">P</span>
+          </div>
+          <p className="text-[10px] sm:text-xs font-medium text-white/80 tracking-wide animate-pulse cursor-default select-none">Click or press any key to unlock</p>
+        </div>
+
+        {/* CANCEL BUTTON */}
+        <div className={`absolute bottom-16 sm:bottom-24 flex flex-col items-center transition-all duration-700 ease-in-out ${showPasswordPrompt ? 'opacity-100 pointer-events-auto delay-300' : 'opacity-0 pointer-events-none'}`}>
+           <button 
+             onClick={(e) => { e.stopPropagation(); setShowPasswordPrompt(false); }}
+             className="text-[11px] sm:text-xs text-white/70 hover:text-white transition-colors bg-white/10 hover:bg-white/20 px-4 py-1.5 rounded-full backdrop-blur-md"
+           >
+             Cancel
+           </button>
         </div>
       </div>
     </div>
