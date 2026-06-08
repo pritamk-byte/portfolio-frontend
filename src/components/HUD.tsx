@@ -318,10 +318,30 @@ function DockItem({ item, isOpen, isActive, mouseX, onClick, onContextMenu }: an
 export default function HUD() {
   const [isUnlocked, setIsUnlocked] = useState(false);
 
+  // 👇 LOOPHOLE FIX: The HUD relies on local storage to know if it should be mounted
   useEffect(() => {
+    const checkAuthStatus = () => {
+      const EXPIRATION_TIME_MS = 60 * 60 * 1000;
+      const lastActive = localStorage.getItem('pritam_os_last_active');
+      if (lastActive && (Date.now() - parseInt(lastActive) < EXPIRATION_TIME_MS)) {
+        setIsUnlocked(true);
+      } else {
+        setIsUnlocked(false);
+      }
+    };
+    
+    checkAuthStatus(); 
+
     const handleUnlock = () => setIsUnlocked(true);
+    const handleLock = () => setIsUnlocked(false);
+    
     window.addEventListener('system-unlock', handleUnlock);
-    return () => window.removeEventListener('system-unlock', handleUnlock);
+    window.addEventListener('system-lock-triggered', handleLock); // Listen for the new lock event
+    
+    return () => {
+      window.removeEventListener('system-unlock', handleUnlock);
+      window.removeEventListener('system-lock-triggered', handleLock);
+    };
   }, []);
 
   const [openApps, setOpenApps] = useState<string[]>([]);
@@ -336,7 +356,6 @@ export default function HUD() {
   const [pinnedApps, setPinnedApps] = useState<string[]>(['finder', 'profile', 'contact', 'github']);
   const [dockContextMenu, setDockContextMenu] = useState<{show: boolean, x: number, appId: string | null}>({ show: false, x: 0, appId: null });
 
-  // 👇 STATE FOR DYNAMIC CUSTOM FOLDERS
   const [customFolders, setCustomFolders] = useState<any[]>([]);
 
   useEffect(() => {
@@ -393,7 +412,6 @@ export default function HUD() {
     window.addEventListener('resize', checkMobile);
 
     const handleLaunch = (e: Event) => {
-      // Refresh custom folders immediately on launch to capture renamed titles
       const savedCustom = localStorage.getItem('pritam_os_custom_folders');
       if (savedCustom) {
         setCustomFolders(JSON.parse(savedCustom));
@@ -433,7 +451,6 @@ export default function HUD() {
     setActiveApp(null);
   };
 
-  // 👇 DYNAMIC APP LOOKUP: Intercepts custom folders and meshes them with core apps
   const getAppInfo = (id: string) => {
     const staticApp = SYSTEM_APPS.find(app => app.id === id);
     if (staticApp) return staticApp;
@@ -458,6 +475,7 @@ export default function HUD() {
   ];
   const currentDockItems = sortedDockItemIds.map(id => getAppInfo(id)).filter(Boolean) as any[];
 
+  // 👇 IMPORTANT: DO NOT RENDER ANYTHING IF THE SCREEN IS LOCKED OR BOOTING
   if (!isUnlocked) return null;
   
   return (
@@ -529,7 +547,6 @@ export default function HUD() {
       )}
 
       <>
-        {/* CORE APPS */}
         {openApps.includes('finder') && (
           <DesktopWindow id="finder" title="Finder" icon={LayoutGrid} isActive={activeApp === 'finder'} isMinimized={minimizedApps.includes('finder')} isMobile={isMobile} onFocus={() => setActiveApp('finder')} onMinimize={() => handleMinimizeApp('finder')} onClose={() => handleCloseApp('finder')}>
             <Finder />
@@ -637,7 +654,6 @@ export default function HUD() {
           </DesktopWindow>
         )}
 
-        {/* 👇 DYNAMIC WINDOW MAPPER FOR CUSTOM FOLDERS */}
         {openApps.filter(id => id.startsWith('folder-')).map(folderId => {
           const folderInfo = getAppInfo(folderId);
           return (

@@ -30,6 +30,8 @@ const getWeatherTheme = (iconCode: string) => {
   }
 };
 
+const EXPIRATION_TIME_MS = 60 * 60 * 1000;
+
 export default function Header() {
   const [currentDateObj, setCurrentDateObj] = useState(new Date());
   const [time, setTime] = useState<string>('');
@@ -50,13 +52,27 @@ export default function Header() {
 
   const [isUnlocked, setIsUnlocked] = useState(false);
 
-  // 👇 IMPORTANT FIX: Listen to both Unlock AND Lock states!
+  // 👇 LOOPHOLE FIX: Syncs unlock state to local storage to prevent Header flash on load
   useEffect(() => {
+    const checkAuthStatus = () => {
+      const lastActive = localStorage.getItem('pritam_os_last_active');
+      if (lastActive && (Date.now() - parseInt(lastActive) < EXPIRATION_TIME_MS)) {
+        setIsUnlocked(true);
+      } else {
+        setIsUnlocked(false);
+      }
+    };
+    
+    checkAuthStatus(); // Run on mount
+
     const handleUnlock = () => setIsUnlocked(true);
-    const handleLock = () => setIsUnlocked(false);
+    const handleLock = () => {
+      setIsUnlocked(false);
+      setOpenMenu(null); // Force close menus on lock
+    };
     
     window.addEventListener('system-unlock', handleUnlock);
-    window.addEventListener('system-lock-triggered', handleLock); // Added Lock listener
+    window.addEventListener('system-lock-triggered', handleLock);
     
     return () => {
       window.removeEventListener('system-unlock', handleUnlock);
@@ -200,6 +216,7 @@ export default function Header() {
     setLang(langs[(langs.indexOf(lang) + 1) % langs.length]);
   };
 
+  // 👇 IMPORTANT: DO NOT RENDER ANYTHING IF THE SCREEN IS LOCKED OR BOOTING
   if (!isUnlocked) return null;
 
   const year = currentDateObj.getFullYear();
