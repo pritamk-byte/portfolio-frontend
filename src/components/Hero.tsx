@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { 
   Command, ArrowRight, Folder, Mail, Music2, Code2, Calculator as CalcIcon, TerminalSquare, 
   SquarePen, Palette, Globe, Users, FileText, FileCode, Gamepad2, Camera, CloudSun, 
-  Activity, Compass, Crosshair, EyeOff, Eye, Trash2 
+  Activity, Compass, Crosshair, EyeOff, Eye, Trash2, Moon, RotateCcw, Power, X 
 } from 'lucide-react';
 
 const wallpapers = [
@@ -228,7 +228,7 @@ export default function Hero() {
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   const [isSubmittingLogin, setIsSubmittingLogin] = useState(false);
 
-  // 👇 STATE FOR THE NEW MAC OS LOCK SCREEN
+  // STATE FOR MAC OS LOCK SCREEN
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const passwordInputRef = useRef<HTMLInputElement>(null);
@@ -238,16 +238,16 @@ export default function Hero() {
 
   const [icons, setIcons] = useState(initialDesktopIcons);
 
-  // Live Clock Effect
+  // Live Clock Update
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
   const timeString = currentTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  const dateString = currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const dateString = currentTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
-  // Global keydown listener to wake up the screen (macOS style)
+  // Any key wakes up the Mac
   useEffect(() => {
     const handleAnyKey = (e: KeyboardEvent) => {
       if (bootStage === 'login' && !showPasswordPrompt) {
@@ -258,12 +258,10 @@ export default function Hero() {
     return () => window.removeEventListener('keydown', handleAnyKey);
   }, [bootStage, showPasswordPrompt]);
 
-  // Auto-focus password input when it slides up
+  // Auto-focus password when unlocked
   useEffect(() => {
     if (showPasswordPrompt && passwordInputRef.current) {
-      setTimeout(() => {
-        passwordInputRef.current?.focus();
-      }, 400); // Slight delay to wait for the sliding animation
+      setTimeout(() => passwordInputRef.current?.focus(), 400);
     }
   }, [showPasswordPrompt]);
 
@@ -387,7 +385,6 @@ export default function Hero() {
     setIsSubmittingLogin(true); 
     localStorage.setItem('pritam_os_last_active', Date.now().toString());
     setBootStage('desktop');
-    // Ensure lockscreen prompt is reset in case we lock the OS later
     setTimeout(() => setShowPasswordPrompt(false), 1000); 
     window.dispatchEvent(new Event('system-unlock')); 
     setTimeout(() => window.dispatchEvent(new CustomEvent('launch-app', { detail: 'profile' })), 800);
@@ -455,12 +452,7 @@ export default function Hero() {
 
     const recycled = JSON.parse(localStorage.getItem('pritam_os_recycled_items') || '[]');
     recycled.push({
-      id: folderToDelete.id,
-      label: folderToDelete.label,
-      color: folderToDelete.color,
-      fill: folderToDelete.fill,
-      isCustomFolder: true,
-      deletedAt: Date.now()
+      id: folderToDelete.id, label: folderToDelete.label, color: folderToDelete.color, fill: folderToDelete.fill, isCustomFolder: true, deletedAt: Date.now()
     });
     localStorage.setItem('pritam_os_recycled_items', JSON.stringify(recycled));
 
@@ -503,7 +495,7 @@ export default function Hero() {
             <img src={currentWallpaper.url} alt="preload" className="hidden" onError={() => setImageError(true)} />
             <div 
               className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 opacity-90"
-              style={{ backgroundImage: `url(${currentWallpaper.url})` }}
+              style={{ backgroundImage: `url('${currentWallpaper.url}')` }}
             />
           </>
         )}
@@ -605,7 +597,7 @@ export default function Hero() {
         </div>
       )}
 
-      {/* BOOT SCREEN & LOCKSCREEN */}
+      {/* BOOT SCREEN */}
       {bootStage === 'loading' && (
         <div className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center">
           <Command size={56} className="text-os-text mb-12 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" strokeWidth={1.5} />
@@ -615,59 +607,79 @@ export default function Hero() {
         </div>
       )}
 
+      {/* MAC OS SONOMA LOCK SCREEN */}
       <div 
-        className={`absolute inset-0 z-40 flex flex-col items-center justify-center bg-cover bg-center transition-all duration-1000 ease-in-out
+        className={`absolute inset-0 z-40 flex flex-col items-center justify-between transition-all duration-1000 ease-in-out bg-cover bg-center
           ${bootStage === 'login' ? 'opacity-100 pointer-events-auto scale-100' : 'opacity-0 pointer-events-none scale-105'}
           ${bootStage === 'loading' && 'hidden'}
         `}
         style={{ backgroundImage: `url('${currentWallpaper.url}')` }}
-        onClick={() => {
-          if (bootStage === 'login' && !showPasswordPrompt) setShowPasswordPrompt(true);
-        }}
+        onClick={() => { if (bootStage === 'login' && !showPasswordPrompt) setShowPasswordPrompt(true); }}
       >
-        <div className={`absolute inset-0 transition-all duration-700 ease-in-out ${showPasswordPrompt ? 'backdrop-blur-2xl bg-black/40' : 'backdrop-blur-md bg-black/10'}`}></div>
+        <div className={`absolute inset-0 transition-all duration-700 ease-in-out ${showPasswordPrompt ? 'backdrop-blur-2xl bg-black/40' : 'backdrop-blur-none bg-black/10'}`}></div>
         
-        {/* MAC OS SONOMA LOCK SCREEN CLOCK */}
-        <div className={`absolute top-24 sm:top-32 flex flex-col items-center transition-all duration-700 ease-in-out ${showPasswordPrompt ? '-translate-y-16 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}>
-          <h1 className="text-[100px] sm:text-[140px] leading-none font-bold text-white tracking-tighter drop-shadow-xl select-none cursor-default">{timeString}</h1>
-          <p className="text-xl sm:text-2xl text-white font-medium mt-2 drop-shadow-md select-none cursor-default">{dateString}</p>
+        {/* Top: Clock & Date */}
+        <div className={`z-10 mt-16 sm:mt-24 flex flex-col items-center transition-all duration-700 ease-in-out ${showPasswordPrompt ? 'scale-75 -translate-y-12 opacity-0' : 'scale-100 translate-y-0 opacity-100'}`}>
+          <div className="text-lg sm:text-2xl text-white font-medium drop-shadow-md select-none">{dateString}</div>
+          <div className="text-[70px] sm:text-[100px] leading-none font-bold text-white tracking-tighter drop-shadow-xl select-none mt-2">{timeString}</div>
         </div>
 
-        {/* LOGIN PROMPT */}
-        <div className={`z-10 flex flex-col items-center transition-all duration-700 ease-in-out ${showPasswordPrompt ? 'translate-y-0 opacity-100' : 'translate-y-16 opacity-0 pointer-events-none'}`}>
-          <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-zinc-700 to-zinc-500 flex items-center justify-center border border-zinc-500 shadow-2xl mb-4 overflow-hidden">
-             <span className="text-4xl text-white font-medium drop-shadow-md">P</span>
+        {/* Center: User Auth */}
+        <div 
+          className={`z-10 flex flex-col items-center justify-center transition-all duration-500 ease-in-out transform ${showPasswordPrompt ? '-translate-y-24 sm:-translate-y-32' : 'translate-y-16 sm:translate-y-0 hover:scale-105 cursor-pointer'}`}
+          onClick={(e) => { e.stopPropagation(); setShowPasswordPrompt(true); }}
+        >
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-zinc-700 to-zinc-500 flex items-center justify-center border-2 border-white/20 shadow-2xl mb-4 overflow-hidden">
+             <span className="text-2xl sm:text-3xl text-white font-medium drop-shadow-md">P</span>
           </div>
-          <h1 className="text-xl font-semibold text-white mb-6 tracking-wide drop-shadow-lg">Pritam Poddar</h1>
-          <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} className="relative flex items-center group">
-            <input 
-              ref={passwordInputRef}
-              type="password" placeholder="Enter Password" 
-              className="w-48 h-8 rounded-full bg-white/10 border border-white/20 px-4 text-xs text-white placeholder:text-white/50 backdrop-blur-md outline-none focus:bg-white/20 focus:border-white/40 transition-all pr-8 tracking-widest text-center"
-            />
-            <button type="submit" className="absolute right-1 w-6 h-6 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/40 transition-colors opacity-0 group-hover:opacity-100 focus-within:opacity-100">
-              <ArrowRight size={12} className="text-white" />
-            </button>
-          </form>
-          <div className="text-[10px] text-white/40 mt-3 font-medium">Press Enter to log in</div>
-        </div>
+          <h1 className="text-lg sm:text-xl font-semibold text-white drop-shadow-lg select-none mb-4">Pritam Poddar</h1>
 
-        {/* SMALL AVATAR AT BOTTOM WHEN LOCKED */}
-        <div className={`absolute bottom-16 sm:bottom-24 flex flex-col items-center transition-all duration-700 ease-in-out ${showPasswordPrompt ? 'translate-y-16 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}>
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-tr from-zinc-700 to-zinc-500 flex items-center justify-center border border-zinc-500 shadow-lg mb-3 overflow-hidden cursor-pointer hover:scale-105 transition-transform">
-             <span className="text-sm sm:text-lg text-white font-medium drop-shadow-md">P</span>
+          <div className={`transition-all duration-500 overflow-hidden ${showPasswordPrompt ? 'opacity-100 max-h-24' : 'opacity-0 max-h-0'}`}>
+            <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} className="relative flex items-center group">
+              <input 
+                ref={passwordInputRef}
+                type="password" placeholder="Enter Password" 
+                className="w-48 h-8 rounded-full bg-white/10 border border-white/20 px-4 text-xs text-white placeholder:text-white/50 backdrop-blur-md outline-none focus:bg-white/20 focus:border-white/40 transition-all pr-8 tracking-widest text-center"
+              />
+              <button type="submit" className="absolute right-1 w-6 h-6 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/40 transition-colors opacity-0 group-hover:opacity-100 focus-within:opacity-100">
+                <ArrowRight size={12} className="text-white" />
+              </button>
+            </form>
+            <div className="text-[10px] text-white/40 mt-2 font-medium text-center">Touch ID or Enter Password</div>
           </div>
-          <p className="text-[10px] sm:text-xs font-medium text-white/80 tracking-wide animate-pulse cursor-default select-none">Click or press any key to unlock</p>
         </div>
 
-        {/* CANCEL BUTTON */}
-        <div className={`absolute bottom-16 sm:bottom-24 flex flex-col items-center transition-all duration-700 ease-in-out ${showPasswordPrompt ? 'opacity-100 pointer-events-auto delay-300' : 'opacity-0 pointer-events-none'}`}>
-           <button 
-             onClick={(e) => { e.stopPropagation(); setShowPasswordPrompt(false); }}
-             className="text-[11px] sm:text-xs text-white/70 hover:text-white transition-colors bg-white/10 hover:bg-white/20 px-4 py-1.5 rounded-full backdrop-blur-md"
-           >
-             Cancel
-           </button>
+        {/* Bottom: Power Controls */}
+        <div className="z-10 mb-8 sm:mb-12 flex gap-6 sm:gap-12 transition-all duration-500">
+          {showPasswordPrompt ? (
+             <div className="flex flex-col items-center cursor-pointer group" onClick={(e) => { e.stopPropagation(); setShowPasswordPrompt(false); }}>
+               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md group-hover:bg-white/20 transition-colors">
+                 <X size={16} className="text-white" />
+               </div>
+               <span className="text-[10px] sm:text-xs text-white mt-2 select-none">Cancel</span>
+             </div>
+          ) : (
+             <>
+               <div className="flex flex-col items-center cursor-pointer group">
+                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md group-hover:bg-white/20 transition-colors">
+                   <Moon size={16} className="text-white" />
+                 </div>
+                 <span className="text-[10px] sm:text-xs text-white mt-2 select-none">Sleep</span>
+               </div>
+               <div className="flex flex-col items-center cursor-pointer group">
+                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md group-hover:bg-white/20 transition-colors">
+                   <RotateCcw size={16} className="text-white" />
+                 </div>
+                 <span className="text-[10px] sm:text-xs text-white mt-2 select-none">Restart</span>
+               </div>
+               <div className="flex flex-col items-center cursor-pointer group">
+                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md group-hover:bg-white/20 transition-colors">
+                   <Power size={16} className="text-white" />
+                 </div>
+                 <span className="text-[10px] sm:text-xs text-white mt-2 select-none">Shut Down</span>
+               </div>
+             </>
+          )}
         </div>
       </div>
     </div>
