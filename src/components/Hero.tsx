@@ -3,10 +3,9 @@ import { useState, useEffect, useRef } from 'react';
 import { 
   Command, ArrowRight, Folder, Mail, Music2, Code2, Calculator as CalcIcon, TerminalSquare, 
   SquarePen, Palette, Globe, Users, FileText, FileCode, Gamepad2, Camera, CloudSun, 
-  Activity, Compass, Crosshair, EyeOff, Eye, Trash2, X 
+  Activity, Compass, Crosshair, EyeOff, Eye, Trash2, X, Moon, RotateCcw, Power, Image as ImageIcon, Wifi, WifiOff, BatteryMedium 
 } from 'lucide-react';
 
-// Purely natural, high-resolution landscape wallpapers from Unsplash
 const wallpapers = [
   { id: 'yosemite', type: 'image', name: 'Yosemite Valley', url: 'https://images.unsplash.com/photo-1426604966848-d7adac402bff?q=80&w=2564&auto=format&fit=crop' },
   { id: 'snow-peaks', type: 'image', name: 'Snow Peaks', url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2564&auto=format&fit=crop' },
@@ -89,10 +88,8 @@ function DraggableIcon({
     e.stopPropagation();
     onClick(e as unknown as React.MouseEvent, item.id);
     setIsDragging(true);
-    
     originalPos.current = { x: pos.x, y: pos.y }; 
     dragStart.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
-    
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   };
 
@@ -100,15 +97,8 @@ function DraggableIcon({
     if (isDragging) {
       let newX = e.clientX - dragStart.current.x;
       let newY = e.clientY - dragStart.current.y;
-
-      const iconWidth = 80;  
-      const iconHeight = 100; 
-      const topBarHeight = 28;
-      const dockHeight = 100;
-
-      newX = Math.max(0, Math.min(window.innerWidth - iconWidth, newX));
-      newY = Math.max(topBarHeight, Math.min(window.innerHeight - dockHeight - iconHeight, newY));
-
+      newX = Math.max(0, Math.min(window.innerWidth - 80, newX));
+      newY = Math.max(28, Math.min(window.innerHeight - 200, newY));
       setPos({ x: newX, y: newY });
     }
   };
@@ -120,40 +110,31 @@ function DraggableIcon({
     const currentRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const allIcons = document.querySelectorAll('.desktop-icon');
     let hasOverlap = false;
-    const buffer = 15;
 
     allIcons.forEach(icon => {
       if (icon === e.currentTarget) return; 
-      
       const rect = icon.getBoundingClientRect();
-      
       if (
-        currentRect.left < rect.right + buffer &&
-        currentRect.right > rect.left - buffer &&
-        currentRect.top < rect.bottom + buffer &&
-        currentRect.bottom > rect.top - buffer
+        currentRect.left < rect.right + 15 &&
+        currentRect.right > rect.left - 15 &&
+        currentRect.top < rect.bottom + 15 &&
+        currentRect.bottom > rect.top - 15
       ) {
         hasOverlap = true;
       }
     });
 
-    if (hasOverlap) {
-      setPos({ x: originalPos.current.x, y: originalPos.current.y });
-    }
+    if (hasOverlap) setPos({ x: originalPos.current.x, y: originalPos.current.y });
   };
 
   const submitRename = () => {
     setIsEditing(false);
     const trimmed = renamingValue.trim();
-    if (trimmed && trimmed !== item.label) {
-      onRename(item.id, trimmed);
-    } else {
-      setRenamingValue(item.label);
-    }
+    if (trimmed && trimmed !== item.label) onRename(item.id, trimmed);
+    else setRenamingValue(item.label);
   };
 
   if (!isReady) return null;
-
   const Icon = item.icon;
 
   return (
@@ -169,10 +150,7 @@ function DraggableIcon({
       style={{ left: `${pos.x}px`, top: `${pos.y}px` }}
     >
       <div 
-        onDoubleClick={(e) => { 
-          e.stopPropagation(); 
-          if (!isEditing) onDoubleClick(item.id); 
-        }}
+        onDoubleClick={(e) => { e.stopPropagation(); if (!isEditing) onDoubleClick(item.id); }}
         className={`w-14 h-14 flex items-center justify-center rounded-lg transition-all duration-200
         ${isSelected ? 'bg-white/20 border border-white/30 shadow-lg' : 'bg-transparent border border-transparent'}
       `}>
@@ -189,20 +167,14 @@ function DraggableIcon({
           onBlur={submitRename}
           onKeyDown={(e) => {
             if (e.key === 'Enter') submitRename();
-            if (e.key === 'Escape') {
-              setIsEditing(false);
-              setRenamingValue(item.label);
-            }
+            if (e.key === 'Escape') { setIsEditing(false); setRenamingValue(item.label); }
           }}
           className="w-full text-[11px] font-medium px-1 bg-blue-600 border border-blue-400 text-white rounded text-center outline-none focus:ring-0"
         />
       ) : (
         <div 
           onDoubleClick={(e) => {
-            if (item.isCustomFolder || item.id.startsWith('folder-')) {
-              e.stopPropagation();
-              setIsEditing(true);
-            }
+            if (item.isCustomFolder || item.id.startsWith('folder-')) { e.stopPropagation(); setIsEditing(true); }
           }}
           className={`text-[11px] font-medium px-1 py-0.5 rounded text-center leading-tight tracking-wide drop-shadow-md select-none w-full overflow-hidden text-ellipsis line-clamp-2 break-words
             ${isSelected ? 'bg-blue-600 text-white' : 'text-zinc-100 bg-transparent'}
@@ -218,21 +190,49 @@ function DraggableIcon({
 export default function Hero() {
   const [progress, setProgress] = useState(0);
   const [bootStage, setBootStage] = useState<'loading' | 'login' | 'desktop'>('loading');
-  const [themeIdx, setThemeIdx] = useState(0); // Set Yosemite as default
+  const [themeIdx, setThemeIdx] = useState(0); 
   const [imageError, setImageError] = useState(false);
   const [contextMenu, setContextMenu] = useState<{show: boolean, x: number, y: number, targetId: string | null}>({ show: false, x: 0, y: 0, targetId: null });
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   const [isSubmittingLogin, setIsSubmittingLogin] = useState(false);
 
-  // STATE FOR MAC OS LOCK SCREEN
+  // MAC OS LOCK SCREEN STATES
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const passwordInputRef = useRef<HTMLInputElement>(null);
 
+  // SYSTEM STATUS STATES
+  const [batteryLevel, setBatteryLevel] = useState(100);
+  const [isOnline, setIsOnline] = useState(true);
+  
+  // POWER STATES
+  const [isAsleep, setIsAsleep] = useState(false);
+  const [isShuttingDown, setIsShuttingDown] = useState(false);
+  const [isPoweredOff, setIsPoweredOff] = useState(false);
+
   const [showIcons, setShowIcons] = useState(true);
   const [showDock, setShowDock] = useState(true);
-
   const [icons, setIcons] = useState(initialDesktopIcons);
+
+  // Hardware Status Effects (Battery & Network)
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    if ('getBattery' in navigator) {
+      (navigator as any).getBattery().then((battery: any) => {
+        setBatteryLevel(Math.round(battery.level * 100));
+        battery.addEventListener('levelchange', () => setBatteryLevel(Math.round(battery.level * 100)));
+      });
+    }
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Live Clock Update
   useEffect(() => {
@@ -243,16 +243,30 @@ export default function Hero() {
   const timeString = currentTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   const dateString = currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
-  // Any key wakes up the Mac
+  // Sleep Wake-Up Effect
+  useEffect(() => {
+    if (!isAsleep) return;
+    const wakeUp = () => setIsAsleep(false);
+    window.addEventListener('keydown', wakeUp);
+    window.addEventListener('mousemove', wakeUp);
+    window.addEventListener('click', wakeUp);
+    return () => {
+      window.removeEventListener('keydown', wakeUp);
+      window.removeEventListener('mousemove', wakeUp);
+      window.removeEventListener('click', wakeUp);
+    };
+  }, [isAsleep]);
+
+  // Lockscreen Key Press Effect
   useEffect(() => {
     const handleAnyKey = (e: KeyboardEvent) => {
-      if (bootStage === 'login' && !showPasswordPrompt) {
+      if (bootStage === 'login' && !showPasswordPrompt && !isAsleep && !isPoweredOff && !isShuttingDown) {
         setShowPasswordPrompt(true);
       }
     };
     window.addEventListener('keydown', handleAnyKey);
     return () => window.removeEventListener('keydown', handleAnyKey);
-  }, [bootStage, showPasswordPrompt]);
+  }, [bootStage, showPasswordPrompt, isAsleep, isPoweredOff, isShuttingDown]);
 
   // Auto-focus password when unlocked
   useEffect(() => {
@@ -266,10 +280,7 @@ export default function Hero() {
     if (savedCustomIcons) {
       try {
         const parsed = JSON.parse(savedCustomIcons);
-        const remapped = parsed.map((folder: any) => ({
-          ...folder,
-          icon: Folder
-        }));
+        const remapped = parsed.map((folder: any) => ({ ...folder, icon: Folder }));
         setIcons([...initialDesktopIcons, ...remapped]);
       } catch (e) {
         console.error("Error formatting folder persistent payload:", e);
@@ -347,12 +358,6 @@ export default function Hero() {
   }, [selectedIcon, icons]);
 
   useEffect(() => {
-    const handleNextWallpaper = () => setThemeIdx(prev => (prev + 1) % wallpapers.length);
-    window.addEventListener('next-wallpaper', handleNextWallpaper);
-    return () => window.removeEventListener('next-wallpaper', handleNextWallpaper);
-  }, []);
-
-  useEffect(() => {
     const closeMenu = () => setContextMenu(prev => ({ ...prev, show: false }));
     window.addEventListener('click', closeMenu);
     return () => window.removeEventListener('click', closeMenu);
@@ -412,15 +417,7 @@ export default function Hero() {
 
   const createNewFolder = () => {
     const folderId = `folder-${Date.now()}`;
-    const newFolder = {
-      id: folderId,
-      label: 'Untitled Folder',
-      icon: Folder,
-      color: 'text-blue-400',
-      fill: 'fill-blue-400/20',
-      isCustomFolder: true
-    };
-
+    const newFolder = { id: folderId, label: 'Untitled Folder', icon: Folder, color: 'text-blue-400', fill: 'fill-blue-400/20', isCustomFolder: true };
     const updatedIcons = [...icons, newFolder];
     setIcons(updatedIcons);
 
@@ -442,7 +439,6 @@ export default function Hero() {
 
   const handleDeleteFolder = (id: string) => {
     if (!id.startsWith('folder-')) return;
-    
     const folderToDelete = icons.find(icon => icon.id === id);
     if (!folderToDelete) return;
 
@@ -468,6 +464,19 @@ export default function Hero() {
     localStorage.setItem('pritam_os_recycled_items', '[]');
     setContextMenu({ show: false, x: 0, y: 0, targetId: null });
     window.dispatchEvent(new Event('trash-emptied'));
+  };
+
+  // Power Actions
+  const handleShutDown = () => {
+    setIsShuttingDown(true);
+    setTimeout(() => setIsPoweredOff(true), 1500);
+  };
+
+  const handlePowerOn = () => {
+    setIsPoweredOff(false);
+    setIsShuttingDown(false);
+    setBootStage('loading');
+    setProgress(0);
   };
 
   return (
@@ -524,24 +533,17 @@ export default function Hero() {
             <>
               <button onClick={() => launchApp('trash')} className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white">Open</button>
               <div className="h-px bg-white/10 my-1"></div>
-              <button 
-                onClick={handleEmptyTrash} 
-                className="w-full text-left px-4 py-1.5 text-zinc-400 hover:bg-red-500 hover:text-white flex items-center justify-between"
-              >
+              <button onClick={handleEmptyTrash} className="w-full text-left px-4 py-1.5 text-zinc-400 hover:bg-red-500 hover:text-white flex items-center justify-between">
                 Empty Recycle Bin <Trash2 size={14} />
               </button>
             </>
           ) : contextMenu.targetId ? (
             <>
               <button onClick={() => launchApp(contextMenu.targetId!)} className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white">Open</button>
-              
               {contextMenu.targetId.startsWith('folder-') && (
                 <>
                   <div className="h-px bg-white/10 my-1"></div>
-                  <button 
-                    onClick={() => handleDeleteFolder(contextMenu.targetId!)} 
-                    className="w-full text-left px-4 py-1.5 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-between"
-                  >
+                  <button onClick={() => handleDeleteFolder(contextMenu.targetId!)} className="w-full text-left px-4 py-1.5 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-between">
                     Move to Trash <Trash2 size={14} />
                   </button>
                 </>
@@ -550,17 +552,10 @@ export default function Hero() {
           ) : (
             <>
               <button onClick={createNewFolder} className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white">New Folder</button>
-              
-              <button 
-                className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"
-                onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
-              >
-                <span>Spotlight Search</span>
-                <span className="text-[10px] opacity-60 font-mono tracking-widest">⌘K</span>
+              <button onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))} className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center">
+                <span>Spotlight Search</span><span className="text-[10px] opacity-60 font-mono tracking-widest">⌘K</span>
               </button>
-
               <div className="h-px bg-white/10 my-1"></div>
-              
               <div className="px-4 py-1 text-zinc-500 font-semibold text-[10px] tracking-wider uppercase">View</div>
               <button className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center group" onClick={toggleIcons}>
                 <span>{showIcons ? 'Hide Desktop Icons' : 'Show Desktop Icons'}</span>
@@ -570,18 +565,11 @@ export default function Hero() {
                 <span>{showDock ? 'Hide Dock' : 'Show Dock'}</span>
                 {showDock ? <EyeOff size={12} className="opacity-0 group-hover:opacity-100" /> : <Eye size={12} className="opacity-0 group-hover:opacity-100" />}
               </button>
-
               <div className="h-px bg-white/10 my-1"></div>
-              
               <div className="px-4 py-1 text-zinc-500 font-semibold text-[10px] tracking-wider uppercase">Wallpaper</div>
-              <button 
-                className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center" 
-                onClick={() => setThemeIdx(p => (p + 1) % wallpapers.length)}
-              >
-                <span>Next Background</span>
-                <span className="text-zinc-500 text-[10px] truncate max-w-[80px] text-right">{currentWallpaper.name}</span>
+              <button onClick={() => setThemeIdx(p => (p + 1) % wallpapers.length)} className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center">
+                <span>Next Background</span><span className="text-zinc-500 text-[10px] truncate max-w-[80px] text-right">{currentWallpaper.name}</span>
               </button>
-              
               <div className="h-px bg-white/10 my-1"></div>
               <button className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white" onClick={() => launchApp('terminal')}>Open Terminal</button>
               <button className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white" onClick={() => window.location.reload()}>Refresh Workspace</button>
@@ -590,7 +578,27 @@ export default function Hero() {
         </div>
       )}
 
-      {/* BOOT SCREEN & LOCKSCREEN */}
+      {/* SLEEP SCREEN OVERLAY */}
+      {isAsleep && (
+        <div 
+          className="fixed inset-0 z-[99999] bg-black cursor-default"
+          onMouseMove={() => setIsAsleep(false)}
+        />
+      )}
+
+      {/* SHUTDOWN / POWER OFF OVERLAY */}
+      {(isShuttingDown || isPoweredOff) && (
+        <div className={`fixed inset-0 z-[100000] bg-black flex items-center justify-center transition-opacity duration-1500 ease-in-out ${isPoweredOff ? 'opacity-100' : isShuttingDown ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+           {isPoweredOff && (
+             <button onClick={handlePowerOn} className="text-white/20 hover:text-white/80 flex flex-col items-center gap-4 transition-colors">
+               <Power size={48} />
+               <span className="text-xs font-medium tracking-widest uppercase animate-pulse">Power On</span>
+             </button>
+           )}
+        </div>
+      )}
+
+      {/* BOOT SCREEN */}
       {bootStage === 'loading' && (
         <div className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center">
           <Command size={56} className="text-os-text mb-12 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" strokeWidth={1.5} />
@@ -609,7 +617,7 @@ export default function Hero() {
         style={{ backgroundImage: `url('${currentWallpaper.url}')` }}
         onClick={() => { if (bootStage === 'login' && !showPasswordPrompt) setShowPasswordPrompt(true); }}
       >
-        <div className={`absolute inset-0 transition-all duration-700 ease-in-out ${showPasswordPrompt ? 'backdrop-blur-2xl bg-black/40' : 'backdrop-blur-none bg-black/10'}`}></div>
+        <div className={`absolute inset-0 transition-all duration-700 ease-in-out ${showPasswordPrompt ? 'backdrop-blur-3xl bg-black/40' : 'backdrop-blur-none bg-black/10'}`}></div>
         
         {/* Top: Clock & Date */}
         <div className={`z-10 mt-16 sm:mt-24 flex flex-col items-center transition-all duration-700 ease-in-out ${showPasswordPrompt ? 'scale-75 -translate-y-12 opacity-0' : 'scale-100 translate-y-0 opacity-100'}`}>
@@ -617,46 +625,76 @@ export default function Hero() {
           <div className="text-[70px] sm:text-[100px] leading-none font-bold text-white tracking-tighter drop-shadow-xl select-none mt-2">{timeString}</div>
         </div>
 
-        {/* Center: User Auth */}
+        {/* Center: Hidden User Auth (Appears on click/key) */}
         <div 
-          className={`z-10 absolute top-1/2 -translate-y-1/2 flex flex-col items-center justify-center transition-all duration-500 ease-in-out transform hover:scale-105 cursor-pointer`}
-          onClick={(e) => { e.stopPropagation(); setShowPasswordPrompt(true); }}
+          className={`z-10 absolute top-1/2 -translate-y-1/2 flex flex-col items-center justify-center transition-all duration-500 ease-in-out transform 
+            ${showPasswordPrompt ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}`}
         >
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-zinc-700 to-zinc-500 flex items-center justify-center border-2 border-white/20 shadow-2xl mb-4 overflow-hidden">
              <span className="text-2xl sm:text-3xl text-white font-medium drop-shadow-md">P</span>
           </div>
           <h1 className="text-lg sm:text-xl font-semibold text-white drop-shadow-lg select-none mb-4">Pritam Poddar</h1>
 
-          <div className={`transition-all duration-500 overflow-hidden ${showPasswordPrompt ? 'opacity-100 max-h-24' : 'opacity-0 max-h-0'}`}>
-            <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} className="relative flex items-center group">
-              <input 
-                ref={passwordInputRef}
-                type="password" placeholder="Enter Password" 
-                className="w-48 h-8 rounded-full bg-white/10 border border-white/20 px-4 text-xs text-white placeholder:text-white/50 backdrop-blur-md outline-none focus:bg-white/20 focus:border-white/40 transition-all pr-8 tracking-widest text-center"
-              />
-              <button type="submit" className="absolute right-1 w-6 h-6 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/40 transition-colors opacity-0 group-hover:opacity-100 focus-within:opacity-100">
-                <ArrowRight size={12} className="text-white" />
-              </button>
-            </form>
-            <div className="text-[10px] text-white/40 mt-2 font-medium text-center">Touch ID or Enter Password</div>
-          </div>
+          <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} className="relative flex items-center group">
+            <input 
+              ref={passwordInputRef}
+              type="password" placeholder="Enter Password" 
+              className="w-48 h-8 rounded-full bg-white/10 border border-white/20 px-4 text-xs text-white placeholder:text-white/50 backdrop-blur-md outline-none focus:bg-white/20 focus:border-white/40 transition-all pr-8 tracking-widest text-center"
+            />
+            <button type="submit" className="absolute right-1 w-6 h-6 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/40 transition-colors opacity-0 group-hover:opacity-100 focus-within:opacity-100">
+              <ArrowRight size={12} className="text-white" />
+            </button>
+          </form>
+          <div className="text-[10px] text-white/40 mt-2 font-medium text-center">Touch ID or Enter Password</div>
         </div>
 
-        {/* Bottom Text or Cancel Button */}
-        <div className="absolute bottom-16 sm:bottom-24 z-10">
-           {showPasswordPrompt ? (
-             <button 
+        {/* Bottom Status / Power Bar */}
+        <div className={`absolute bottom-8 right-8 sm:bottom-12 sm:right-12 z-20 flex flex-col sm:flex-row items-end sm:items-center gap-4 transition-all duration-500 ${showPasswordPrompt ? 'opacity-0 translate-y-4 pointer-events-none' : 'opacity-100 translate-y-0'}`}>
+           
+           {/* Status Icons */}
+           <div className="flex items-center gap-3 text-white/90 bg-black/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
+             {isOnline ? <Wifi size={16} /> : <WifiOff size={16} className="opacity-50" />}
+             <div className="flex items-center gap-1.5">
+               <span className="text-xs font-semibold">{batteryLevel}%</span>
+               <BatteryMedium size={16} />
+             </div>
+           </div>
+
+           {/* Functional Icons */}
+           <div className="flex items-center gap-2 bg-black/20 backdrop-blur-md p-1.5 rounded-full border border-white/10 shadow-lg">
+             <button onClick={(e) => { e.stopPropagation(); setThemeIdx(p => (p+1)%wallpapers.length); }} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/20 text-white transition-colors" title="Change Wallpaper">
+               <ImageIcon size={14} />
+             </button>
+             <button onClick={(e) => { e.stopPropagation(); setIsAsleep(true); }} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/20 text-white transition-colors" title="Sleep">
+               <Moon size={14} />
+             </button>
+             <button onClick={(e) => { e.stopPropagation(); window.location.reload(); }} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/20 text-white transition-colors" title="Restart">
+               <RotateCcw size={14} />
+             </button>
+             <button onClick={(e) => { e.stopPropagation(); handleShutDown(); }} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-500/80 text-white transition-colors" title="Shut Down">
+               <Power size={14} />
+             </button>
+           </div>
+        </div>
+
+        {/* Hint text at bottom center */}
+        {!showPasswordPrompt && (
+          <div className="absolute bottom-12 z-10 text-[10px] sm:text-xs font-medium text-white/70 tracking-wide animate-pulse cursor-default select-none">
+            Click or press any key to unlock
+          </div>
+        )}
+
+        {/* Cancel Button */}
+        {showPasswordPrompt && (
+          <div className="absolute bottom-12 z-10">
+            <button 
                onClick={(e) => { e.stopPropagation(); setShowPasswordPrompt(false); }}
-               className="flex items-center justify-center w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-colors"
+               className="flex items-center justify-center w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-colors border border-white/10 shadow-lg"
              >
                <X size={16} className="text-white" />
              </button>
-           ) : (
-             <p className="text-[10px] sm:text-xs font-medium text-white/80 tracking-wide animate-pulse cursor-default select-none">
-               Click or press any key to unlock
-             </p>
-           )}
-        </div>
+          </div>
+        )}
 
       </div>
     </div>
