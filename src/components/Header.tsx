@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { 
   Wifi, BatteryMedium, Command, Zap, Search, Settings, RotateCcw, 
   CloudSun, SlidersHorizontal, Bluetooth, Monitor, Volume2, Sun, Moon, 
-  Image as ImageIcon, Languages, CloudRain, Cloud, CloudLightning, Snowflake 
+  Image as ImageIcon, Languages, CloudRain, Cloud, CloudLightning, Snowflake, Lock, Power 
 } from 'lucide-react';
 
 const systemMenus: Record<string, string[]> = {
@@ -19,22 +19,15 @@ const systemMenus: Record<string, string[]> = {
 const getWeatherTheme = (iconCode: string) => {
   const code = iconCode.slice(0, 2);
   switch (code) {
-    case '01': // Clear
-      return { Icon: Sun, color: "text-amber-400", calBg: "bg-amber-900/10", calBorder: "border-amber-500/20", todayBg: "bg-amber-500 text-white shadow-amber-500/20" }; 
-    case '02': // Few Clouds
-      return { Icon: CloudSun, color: "text-yellow-400", calBg: "bg-blue-900/10", calBorder: "border-blue-500/20", todayBg: "bg-blue-500 text-white shadow-blue-500/20" }; 
+    case '01': return { Icon: Sun, color: "text-amber-400", calBg: "bg-amber-900/10", calBorder: "border-amber-500/20", todayBg: "bg-amber-500 text-white shadow-amber-500/20" }; 
+    case '02': return { Icon: CloudSun, color: "text-yellow-400", calBg: "bg-blue-900/10", calBorder: "border-blue-500/20", todayBg: "bg-blue-500 text-white shadow-blue-500/20" }; 
     case '03': 
-    case '04': // Clouds
-      return { Icon: Cloud, color: "text-zinc-300", calBg: "bg-zinc-800/30", calBorder: "border-zinc-600/30", todayBg: "bg-zinc-500 text-white shadow-zinc-500/20" }; 
+    case '04': return { Icon: Cloud, color: "text-zinc-300", calBg: "bg-zinc-800/30", calBorder: "border-zinc-600/30", todayBg: "bg-zinc-500 text-white shadow-zinc-500/20" }; 
     case '09': 
-    case '10': // Rain
-      return { Icon: CloudRain, color: "text-blue-400", calBg: "bg-indigo-900/10", calBorder: "border-indigo-500/20", todayBg: "bg-indigo-500 text-white shadow-indigo-500/20" }; 
-    case '11': // Thunderstorm
-      return { Icon: CloudLightning, color: "text-purple-400", calBg: "bg-purple-900/10", calBorder: "border-purple-500/20", todayBg: "bg-purple-500 text-white shadow-purple-500/20" }; 
-    case '13': // Snow
-      return { Icon: Snowflake, color: "text-cyan-200", calBg: "bg-cyan-900/10", calBorder: "border-cyan-500/20", todayBg: "bg-cyan-500 text-white shadow-cyan-500/20" }; 
-    default: 
-      return { Icon: CloudSun, color: "text-zinc-300", calBg: "bg-transparent", calBorder: "border-transparent", todayBg: "bg-[#0058d0] text-white shadow-md" };
+    case '10': return { Icon: CloudRain, color: "text-blue-400", calBg: "bg-indigo-900/10", calBorder: "border-indigo-500/20", todayBg: "bg-indigo-500 text-white shadow-indigo-500/20" }; 
+    case '11': return { Icon: CloudLightning, color: "text-purple-400", calBg: "bg-purple-900/10", calBorder: "border-purple-500/20", todayBg: "bg-purple-500 text-white shadow-purple-500/20" }; 
+    case '13': return { Icon: Snowflake, color: "text-cyan-200", calBg: "bg-cyan-900/10", calBorder: "border-cyan-500/20", todayBg: "bg-cyan-500 text-white shadow-cyan-500/20" }; 
+    default: return { Icon: CloudSun, color: "text-zinc-300", calBg: "bg-transparent", calBorder: "border-transparent", todayBg: "bg-[#0058d0] text-white shadow-md" };
   }
 };
 
@@ -85,7 +78,6 @@ export default function Header() {
       try {
         const API_KEY = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
         if (!API_KEY) return;
-        // Using metric for Celsius display. Change to imperial for Fahrenheit if preferred.
         const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`);
         const data = await res.json();
         
@@ -215,7 +207,6 @@ export default function Header() {
   const blanks = Array.from({ length: firstDayOfMonth }, (_, i) => i);
   const weekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
-  // Calculate dynamic theme styles based on current weather
   const currentTheme = getWeatherTheme(weather.icon);
   const WeatherIcon = currentTheme.Icon;
 
@@ -236,18 +227,26 @@ export default function Header() {
           {openMenu === 'apple' && (
             <div className="absolute top-7 left-0 w-52 bg-[#181818]/95 backdrop-blur-3xl border border-os-border rounded-lg shadow-2xl py-1.5 z-[130] font-normal text-os-text">
               <button onClick={() => launchApp('profile')} className="flex items-center gap-2 w-full px-4 py-1.5 hover:bg-[#0058d0] hover:text-white rounded transition-colors text-left interactive">
-                <Command size={14} className="opacity-70" />
                 <span>About Pritam_OS</span>
               </button>
               <div className="h-px bg-zinc-800 my-1"></div>
-              <button onClick={() => launchApp('terminal')} className="flex items-center gap-2 w-full px-4 py-1.5 hover:bg-[#0058d0] hover:text-white rounded transition-colors text-left interactive">
-                <Zap size={14} className="opacity-70" />
-                <span>Initialize Vibe Mode</span>
+              
+              {/* SYSTEM POWER CONTROLS */}
+              <button onClick={() => { window.dispatchEvent(new Event('system-lock')); setOpenMenu(null); }} className="flex items-center gap-2 w-full px-4 py-1.5 hover:bg-[#0058d0] hover:text-white rounded transition-colors text-left interactive">
+                <Lock size={14} className="opacity-70" />
+                <span>Lock Screen</span>
               </button>
-              <div className="h-px bg-zinc-800 my-1"></div>
-              <button onClick={() => window.location.reload()} className="flex items-center gap-2 w-full px-4 py-1.5 hover:bg-[#0058d0] hover:text-white rounded transition-colors text-left">
+              <button onClick={() => { window.dispatchEvent(new Event('system-sleep')); setOpenMenu(null); }} className="flex items-center gap-2 w-full px-4 py-1.5 hover:bg-[#0058d0] hover:text-white rounded transition-colors text-left interactive">
+                <Moon size={14} className="opacity-70" />
+                <span>Sleep</span>
+              </button>
+              <button onClick={() => { window.dispatchEvent(new Event('system-restart')); setOpenMenu(null); }} className="flex items-center gap-2 w-full px-4 py-1.5 hover:bg-[#0058d0] hover:text-white rounded transition-colors text-left">
                 <RotateCcw size={14} className="opacity-70" />
                 <span>Restart...</span>
+              </button>
+              <button onClick={() => { window.dispatchEvent(new Event('system-shutdown')); setOpenMenu(null); }} className="flex items-center gap-2 w-full px-4 py-1.5 hover:bg-[#0058d0] hover:text-white rounded transition-colors text-left">
+                <Power size={14} className="opacity-70" />
+                <span>Shut Down...</span>
               </button>
             </div>
           )}
@@ -311,7 +310,7 @@ export default function Header() {
           </button>
 
           {openMenu === 'control' && (
-            <div className="absolute top-7 right-0 w-[300px] bg-[#181818]/95 backdrop-blur-3xl border border-os-border rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[130] p-4 font-normal text-os-text cursor-default">
+            <div className="absolute top-7 right-0 w-[280px] sm:w-[300px] bg-[#181818]/95 backdrop-blur-3xl border border-os-border rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[130] p-4 font-normal text-os-text cursor-default">
               
               <div className="grid grid-cols-2 gap-3 mb-3">
                 <div className="bg-zinc-800/40 border border-zinc-700/50 rounded-xl p-3 flex flex-col gap-3">
@@ -379,7 +378,7 @@ export default function Header() {
                 <span className="text-xs font-semibold text-white mb-2 ml-1">Personalization</span>
                 <div className="grid grid-cols-3 gap-2">
                   <button 
-                    onClick={() => window.dispatchEvent(new Event('next-wallpaper'))}
+                    onClick={() => { window.dispatchEvent(new Event('next-wallpaper')); setOpenMenu(null); }}
                     className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg transition-colors group"
                   >
                     <ImageIcon size={14} className="text-blue-400 group-hover:scale-110 transition-transform" />
@@ -420,7 +419,7 @@ export default function Header() {
           </button>
           
           {openMenu === 'clock' && (
-            <div className="absolute top-7 right-0 w-72 bg-[#181818]/95 backdrop-blur-3xl border border-os-border rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[130] p-4 font-normal text-os-text cursor-default overflow-hidden">
+            <div className="absolute top-7 right-0 w-[280px] sm:w-72 bg-[#181818]/95 backdrop-blur-3xl border border-os-border rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[130] p-4 font-normal text-os-text cursor-default overflow-hidden">
               
               {/* Dynamic Theme Background Layer */}
               <div className={`absolute inset-0 ${currentTheme.calBg} pointer-events-none transition-colors duration-700 ease-in-out`} />

@@ -7,7 +7,6 @@ import {
 } from 'lucide-react';
 
 const wallpapers = [
-  // ABSTRACT & MAC OS WALLPAPERS
   { id: 'default-blur', type: 'css', name: 'Dynamic Aura' },
   { id: 'monterey', type: 'image', name: 'Monterey Abstract', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop' },
   { id: 'ventura', type: 'image', name: 'Ventura Waves', url: 'https://images.unsplash.com/photo-1620121692029-d088224ddc74?q=80&w=2564&auto=format&fit=crop' },
@@ -16,8 +15,6 @@ const wallpapers = [
   { id: 'neon-fluid', type: 'image', name: 'Neon Fluid', url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2564&auto=format&fit=crop' },
   { id: 'abstract-ink', type: 'image', name: 'Macro Fluid', url: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?q=80&w=2564&auto=format&fit=crop' },
   { id: 'vibrant-mesh', type: 'image', name: 'Vibrant Mesh', url: 'https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=2564&auto=format&fit=crop' },
-  
-  // NATURE & LANDSCAPE WALLPAPERS
   { id: 'yosemite', type: 'image', name: 'Yosemite Valley', url: 'https://images.unsplash.com/photo-1426604966848-d7adac402bff?q=80&w=2564&auto=format&fit=crop' },
   { id: 'snow-peaks', type: 'image', name: 'Snow Peaks', url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2564&auto=format&fit=crop' },
   { id: 'forest-road', type: 'image', name: 'Forest Road', url: 'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=2564&auto=format&fit=crop' },
@@ -56,6 +53,28 @@ const initialDesktopIcons = [
 ];
 
 const EXPIRATION_TIME_MS = 60 * 60 * 1000;
+
+// 👇 ZERO-FLICKER WALLPAPER ENGINE
+const WallpaperLayer = ({ activeIdx }: { activeIdx: number }) => (
+  <div className="absolute inset-0 z-0 bg-black overflow-hidden pointer-events-none">
+    {wallpapers.map((wp, idx) => (
+      <div
+        key={wp.id}
+        className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${activeIdx === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
+      >
+        {wp.type === 'css' ? (
+          <div className="absolute inset-0 w-full h-full bg-[#1e1e1e]">
+            <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full bg-purple-900/30 blur-[120px] transition-colors duration-1000"></div>
+            <div className="absolute top-[10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-blue-900/20 blur-[130px] transition-colors duration-1000"></div>
+            <div className="absolute bottom-[-20%] left-[15%] w-[70vw] h-[70vw] rounded-full bg-emerald-900/15 blur-[140px] transition-colors duration-1000"></div>
+          </div>
+        ) : (
+          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${wp.url}')` }} />
+        )}
+      </div>
+    ))}
+  </div>
+);
 
 function DraggableIcon({ 
   item, index, isSelected, onClick, onDoubleClick, onRename, onContextMenu
@@ -101,10 +120,8 @@ function DraggableIcon({
     e.stopPropagation();
     onClick(e as unknown as React.MouseEvent, item.id);
     setIsDragging(true);
-    
     originalPos.current = { x: pos.x, y: pos.y }; 
     dragStart.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
-    
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   };
 
@@ -112,15 +129,8 @@ function DraggableIcon({
     if (isDragging) {
       let newX = e.clientX - dragStart.current.x;
       let newY = e.clientY - dragStart.current.y;
-
-      const iconWidth = 80;  
-      const iconHeight = 100; 
-      const topBarHeight = 28;
-      const dockHeight = 100;
-
-      newX = Math.max(0, Math.min(window.innerWidth - iconWidth, newX));
-      newY = Math.max(topBarHeight, Math.min(window.innerHeight - dockHeight - iconHeight, newY));
-
+      newX = Math.max(0, Math.min(window.innerWidth - 80, newX));
+      newY = Math.max(28, Math.min(window.innerHeight - 200, newY));
       setPos({ x: newX, y: newY });
     }
   };
@@ -154,11 +164,8 @@ function DraggableIcon({
   const submitRename = () => {
     setIsEditing(false);
     const trimmed = renamingValue.trim();
-    if (trimmed && trimmed !== item.label) {
-      onRename(item.id, trimmed);
-    } else {
-      setRenamingValue(item.label);
-    }
+    if (trimmed && trimmed !== item.label) onRename(item.id, trimmed);
+    else setRenamingValue(item.label);
   };
 
   if (!isReady) return null;
@@ -230,8 +237,7 @@ export default function Hero() {
   
   // DECOUPLED WALLPAPER STATES
   const [desktopWpIdx, setDesktopWpIdx] = useState(0);
-  const [lockWpIdx, setLockWpIdx] = useState(8); // Default to a different wallpaper initially so users notice it
-  const [imageError, setImageError] = useState(false);
+  const [lockWpIdx, setLockWpIdx] = useState(8);
   
   const [contextMenu, setContextMenu] = useState<{show: boolean, x: number, y: number, targetId: string | null}>({ show: false, x: 0, y: 0, targetId: null });
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
@@ -331,7 +337,7 @@ export default function Hero() {
     }
   };
 
-  // HYDRATE ALL PERSISTENT STATES
+  // HYDRATE ALL PERSISTENT STATES & ATTACH GLOBAL HEADER LISTENERS
   useEffect(() => {
     const savedDWP = localStorage.getItem('pritam_os_desktop_wp');
     if (savedDWP !== null) setDesktopWpIdx(parseInt(savedDWP));
@@ -349,7 +355,6 @@ export default function Hero() {
     }
 
     loadDesktopIcons();
-    window.addEventListener('sync-folders', loadDesktopIcons);
 
     const lastActive = localStorage.getItem('pritam_os_last_active');
     const now = Date.now();
@@ -363,20 +368,39 @@ export default function Hero() {
       localStorage.removeItem('pritam_os_last_active');
     }
 
-    return () => window.removeEventListener('sync-folders', loadDesktopIcons);
-  }, []);
+    // 👇 EXPOSED GLOBAL EVENTS FOR YOUR HEADER TO CALL
+    const handleNextDesktopWp = () => setDesktopWpIdx(prev => (prev + 1) % wallpapers.length);
+    const handleSystemLock = () => { setBootStage('login'); setShowPasswordPrompt(false); };
+    const handleSystemSleep = () => setIsAsleep(true);
+    const handleSystemShutdown = () => handleShutDown();
+    const handleSystemRestart = () => {
+      handleShutDown();
+      setTimeout(() => handlePowerOn(), 3000);
+    };
 
-  const desktopWallpaper = wallpapers[desktopWpIdx];
-  const lockWallpaper = wallpapers[lockWpIdx];
+    window.addEventListener('sync-folders', loadDesktopIcons);
+    window.addEventListener('next-wallpaper', handleNextDesktopWp);
+    window.addEventListener('system-lock', handleSystemLock);
+    window.addEventListener('system-sleep', handleSystemSleep);
+    window.addEventListener('system-shutdown', handleSystemShutdown);
+    window.addEventListener('system-restart', handleSystemRestart);
+
+    return () => {
+      window.removeEventListener('sync-folders', loadDesktopIcons);
+      window.removeEventListener('next-wallpaper', handleNextDesktopWp);
+      window.removeEventListener('system-lock', handleSystemLock);
+      window.removeEventListener('system-sleep', handleSystemSleep);
+      window.removeEventListener('system-shutdown', handleSystemShutdown);
+      window.removeEventListener('system-restart', handleSystemRestart);
+    };
+  }, []);
 
   // Sync wallpaper states to local storage whenever changed
   useEffect(() => {
-    setImageError(false);
     localStorage.setItem('pritam_os_desktop_wp', desktopWpIdx.toString());
   }, [desktopWpIdx]);
 
   useEffect(() => {
-    setImageError(false);
     localStorage.setItem('pritam_os_lockscreen_wp', lockWpIdx.toString());
   }, [lockWpIdx]);
 
@@ -542,25 +566,8 @@ export default function Hero() {
       onClick={() => setSelectedIcon(null)}
     >
       
-      {/* 1. DESKTOP WALLPAPER LAYER */}
-      <div className="absolute inset-0 bg-[#000000] transition-all duration-1000">
-        {desktopWallpaper.type === 'css' || imageError ? (
-          <div className="absolute inset-0 w-full h-full overflow-hidden bg-[#1e1e1e]">
-            {imageError && <div className="absolute inset-0 backdrop-blur-3xl bg-white/5"></div>}
-            <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full bg-purple-900/30 blur-[120px] transition-colors duration-1000"></div>
-            <div className="absolute top-[10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-blue-900/20 blur-[130px] transition-colors duration-1000"></div>
-            <div className="absolute bottom-[-20%] left-[15%] w-[70vw] h-[70vw] rounded-full bg-emerald-900/15 blur-[140px] transition-colors duration-1000"></div>
-          </div>
-        ) : (
-          <>
-            <img src={desktopWallpaper.url} alt="preload" className="hidden" onError={() => setImageError(true)} />
-            <div 
-              className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 opacity-90"
-              style={{ backgroundImage: `url('${desktopWallpaper.url}')` }}
-            />
-          </>
-        )}
-      </div>
+      {/* 1. DESKTOP WALLPAPER LAYER (Zero-Flicker) */}
+      <WallpaperLayer activeIdx={desktopWpIdx} />
 
       {/* 2. RENDER DRAGGABLE DESKTOP ICONS */}
       {bootStage === 'desktop' && showIcons && (
@@ -627,7 +634,7 @@ export default function Hero() {
               <div className="h-px bg-white/10 my-1"></div>
               <div className="px-4 py-1 text-zinc-500 font-semibold text-[10px] tracking-wider uppercase">Wallpaper</div>
               <button onClick={() => setDesktopWpIdx(p => (p + 1) % wallpapers.length)} className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center">
-                <span>Next Background</span><span className="text-zinc-500 text-[10px] truncate max-w-[80px] text-right">{desktopWallpaper.name}</span>
+                <span>Next Background</span><span className="text-zinc-500 text-[10px] truncate max-w-[80px] text-right">{wallpapers[(desktopWpIdx + 1) % wallpapers.length].name}</span>
               </button>
               <div className="h-px bg-white/10 my-1"></div>
               <button className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white" onClick={() => launchApp('terminal')}>Open Terminal</button>
@@ -673,34 +680,27 @@ export default function Hero() {
         </div>
       )}
 
-      {/* 8. MAC OS SONOMA LOCK SCREEN */}
+      {/* 8. PURE MAC OS SONOMA LOCK SCREEN (Zero-Flicker) */}
       <div 
-        className={`absolute inset-0 z-40 flex flex-col items-center transition-all duration-1000 ease-in-out bg-cover bg-center
+        className={`absolute inset-0 z-40 flex flex-col items-center transition-all duration-1000 ease-in-out
           ${bootStage === 'login' ? 'opacity-100 pointer-events-auto scale-100' : 'opacity-0 pointer-events-none scale-105'}
           ${bootStage === 'loading' && 'hidden'}
         `}
-        style={lockWallpaper.type === 'image' ? { backgroundImage: `url('${lockWallpaper.url}')` } : { backgroundColor: '#000' }}
         onClick={() => { if (bootStage === 'login' && !showPasswordPrompt) setShowPasswordPrompt(true); }}
       >
-        {lockWallpaper.type === 'css' && (
-          <div className="absolute inset-0 w-full h-full overflow-hidden bg-[#1e1e1e]">
-            <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full bg-purple-900/30 blur-[120px] transition-colors duration-1000"></div>
-            <div className="absolute top-[10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-blue-900/20 blur-[130px] transition-colors duration-1000"></div>
-            <div className="absolute bottom-[-20%] left-[15%] w-[70vw] h-[70vw] rounded-full bg-emerald-900/15 blur-[140px] transition-colors duration-1000"></div>
-          </div>
-        )}
-
-        <div className={`absolute inset-0 transition-all duration-700 ease-in-out ${showPasswordPrompt ? 'backdrop-blur-3xl bg-black/40' : 'backdrop-blur-none bg-black/10'}`}></div>
+        <WallpaperLayer activeIdx={lockWpIdx} />
+        
+        <div className={`absolute inset-0 transition-all duration-700 ease-in-out z-10 ${showPasswordPrompt ? 'backdrop-blur-3xl bg-black/40' : 'backdrop-blur-none bg-black/10'}`}></div>
         
         {/* Top: Clock & Date */}
-        <div className={`z-10 mt-16 sm:mt-24 flex flex-col items-center transition-all duration-700 ease-in-out ${showPasswordPrompt ? 'scale-75 -translate-y-12 opacity-0' : 'scale-100 translate-y-0 opacity-100'}`}>
+        <div className={`z-20 mt-16 sm:mt-24 flex flex-col items-center transition-all duration-700 ease-in-out ${showPasswordPrompt ? 'scale-75 -translate-y-12 opacity-0' : 'scale-100 translate-y-0 opacity-100'}`}>
           <div className="text-lg sm:text-2xl text-white font-medium drop-shadow-md select-none">{dateString}</div>
           <div className="text-[70px] sm:text-[100px] leading-none font-bold text-white tracking-tighter drop-shadow-xl select-none mt-2">{timeString}</div>
         </div>
 
-        {/* Center: User Auth */}
+        {/* Center: Hidden User Auth (Appears on click/key) */}
         <div 
-          className={`z-10 absolute top-1/2 -translate-y-1/2 flex flex-col items-center justify-center transition-all duration-500 ease-in-out transform 
+          className={`z-20 absolute top-1/2 -translate-y-1/2 flex flex-col items-center justify-center transition-all duration-500 ease-in-out transform 
             ${showPasswordPrompt ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}`}
         >
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-zinc-700 to-zinc-500 flex items-center justify-center border-2 border-white/20 shadow-2xl mb-4 overflow-hidden">
@@ -722,7 +722,8 @@ export default function Hero() {
         </div>
 
         {/* Bottom Status / Power Bar */}
-        <div className={`absolute bottom-8 right-8 sm:bottom-12 sm:right-12 z-20 flex flex-col sm:flex-row items-end sm:items-center gap-4 transition-all duration-500 ${showPasswordPrompt ? 'opacity-0 translate-y-4 pointer-events-none' : 'opacity-100 translate-y-0'}`}>
+        <div className={`absolute bottom-8 right-8 sm:bottom-12 sm:right-12 z-30 flex flex-col sm:flex-row items-end sm:items-center gap-4 transition-all duration-500 ${showPasswordPrompt ? 'opacity-0 translate-y-4 pointer-events-none' : 'opacity-100 translate-y-0'}`}>
+           
            <div className="flex items-center gap-3 text-white/90 bg-black/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
              {isOnline ? <Wifi size={16} /> : <WifiOff size={16} className="opacity-50" />}
              <div className="flex items-center gap-1.5">
@@ -732,16 +733,16 @@ export default function Hero() {
            </div>
 
            <div className="flex items-center gap-2 bg-black/20 backdrop-blur-md p-1.5 rounded-full border border-white/10 shadow-lg">
-             <button onClick={(e) => { e.stopPropagation(); setLockWpIdx(p => (p+1)%wallpapers.length); }} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/20 text-white transition-colors" title="Change Wallpaper">
+             <button onClick={(e) => { e.stopPropagation(); setLockWpIdx(p => (p+1)%wallpapers.length); }} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/20 text-white transition-colors" title="Change Lockscreen Wallpaper">
                <ImageIcon size={14} />
              </button>
              <button onClick={(e) => { e.stopPropagation(); setIsAsleep(true); }} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/20 text-white transition-colors" title="Sleep">
                <Moon size={14} />
              </button>
-             <button onClick={(e) => { e.stopPropagation(); window.location.reload(); }} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/20 text-white transition-colors" title="Restart">
+             <button onClick={(e) => { e.stopPropagation(); window.dispatchEvent(new Event('system-restart')); }} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/20 text-white transition-colors" title="Restart">
                <RotateCcw size={14} />
              </button>
-             <button onClick={(e) => { e.stopPropagation(); handleShutDown(); }} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-500/80 text-white transition-colors" title="Shut Down">
+             <button onClick={(e) => { e.stopPropagation(); window.dispatchEvent(new Event('system-shutdown')); }} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-500/80 text-white transition-colors" title="Shut Down">
                <Power size={14} />
              </button>
            </div>
@@ -749,14 +750,14 @@ export default function Hero() {
 
         {/* Hint text */}
         {!showPasswordPrompt && (
-          <div className="absolute bottom-12 z-10 text-[10px] sm:text-xs font-medium text-white/70 tracking-wide animate-pulse cursor-default select-none">
+          <div className="absolute bottom-12 z-20 text-[10px] sm:text-xs font-medium text-white/70 tracking-wide animate-pulse cursor-default select-none">
             Click or press any key to unlock
           </div>
         )}
 
         {/* Cancel Login Button */}
         {showPasswordPrompt && (
-          <div className="absolute bottom-12 z-10">
+          <div className="absolute bottom-12 z-20">
             <button 
                onClick={(e) => { e.stopPropagation(); setShowPasswordPrompt(false); }}
                className="flex items-center justify-center w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-colors border border-white/10 shadow-lg"
