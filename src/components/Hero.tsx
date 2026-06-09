@@ -232,7 +232,6 @@ function DraggableIcon({
 }
 
 export default function Hero() {
-  // CORE STATE (Progress explicitly added)
   const [progress, setProgress] = useState<number>(0);
   const [bootStage, setBootStage] = useState<'loading' | 'login' | 'desktop'>('loading');
   
@@ -289,7 +288,7 @@ export default function Hero() {
   const timeString = currentTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   const dateString = currentTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
-  // Sleep Wake-Up (Strict 300ms delay to prevent instant wake bugs)
+  // Sleep Wake-Up
   useEffect(() => {
     if (!isAsleep) return;
     const wakeUp = () => setIsAsleep(false);
@@ -373,19 +372,19 @@ export default function Hero() {
       localStorage.removeItem('pritam_os_last_active');
     }
 
-    // GLOBAL COMMAND CENTER LISTENERS
     const handleNextDesktopWp = () => setDesktopWpIdx(prev => (prev + 1) % wallpapers.length);
     
+    // 👇 ADDED BROADCAST: Unmounts HUD when lock is clicked
     const handleSystemLock = () => {
       localStorage.removeItem('pritam_os_last_active'); 
       setBootStage('login'); 
       setShowPasswordPrompt(false); 
       setIsSubmittingLogin(false);
+      window.dispatchEvent(new Event('system-lock-triggered')); 
     };
 
     const handleSystemSleep = () => setIsAsleep(true);
     
-    // Power Actions fully clean the memory and trigger true reloads
     const handleSystemShutdown = () => {
       localStorage.removeItem('pritam_os_last_active');
       window.dispatchEvent(new Event('system-lock-triggered'));
@@ -422,7 +421,6 @@ export default function Hero() {
     };
   }, []);
 
-  // Sync wallpaper states
   useEffect(() => {
     localStorage.setItem('pritam_os_desktop_wp', desktopWpIdx.toString());
   }, [desktopWpIdx]);
@@ -431,7 +429,6 @@ export default function Hero() {
     localStorage.setItem('pritam_os_lockscreen_wp', lockWpIdx.toString());
   }, [lockWpIdx]);
 
-  // Loading Screen Timer
   useEffect(() => {
     if (bootStage !== 'loading') return;
     const lastActive = localStorage.getItem('pritam_os_last_active');
@@ -450,7 +447,6 @@ export default function Hero() {
     return () => clearInterval(interval);
   }, [bootStage]);
 
-  // Keyboard Folder Deletion
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIcon && selectedIcon.startsWith('folder-')) {
@@ -486,7 +482,6 @@ export default function Hero() {
     setSelectedIcon(id);
   };
 
-  // Login Fix
   const handleLogin = () => {
     if (isSubmittingLogin || bootStage !== 'login') return; 
     setIsSubmittingLogin(true); 
@@ -584,109 +579,110 @@ export default function Hero() {
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-0 bg-black overflow-hidden select-none"
-      onContextMenu={handleDesktopContextMenu}
-      onClick={() => setSelectedIcon(null)}
-    >
-      
-      {/* 1. DESKTOP WALLPAPER LAYER */}
-      <WallpaperLayer activeIdx={desktopWpIdx} />
+    <>
+      {/* 1. BACKGROUND & DESKTOP (z-0) */}
+      <div 
+        className="fixed inset-0 z-0 bg-black overflow-hidden select-none"
+        onContextMenu={handleDesktopContextMenu}
+        onClick={() => setSelectedIcon(null)}
+      >
+        <WallpaperLayer activeIdx={desktopWpIdx} />
 
-      {/* 2. RENDER DRAGGABLE DESKTOP ICONS (Loophole fix: strictly hidden when not on desktop) */}
-      <div className={`absolute inset-0 z-10 transition-opacity duration-300 ${bootStage === 'desktop' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        {showIcons && (
-          <div className="relative w-full h-full pointer-events-auto">
-            {icons.map((item, index) => (
-              <DraggableIcon 
-                key={item.id}
-                item={item}
-                index={index}
-                isSelected={selectedIcon === item.id}
-                onClick={handleIconClick}
-                onDoubleClick={() => { if (window.innerWidth >= 768) launchApp(item.id); }}
-                onRename={handleRenameFolder}
-                onContextMenu={handleIconContextMenu}
-              />
-            ))}
+        <div className={`absolute inset-0 z-10 transition-opacity duration-300 ${bootStage === 'desktop' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+          {showIcons && (
+            <div className="relative w-full h-full pointer-events-auto">
+              {icons.map((item, index) => (
+                <DraggableIcon 
+                  key={item.id}
+                  item={item}
+                  index={index}
+                  isSelected={selectedIcon === item.id}
+                  onClick={handleIconClick}
+                  onDoubleClick={() => { if (window.innerWidth >= 768) launchApp(item.id); }}
+                  onRename={handleRenameFolder}
+                  onContextMenu={handleIconContextMenu}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {contextMenu.show && bootStage === 'desktop' && (
+          <div 
+            className="fixed z-9999 w-56 bg-os-window/80 backdrop-blur-3xl border border-os-border rounded-xl shadow-2xl py-1.5 text-[12px] font-sans text-os-text"
+            style={{ top: contextMenu.y, left: contextMenu.x }}
+          >
+            {contextMenu.targetId === 'trash' ? (
+              <>
+                <button onClick={() => launchApp('trash')} className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white">Open</button>
+                <div className="h-px bg-white/10 my-1"></div>
+                <button onClick={handleEmptyTrash} className="w-full text-left px-4 py-1.5 text-zinc-400 hover:bg-red-500 hover:text-white flex items-center justify-between">
+                  Empty Recycle Bin <Trash2 size={14} />
+                </button>
+              </>
+            ) : contextMenu.targetId ? (
+              <>
+                <button onClick={() => launchApp(contextMenu.targetId!)} className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white">Open</button>
+                {contextMenu.targetId.startsWith('folder-') && (
+                  <>
+                    <div className="h-px bg-white/10 my-1"></div>
+                    <button onClick={() => handleDeleteFolder(contextMenu.targetId!)} className="w-full text-left px-4 py-1.5 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-between">
+                      Move to Trash <Trash2 size={14} />
+                    </button>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <button onClick={createNewFolder} className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white">New Folder</button>
+                <button onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))} className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center">
+                  <span>Spotlight Search</span><span className="text-[10px] opacity-60 font-mono tracking-widest">⌘K</span>
+                </button>
+                <div className="h-px bg-white/10 my-1"></div>
+                <div className="px-4 py-1 text-zinc-500 font-semibold text-[10px] tracking-wider uppercase">View</div>
+                <button className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center group" onClick={toggleIcons}>
+                  <span>{showIcons ? 'Hide Desktop Icons' : 'Show Desktop Icons'}</span>
+                  {showIcons ? <EyeOff size={12} className="opacity-0 group-hover:opacity-100" /> : <Eye size={12} className="opacity-0 group-hover:opacity-100" />}
+                </button>
+                <button className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center group" onClick={toggleDock}>
+                  <span>{showDock ? 'Hide Dock' : 'Show Dock'}</span>
+                  {showDock ? <EyeOff size={12} className="opacity-0 group-hover:opacity-100" /> : <Eye size={12} className="opacity-0 group-hover:opacity-100" />}
+                </button>
+                <div className="h-px bg-white/10 my-1"></div>
+                <div className="px-4 py-1 text-zinc-500 font-semibold text-[10px] tracking-wider uppercase">Wallpaper</div>
+                <button onClick={() => window.dispatchEvent(new Event('next-wallpaper'))} className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center">
+                  <span>Next Background</span><span className="text-zinc-500 text-[10px] truncate max-w-20 text-right">{wallpapers[(desktopWpIdx + 1) % wallpapers.length].name}</span>
+                </button>
+                <div className="h-px bg-white/10 my-1"></div>
+                <button className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white" onClick={() => launchApp('terminal')}>Open Terminal</button>
+                <button className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white" onClick={() => window.location.reload()}>Refresh Workspace</button>
+              </>
+            )}
           </div>
         )}
       </div>
 
-      {/* 3. DYNAMIC CONTEXT MENU */}
-      {contextMenu.show && bootStage === 'desktop' && (
-        <div 
-          className="fixed z-9999 w-56 bg-os-window/80 backdrop-blur-3xl border border-os-border rounded-xl shadow-2xl py-1.5 text-[12px] font-sans text-os-text"
-          style={{ top: contextMenu.y, left: contextMenu.x }}
-        >
-          {contextMenu.targetId === 'trash' ? (
-            <>
-              <button onClick={() => launchApp('trash')} className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white">Open</button>
-              <div className="h-px bg-white/10 my-1"></div>
-              <button onClick={handleEmptyTrash} className="w-full text-left px-4 py-1.5 text-zinc-400 hover:bg-red-500 hover:text-white flex items-center justify-between">
-                Empty Recycle Bin <Trash2 size={14} />
-              </button>
-            </>
-          ) : contextMenu.targetId ? (
-            <>
-              <button onClick={() => launchApp(contextMenu.targetId!)} className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white">Open</button>
-              {contextMenu.targetId.startsWith('folder-') && (
-                <>
-                  <div className="h-px bg-white/10 my-1"></div>
-                  <button onClick={() => handleDeleteFolder(contextMenu.targetId!)} className="w-full text-left px-4 py-1.5 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-between">
-                    Move to Trash <Trash2 size={14} />
-                  </button>
-                </>
-              )}
-            </>
-          ) : (
-            <>
-              <button onClick={createNewFolder} className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white">New Folder</button>
-              <button onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))} className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center">
-                <span>Spotlight Search</span><span className="text-[10px] opacity-60 font-mono tracking-widest">⌘K</span>
-              </button>
-              <div className="h-px bg-white/10 my-1"></div>
-              <div className="px-4 py-1 text-zinc-500 font-semibold text-[10px] tracking-wider uppercase">View</div>
-              <button className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center group" onClick={toggleIcons}>
-                <span>{showIcons ? 'Hide Desktop Icons' : 'Show Desktop Icons'}</span>
-                {showIcons ? <EyeOff size={12} className="opacity-0 group-hover:opacity-100" /> : <Eye size={12} className="opacity-0 group-hover:opacity-100" />}
-              </button>
-              <button className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center group" onClick={toggleDock}>
-                <span>{showDock ? 'Hide Dock' : 'Show Dock'}</span>
-                {showDock ? <EyeOff size={12} className="opacity-0 group-hover:opacity-100" /> : <Eye size={12} className="opacity-0 group-hover:opacity-100" />}
-              </button>
-              <div className="h-px bg-white/10 my-1"></div>
-              <div className="px-4 py-1 text-zinc-500 font-semibold text-[10px] tracking-wider uppercase">Wallpaper</div>
-              <button onClick={() => window.dispatchEvent(new Event('next-wallpaper'))} className="w-full text-left px-4 py-1 hover:bg-[#0058d0] hover:text-white flex justify-between items-center">
-                <span>Next Background</span><span className="text-zinc-500 text-[10px] truncate max-w-20 text-right">{wallpapers[(desktopWpIdx + 1) % wallpapers.length].name}</span>
-              </button>
-              <div className="h-px bg-white/10 my-1"></div>
-              <button className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white" onClick={() => launchApp('terminal')}>Open Terminal</button>
-              <button className="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white" onClick={() => window.location.reload()}>Refresh Workspace</button>
-            </>
-          )}
-        </div>
-      )}
+      {/* 👇 ABSOLUTE OVERLAYS (z-[99999]): Removed from z-0 container so they physically cover HUD and Header */}
 
-      {/* 4. SLEEP SCREEN OVERLAY */}
+      {/* 2. SLEEP SCREEN OVERLAY */}
       {isAsleep && (
         <div 
-          className="absolute inset-0 z-400 bg-black cursor-default"
+          className="fixed inset-0 z-[99999] bg-black cursor-default"
           onMouseMove={() => setIsAsleep(false)}
         />
       )}
 
-      {/* 5. SHUTTING DOWN ANIMATION */}
+      {/* 3. SHUTTING DOWN ANIMATION */}
       {isShuttingDown && (
-        <div className="absolute inset-0 z-500 bg-black flex flex-col items-center justify-center transition-opacity duration-500">
+        <div className="fixed inset-0 z-[99999] bg-black flex flex-col items-center justify-center transition-opacity duration-500">
            <Loader2 className="animate-spin text-zinc-500 mb-6" size={40} />
            <p className="text-zinc-400 font-medium tracking-widest uppercase text-xs animate-pulse">Shutting Down...</p>
         </div>
       )}
 
-      {/* 6. POWER OFF SCREEN */}
+      {/* 4. POWER OFF SCREEN */}
       {isPoweredOff && (
-        <div className="absolute inset-0 z-600 bg-black flex items-center justify-center transition-opacity duration-1000">
+        <div className="fixed inset-0 z-[99999] bg-black flex items-center justify-center transition-opacity duration-1000">
            <button onClick={handlePowerOn} className="text-white/20 hover:text-white/80 transition-all flex flex-col items-center gap-4">
              <Power size={48} />
              <span className="text-xs font-medium tracking-widest uppercase animate-pulse">Power On</span>
@@ -694,9 +690,9 @@ export default function Hero() {
         </div>
       )}
 
-      {/* 7. INITIAL BOOT SCREEN */}
+      {/* 5. INITIAL BOOT SCREEN */}
       {bootStage === 'loading' && (
-        <div className="absolute inset-0 z-300 bg-black flex flex-col items-center justify-center">
+        <div className="fixed inset-0 z-[99999] bg-black flex flex-col items-center justify-center">
           <Command size={56} className="text-os-text mb-12 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" strokeWidth={1.5} />
           <div className="w-48 h-1 bg-zinc-800 rounded-full overflow-hidden">
             <div className="h-full bg-zinc-200 transition-all duration-150 ease-out" style={{ width: `${progress}%` }}></div>
@@ -704,9 +700,9 @@ export default function Hero() {
         </div>
       )}
 
-      {/* 8. PURE MAC OS SONOMA LOCK SCREEN */}
+      {/* 6. PURE MAC OS SONOMA LOCK SCREEN */}
       <div 
-        className={`absolute inset-0 z-200 flex flex-col items-center transition-all duration-1000 ease-in-out
+        className={`fixed inset-0 z-[99998] flex flex-col items-center transition-all duration-1000 ease-in-out
           ${bootStage === 'login' ? 'opacity-100 pointer-events-auto scale-100' : 'opacity-0 pointer-events-none scale-105'}
         `}
         onClick={() => { if (bootStage === 'login' && !showPasswordPrompt && !isAsleep && !isShuttingDown && !isPoweredOff) setShowPasswordPrompt(true); }}
@@ -790,6 +786,6 @@ export default function Hero() {
         )}
 
       </div>
-    </div>
+    </>
   );
 }
