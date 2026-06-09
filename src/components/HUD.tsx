@@ -318,7 +318,21 @@ function DockItem({ item, isOpen, isActive, mouseX, onClick, onContextMenu }: an
 export default function HUD() {
   const [isUnlocked, setIsUnlocked] = useState(false);
 
-  // 👇 LOOPHOLE FIX: The HUD relies on local storage to know if it should be mounted
+  const [openApps, setOpenApps] = useState<string[]>([]);
+  const [activeApp, setActiveApp] = useState<string | null>(null);
+  const [minimizedApps, setMinimizedApps] = useState<string[]>([]);
+  
+  const [mouseX, setMouseX] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showDock, setShowDock] = useState(true);
+  const [showMobileNotice, setShowMobileNotice] = useState(false);
+
+  const [pinnedApps, setPinnedApps] = useState<string[]>(['finder', 'profile', 'contact', 'github']);
+  const [dockContextMenu, setDockContextMenu] = useState<{show: boolean, x: number, appId: string | null}>({ show: false, x: 0, appId: null });
+
+  const [customFolders, setCustomFolders] = useState<any[]>([]);
+
+  // 👇 STRICT LOCK FIX: Forces the HUD to completely vanish when the system locks.
   useEffect(() => {
     const checkAuthStatus = () => {
       const EXPIRATION_TIME_MS = 60 * 60 * 1000;
@@ -333,29 +347,23 @@ export default function HUD() {
     checkAuthStatus(); 
 
     const handleUnlock = () => setIsUnlocked(true);
-    const handleLock = () => setIsUnlocked(false);
+    const handleLock = () => {
+      setIsUnlocked(false);
+      // Hard reset the open apps state so the desktop is clean next time they log in
+      setOpenApps([]);
+      setActiveApp(null);
+      setMinimizedApps([]);
+      setDockContextMenu({ show: false, x: 0, appId: null });
+    };
     
     window.addEventListener('system-unlock', handleUnlock);
-    window.addEventListener('system-lock-triggered', handleLock); // Listen for the new lock event
+    window.addEventListener('system-lock-triggered', handleLock); // Listens to the lock event from Hero.tsx
     
     return () => {
       window.removeEventListener('system-unlock', handleUnlock);
       window.removeEventListener('system-lock-triggered', handleLock);
     };
   }, []);
-  const [openApps, setOpenApps] = useState<string[]>([]);
-  const [activeApp, setActiveApp] = useState<string | null>(null);
-  const [minimizedApps, setMinimizedApps] = useState<string[]>([]);
-  
-  const [mouseX, setMouseX] = useState<number | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-  const [showDock, setShowDock] = useState(true);
-  const [showMobileNotice, setShowMobileNotice] = useState(false);
-
-  const [pinnedApps, setPinnedApps] = useState<string[]>(['finder', 'profile', 'contact', 'github']);
-  const [dockContextMenu, setDockContextMenu] = useState<{show: boolean, x: number, appId: string | null}>({ show: false, x: 0, appId: null });
-
-  const [customFolders, setCustomFolders] = useState<any[]>([]);
 
   useEffect(() => {
     const savedPinned = localStorage.getItem('pritam_os_dock_pinned');
@@ -474,7 +482,7 @@ export default function HUD() {
   ];
   const currentDockItems = sortedDockItemIds.map(id => getAppInfo(id)).filter(Boolean) as any[];
 
-  // 👇 IMPORTANT: DO NOT RENDER ANYTHING IF THE SCREEN IS LOCKED OR BOOTING
+  // 👇 ABSOLUTE GATEKEEPER: If locked, render NOTHING. App windows and Dock will vanish.
   if (!isUnlocked) return null;
   
   return (
@@ -653,6 +661,7 @@ export default function HUD() {
           </DesktopWindow>
         )}
 
+        {/* 👇 DYNAMIC WINDOW MAPPER FOR CUSTOM FOLDERS */}
         {openApps.filter(id => id.startsWith('folder-')).map(folderId => {
           const folderInfo = getAppInfo(folderId);
           return (
